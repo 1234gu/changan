@@ -1,0 +1,227 @@
+{
+  "old_root": "/Users/eins/Library/Application Support/ChanganPlatform",
+  "new_root": "/Users/eins/code/changanPlatform",
+  "backup_relative": "data/backups/root-migration-20261115-162936",
+  "tables_before": {
+    "tasks": 126,
+    "segments": 1703,
+    "attempts": 1641,
+    "events": 14146,
+    "sqlite_sequence": 1,
+    "nodes": 7,
+    "strategies": 4,
+    "configs": 9,
+    "alerts": 3,
+    "node_incidents": 28,
+    "execution_sessions": 179
+  },
+  "health_before": {
+    "status": "ok",
+    "service": "changan-orchestrator",
+    "version": "0.5.2",
+    "time": 1794731376.645254
+  },
+  "registry_catalog_before": {
+    "repositories": [
+      "changan/video-thor",
+      "infra/nvidia-device-plugin"
+    ]
+  },
+  "release": "20261113-92eed9d",
+  "release_sha256": {
+    "app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/alerts.py": "9de0b8967041f0706814992806a60830a0ad4f3202fc21c0d11114156afaf20d",
+    "app/capabilities.py": "6dc7d4beddb10e27b6f6f2f84cd4f9e2dabcf0095316740c1606fb05966d5b71",
+    "app/config.py": "b251099222363a3504fc87c93b967ee8fe5c955c4106c4c35025e164e3652ed1",
+    "app/container_api.py": "deb99166fa7eaba64a68e3f08e3de532d9dfedb0e846f3dd4d2957875ac8d953",
+    "app/container_execution.py": "ee7a7f63797276a0be2d0861ea6a7d2db7a2102965115e7f5a39b9c0bad778ba",
+    "app/db.py": "7493a61c490f4bb2c5a3e5c4e2bd705648c6c377a1347dae32c95c89417e55b1",
+    "app/engine.py": "ec10ad797db40ac2cfa9dad3b0c2bcc8e59af705321a191a6538bc26353ef069",
+    "app/execution_timing.py": "c1b9acb6035f3e9f88d306e1970aa5b00cfceb4e53e8579137a5894c56a9f36f",
+    "app/incidents.py": "6a5404a611cdd4d207665d1822d5c0418eb9de16940bf7a0a1d3e6045fd7f1fa",
+    "app/kube.py": "389eb23d307c5edb5664c8c3ab6119a55a4fb1c494b750b7711eaed6ff49955a",
+    "app/main.py": "024384b54f5fb7a3f7b75fb3eeac73fc54dc5b01e343c2c5f4886848d7381248",
+    "app/network_metrics.py": "5efba50581a00fadd97ddc56513e9e07accb094aa89ecc954a524ef1ac24ec77",
+    "app/resource_provider.py": "7a5e0fb93a13c63468db9ebaedd96c7acd65e7cde967ed4bee50e0674442676f",
+    "app/scheduler.py": "dede135e492cfe78e88e2cfbee5da8e84c81535c68d82557cf016d54754443b8",
+    "app/schemas.py": "767907a2d265b11ce1c3947dea7af4b693ce5b84d1c060378d15e55371297ce5",
+    "app/session_execution.py": "524e28c677a6ebe54b098ed11f30df66b5c4c9be629489c51957d01d99351ea4",
+    "app/video.py": "be8d6ee7f4fe4a110a6585c4a01c88e52e0a0fced2a859e2ba1250db8bf79728",
+    "assets/models/yolox_tiny.onnx": "427cc366d34e27ff7a03e2899b5e3671425c262ea2291f88bb942bc1cc70b0f7",
+    "assets/samples/demo.mp4": "e61fdd9e19f04d903e180204a7d0e54e0a0bef79b479123619117e299d1a13fb",
+    "requirements.txt": "02f1520d6f3c0574c35c48037bf594aaa06b202ac9e5df46de1eebe11199b629",
+    "scripts/install_native_services.py": "6a71f5ae4e665a3b16e429f2ce9411ff8e3de9552f0612fa949347157bf405ac",
+    "scripts/kubeconfig.py": "dcb22f205ff29d2564ebf01095f86f80363231767abac07b6772c1ec4de5e249",
+    "scripts/manage.py": "ca2c272814d58951a94e50d302d4f115e261b464aba1b33ea16f098a1977bd68",
+    "scripts/migrate_platform_data.py": "f863111cb0ad6a6a8e078f1305353e404d81da7b365a0a1fbeae3804ba7c80c3",
+    "scripts/publish_oci_archive.py": "c4cdda4c479097bdeaa3b94f7c326b03e0ffb11462ef510439bc43c13ce0a1cc",
+    "scripts/validate_thor_cluster.py": "4e12e5ae18a9b3c428f4bea77ef7ca7cde79842df2e2df73177cba1b05d6b2d0",
+    "scripts/validate_thor_native.py": "d0de12e8c5a9c74a0ae66e1191e8bd84c3b889cca40930303c144bccda36f84e",
+    "web/dist/assets/index-CMKRPUtL.js": "925cf1d444b00016cffa426ccbf3529def2ca3328a5543b15a8daeb5c44f6f93",
+    "web/dist/assets/index-D-HzX5-y.css": "2261c6bf27eea3c4ebc8f4c9c17f0f277658dc9a818d51f13827cb3d4790c18d",
+    "web/dist/index.html": "532bfccb19251da998920dadef52309f22e897d3691d6898c33dbe859ae1f807",
+    "workers/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "workers/attempt_entry.py": "fea44db8a1743a7dfe322358863162cd033a4485a652f98066ce283687740753",
+    "workers/container_entry.py": "517b5d1acd72d63a93d8b45db9f2ef33428df9fc143779975e815e35dfa1c56c",
+    "workers/inference.py": "3745517d8e73a49a305aed3c80c634181040f2e9cd78edc5440aa90ed54e0129",
+    "workers/service.py": "1d5e458eff3671c82142ced0cded6ea9a787e04ee0209599290710dbab39e9a6"
+  },
+  "stopped_at": 1794731377.448868,
+  "moved_at": 1794731417.664466,
+  "moved_file_identity_count": 532,
+  "symlinks_updated": [
+    "current",
+    "releases/20261113-3de5aa9/logs",
+    "releases/20261113-3de5aa9/.env",
+    "releases/20261111-thor-gpu-groups/.env",
+    "releases/20261111-thor-runtime2-candidate/logs",
+    "releases/20261111-thor-runtime2-candidate/.env",
+    "releases/20261113-92eed9d/logs",
+    "releases/20261113-92eed9d/.env",
+    "releases/20261112-c03c68c/logs",
+    "releases/20261112-c03c68c/.env",
+    "releases/20261111-thor-ui-candidate/logs",
+    "releases/20261111-thor-ui-candidate/.env",
+    "releases/20261111-native-implementation/.env",
+    "releases/20261111-thor-runtime2/logs",
+    "releases/20261111-thor-runtime2/.env"
+  ],
+  "configs_updated": [
+    "config/platform.env",
+    "config/registry.json",
+    "/Users/eins/Library/LaunchAgents/local.changan.registry.plist",
+    "/Users/eins/Library/LaunchAgents/local.changan.awake.plist",
+    "/Users/eins/Library/LaunchAgents/local.changan.redis.plist"
+  ],
+  "segment_paths_rebased": 1703,
+  "all_tables_match_before_start": {
+    "tasks": 126,
+    "segments": 1703,
+    "attempts": 1641,
+    "events": 14146,
+    "sqlite_sequence": 1,
+    "nodes": 7,
+    "strategies": 4,
+    "configs": 9,
+    "alerts": 3,
+    "node_incidents": 28,
+    "execution_sessions": 179
+  },
+  "sqlite_integrity": "ok",
+  "sqlite_foreign_keys": "ok",
+  "all_segment_files_present": true,
+  "release_files_unchanged": 36,
+  "compatibility_symlink": "/Users/eins/Library/Application Support/ChanganPlatform",
+  "verification": {
+    "api": {
+      "http": 200,
+      "bytes": 91,
+      "body": {
+        "status": "ok",
+        "service": "changan-orchestrator",
+        "version": "0.5.2",
+        "time": 1794731492.595767
+      }
+    },
+    "gateway": {
+      "http": 200,
+      "bytes": 45
+    },
+    "web": {
+      "http": 200,
+      "bytes": 388
+    },
+    "registry": {
+      "http": 200,
+      "catalog": {
+        "repositories": [
+          "changan/video-thor",
+          "infra/nvidia-device-plugin"
+        ]
+      },
+      "changan/video-thor": {
+        "tags": [
+          "0.5.2-runtime1",
+          "0.5.2-runtime2",
+          "0.5.2-runtime3"
+        ]
+      },
+      "infra/nvidia-device-plugin": {
+        "tags": [
+          "v0.20.1"
+        ]
+      }
+    },
+    "thor_nodes": [
+      {
+        "id": "thor1",
+        "online": true,
+        "enabled": 1
+      },
+      {
+        "id": "thor2",
+        "online": true,
+        "enabled": 1
+      },
+      {
+        "id": "thor3",
+        "online": true,
+        "enabled": 1
+      }
+    ],
+    "redis": "PONG",
+    "historical_tasks_unchanged": 126,
+    "segments_present": 1703,
+    "sqlite_integrity": "ok",
+    "historical_segment_http": {
+      "status": 206,
+      "bytes_read": 64,
+      "task_id": "task_40d8bd2199924927"
+    },
+    "latest_history": {
+      "task_id": "task_91693f297a6f4521",
+      "http": 200,
+      "status": "SUCCEEDED",
+      "completed": 24,
+      "total": 24
+    },
+    "history_export_http": 200,
+    "latest_video_and_source_readable": true,
+    "preview_files_present": 4726,
+    "processes": {
+      "container-gateway": {
+        "pid": 14073,
+        "cwd": "/Users/eins/code/changanPlatform/releases/20261113-92eed9d",
+        "interpreter": "/opt/homebrew/Caskroom/miniforge/base/envs/changan-platform/bin/python3.11"
+      },
+      "api": {
+        "pid": 14080,
+        "cwd": "/Users/eins/code/changanPlatform/releases/20261113-92eed9d",
+        "interpreter": "/opt/homebrew/Caskroom/miniforge/base/envs/changan-platform/bin/python3.11"
+      }
+    },
+    "active_tasks": 0,
+    "unclean_sessions": 0,
+    "web_assets_http": {
+      "/assets/index-CMKRPUtL.js": 200,
+      "/assets/index-D-HzX5-y.css": 200
+    },
+    "historical_preview_samples": [
+      {
+        "task_id": "task_00dcc06d3f5e4d0d",
+        "http": 200,
+        "bytes": 161312
+      },
+      {
+        "task_id": "task_ff8340805654432c",
+        "http": 200,
+        "bytes": 161312
+      }
+    ],
+    "thor1_to_mac": {
+      "gateway_health_http": 200,
+      "registry_tls_http": 200
+    }
+  },
+  "verified_at": 1794731493.005623
+}

@@ -26,13 +26,15 @@
 
 ## 快速进入
 
+2026年11月15日本机运行根目录已迁至 `/Users/eins/code/changanPlatform`，当前程序入口为 `current/`。详见[目录迁移与使用说明](docs/native-root-migration-20261115/迁移与使用说明.md)。
+
 当前正式管理服务原生运行于Mac，入口为 <http://127.0.0.1:8310/?release=20261113-thor3>，API文档 <http://127.0.0.1:8310/docs>。Mac重启后在登录用户会话启动：
 
 ```bash
 source /opt/homebrew/Caskroom/miniforge/base/etc/profile.d/conda.sh
 conda activate changan-platform
-python "/Users/eins/Library/Application Support/ChanganPlatform/current/scripts/install_native_services.py" \
-  --root "/Users/eins/Library/Application Support/ChanganPlatform" \
+python "/Users/eins/code/changanPlatform/current/scripts/install_native_services.py" \
+  --root "/Users/eins/code/changanPlatform" \
   --env-prefix "/opt/homebrew/Caskroom/miniforge/base/envs/changan-platform" \
   --gateway-host 192.168.50.231
 ```

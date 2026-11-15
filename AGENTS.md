@@ -16,3 +16,5 @@
 - 2026-10-31起使用GitHub仓库 https://github.com/EinsZack/changan 管理开发过程。服务器保留唯一业务工作区，开始修改前检查并同步仓库，功能验证后提交并推送main；具体流程见CONTRIBUTING.md。
 
 - 2026-11-11用户明确Mac原生运行管理平台与OCI镜像仓库，Thor承担容器任务执行。Mac使用本机Miniforge项目专用环境`changan-platform`，只部署发布运行制品和数据，不新建Git业务开发副本；服务器继续源码开发、测试与Linux ARM64镜像构建。Mac与Thor上的部署验收按真实结果记录。
+
+- 2026-11-15用户指定本机平台迁至 `/Users/eins/code/changanPlatform/`，当前程序在 `current/`，配置/数据/镜像仓库同根目录管理；原Library位置保留兼容符号链接。后续本机启动、发布和运维使用新根目录；本轮未改变服务器源码开发与Mac发布运行的分工。
