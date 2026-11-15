@@ -1,0 +1,21 @@
+[Unit]
+Description=Changan resource-pool node Agent (registration, heartbeat, resource reports)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/changan-pool-agent.env
+WorkingDirectory=@PREFIX@
+ExecStart=@PREFIX@/venv/bin/python -m agent.main
+Restart=always
+RestartSec=5
+# Read-only collection; the Agent needs no write access beyond its state directory.
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=@PREFIX@/state
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

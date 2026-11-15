@@ -1,0 +1,71 @@
+.platform-strip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 18px 24px;
+  margin-bottom: 20px;
+  background: #fff;
+  border: 1px solid #e6ebf3;
+  border-radius: 14px;
+}
+.platform-strip--empty {
+  color: #8a96ab;
+  justify-content: center;
+}
+.platform-strip__rate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #66758e;
+  font-size: 13px;
+}
+.platform-strip__metrics {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 24px;
+  margin: 0;
+}
+.platform-strip__metrics dt {
+  color: #66758e;
+  font-size: 12px;
+}
+.platform-strip__metrics dd {
+  margin: 2px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #15233d;
+}
+.platform-strip__metrics small {
+  font-size: 13px;
+  font-weight: 400;
+  color: #8a96ab;
+}
+.platform-strip__metrics .is-warning {
+  color: #d4380d;
+}
+.platform-strip__icon {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  color: #c3cde0;
+  font-size: 18px;
+}
+.binding-table .ant-tag {
+  margin-inline-end: 4px;
+}
+.binding-reasons {
+  color: #8a96ab;
+  font-size: 12px;
+}
+.reliability-timeline {
+  max-height: 360px;
+  overflow: auto;
+  padding-top: 8px;
+}
+.reliability-timeline__meta {
+  color: #8a96ab;
+  font-size: 12px;
+}

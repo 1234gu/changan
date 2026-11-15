@@ -10,22 +10,37 @@ from .engine import Engine
 from .alerts import router as alerts_router
 from .schemas import TaskInput,NodeInput,StrategyInput,CandidateInput
 from .capabilities import run_capabilities, connector_call, redact
+from .pool_bridge import PoolBridge
+from .pool_routes import router as pool_platform_router
 engine=Engine()
+pool=PoolBridge() if os.getenv('CHANGAN_POOL_ENABLED','1')!='0' else None
+engine.pool=pool
 @asynccontextmanager
 async def lifespan(app):
     db.init();engine.base=os.getenv('CHANGAN_PUBLIC_BASE','http://127.0.0.1:8310')
     loop=asyncio.create_task(engine.loop())
+    if pool:await pool.start()
     yield
     loop.cancel()
     try: await loop
     except asyncio.CancelledError: pass
+    if pool:await pool.stop()
     await engine.close()
-app=FastAPI(title='车群协同任务编排 API',version='0.5.2',lifespan=lifespan)
+app=FastAPI(title='车群协同任务编排 API',version='0.7.0',lifespan=lifespan)
+app.state.engine=engine
+if pool:
+    pool.install(app)
+    app.include_router(pool_platform_router)
 app.include_router(alerts_router)
 from .container_execution import router as container_router
 app.include_router(container_router)
 from .session_execution import router as session_router
 app.include_router(session_router)
+POOL_AGENT_TOKEN=os.getenv('CHANGAN_POOL_AGENT_TOKEN','')
+import re as _re
+AGENT_REPORT=_re.compile(r'^/api/v1/nodes/(register|[0-9a-fA-F-]{36}/(heartbeat|resources))$')
+def agent_report(request):
+    return request.method=='POST' and AGENT_REPORT.match(request.url.path) is not None
 def browser_session():
     return hmac.new(API_KEY.encode(),b'changan-browser-session-v1',hashlib.sha256).hexdigest()
 @app.post('/api/session')
@@ -36,6 +51,10 @@ def open_session(body:dict):
     return response
 @app.middleware('http')
 async def access(request:Request,call_next):
+    if agent_report(request) and POOL_AGENT_TOKEN:
+        # Node Agents authenticate with their own reporting token, never the admin API key.
+        if not secrets.compare_digest(request.headers.get('X-Pool-Agent-Token',''),POOL_AGENT_TOKEN):return JSONResponse({'detail':'Agent上报凭据无效'},401)
+        return await call_next(request)
     if API_KEY and request.url.path.startswith('/api/') and request.url.path!='/api/session':
         supplied=request.headers.get('X-API-Key','')
         if not secrets.compare_digest(supplied,API_KEY) and not secrets.compare_digest(request.cookies.get('changan_session',''),browser_session()): return JSONResponse({'detail':'需要API密钥'},401)
@@ -49,7 +68,7 @@ async def access(request:Request,call_next):
 def internal(x_internal_token:str=Header(default='')):
     if not secrets.compare_digest(x_internal_token,TOKEN): raise HTTPException(401,'内部认证失败')
 @app.get('/health')
-def health(): return {'status':'ok','service':'changan-orchestrator','version':'0.5.2','time':time.time()}
+def health(): return {'status':'ok','service':'changan-orchestrator','version':'0.7.0','time':time.time()}
 @app.get('/api/overview')
 def overview():
     totals=db.query('SELECT status,count(*) n FROM tasks GROUP BY status')
@@ -262,5 +281,14 @@ def delivery(name:str):
     path=ROOT/'releases'/name
     if not path.is_file():raise HTTPException(404)
     return FileResponse(path,filename=name)
+pool_web=Path(os.getenv('CHANGAN_POOL_WEB_DIR',str(ROOT/'web-pool/dist')))
+if pool and pool_web.exists():
+    if (pool_web/'assets').exists():app.mount('/pool/assets',StaticFiles(directory=pool_web/'assets'),name='pool-assets')
+    @app.get('/pool',include_in_schema=False)
+    @app.get('/pool/{rest:path}',include_in_schema=False)
+    def pool_spa(rest:str=''):
+        candidate=(pool_web/rest).resolve()
+        if rest and candidate.is_file() and pool_web.resolve() in candidate.parents:return FileResponse(candidate)
+        return FileResponse(pool_web/'index.html',headers={'Cache-Control':'no-cache'})
 web_directory=Path(os.getenv('CHANGAN_WEB_DIR',str(ROOT/'web/dist')))
 if web_directory.exists():app.mount('/',StaticFiles(directory=web_directory,html=True),name='web')

@@ -1,0 +1,24 @@
+# Management-PC local example. On the second computer, replace 127.0.0.1
+# with the management computer's private LAN address.
+node_name: null
+# Optional: set this when VPN/virtual adapters make automatic IP selection ambiguous.
+advertise_ip: null
+backend:
+  url: 'http://127.0.0.1:8000'
+  request_timeout_seconds: 5
+
+heartbeat_interval_seconds: 2
+resource_report_interval_seconds: 5
+reconnect_interval_seconds: 3
+reconnect_max_interval_seconds: 30
+
+state_file: '.state/node_id'
+labels: []
+cluster: null
+
+discovery:
+  enabled: true
+  listen_host: '0.0.0.0'
+  port: 8765
+
+log_level: 'INFO'

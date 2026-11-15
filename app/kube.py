@@ -3,6 +3,7 @@ import asyncio, os
 from kubernetes import client, config
 from kubernetes.client.exceptions import ApiException
 from kubernetes.utils.quantity import parse_quantity
+from .pool_bridge import machine_digest
 
 LABEL = 'changan.io/node-id'
 APP = 'changan-video'
@@ -31,7 +32,11 @@ class Kube:
                 'architecture':labels.get('kubernetes.io/arch'),'memory':budget,'active':active,
                 'gpu_slots':int(n.status.allocatable.get('nvidia.com/gpu','0')),'capacity':int(labels.get('changan.io/slots','1')),'kind':labels.get('changan.io/kind','k3s_node'),
                 'runtime':n.status.node_info.container_runtime_version,'kubelet':n.status.node_info.kubelet_version,
-                'physical_host':labels.get('changan.io/physical-host',n.metadata.name)})
+                'physical_host':labels.get('changan.io/physical-host',n.metadata.name),
+                # Only a digest is kept; it is matched against the pool Agent's machine-id digest.
+                'machine_id_sha256':machine_digest(getattr(n.status.node_info,'machine_id',None)),
+                'cpu_cores':float(parse_quantity(n.status.allocatable.get('cpu','0'))),
+                'internal_ip':next((a.address for a in n.status.addresses or [] if a.type=='InternalIP'),None)})
         return output
     async def job(self,name):
         try:return await self.call(self.batch.read_namespaced_job,name,self.namespace)

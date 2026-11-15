@@ -6,8 +6,8 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def package(output):
     files = []
-    for directory in ['app', 'workers', 'web/dist']:
-        files.extend(p for p in (ROOT/directory).rglob('*') if p.is_file() and '__pycache__' not in p.parts and p.suffix != '.pyc')
+    for directory in ['app', 'workers', 'web/dist', 'web-pool/dist', 'agent', 'deploy/pool-agent']:
+        files.extend(p for p in (ROOT/directory).rglob('*') if p.is_file() and '__pycache__' not in p.parts and '.state' not in p.parts and p.suffix != '.pyc')
     files += [ROOT/p for p in ['scripts/manage.py', 'scripts/kubeconfig.py', 'scripts/migrate_platform_data.py', 'scripts/install_native_services.py', 'scripts/publish_oci_archive.py', 'scripts/validate_thor_native.py', 'scripts/validate_thor_cluster.py',
                               'requirements.txt', 'assets/models/yolox_tiny.onnx', 'assets/samples/demo.mp4']]
     blobs = {str(p.relative_to(ROOT)): p.read_bytes() for p in sorted(files)}

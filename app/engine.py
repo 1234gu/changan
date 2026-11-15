@@ -17,6 +17,7 @@ class Engine:
         self.backend=os.getenv('CHANGAN_BACKEND','k3s')
         if self.backend not in ('k3s','process'):raise ValueError('CHANGAN_BACKEND 无效')
         self.containers=None
+        self.pool=None
         if self.backend=='k3s':
             from .container_execution import ContainerExecution
             self.containers=ContainerExecution(self)
@@ -116,7 +117,8 @@ class Engine:
             n['reserved']=db.query("SELECT count(*) AS n FROM attempts WHERE node_id=? AND session_id IS NULL AND (status NOT IN ('SUCCEEDED','FAILED','CANCELED','TIMED_OUT') OR (backend='k3s' AND cleanup_state!='DONE'))",(n['id'],),one=True)['n']
             n['reserved']+=db.query("SELECT count(*) n FROM execution_sessions WHERE node_id=? AND cleanup_state!='DONE'",(n['id'],),one=True)['n']
             n['online']=bool(not n.get('error') and n['observed'] and time.time()-n['observed']<8)
-        if task_id and self.containers:return self.containers.sessions.scheduling_nodes(nodes,task_id)
+        if task_id and self.containers:nodes=self.containers.sessions.scheduling_nodes(nodes,task_id)
+        if self.pool:self.pool.annotate(nodes)
         return nodes
     async def dispatch(self,task,segment):
         params=db.loads(task['params']); frozen=db.loads(task['metadata'],{}).get('algorithm_snapshot')

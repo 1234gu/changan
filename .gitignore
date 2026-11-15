@@ -46,3 +46,6 @@ build/
 *.sqlite
 *.sqlite-*
 *.db
+# Resource-pool Agent local state (node UUID, saved config) must never be shared
+agent/.state/
+web-pool/node_modules

@@ -1,6 +1,7 @@
 import time, math
 from .config import MODEL_ID
 from .network_metrics import positive
+from .pool_bridge import requirement_reasons
 
 def choose(nodes, params, duration, input_bytes, algorithm, cursor=0):
     began=time.monotonic(); now=time.time(); rows=[]
@@ -21,6 +22,11 @@ def choose(nodes, params, duration, input_bytes, algorithm, cursor=0):
         if s.get('available_memory_mb',0)<max(512 if 'kubernetes' in s.get('resource_source','') else 0,params.get('min_memory_mb',256)): why.append('可用内存不足')
         if max(s.get('active',0),n.get('reserved',0))>=s.get('capacity',1): why.append('执行槽已占用或预留')
         if not s.get('input_reachable',True): why.append('输入通道不可达')
+        pool=n.get('pool')
+        if pool:
+            # Stage 1 (resource pool): management eligibility + task requirements; enforced only in enforce mode.
+            pool=dict(pool,reasons=list(pool.get('reasons',[]))+requirement_reasons(pool,params),enforced=pool.get('mode')=='enforce')
+            if pool['enforced']:why.extend(pool['reasons'])
         fps=s.get('measured_fps') or 8.0
         compute=duration*params.get('sample_fps',2)/max(fps,0.1)
         bandwidth=positive(s.get('bandwidth_mbps'))
@@ -32,7 +38,7 @@ def choose(nodes, params, duration, input_bytes, algorithm, cursor=0):
         transfer=input_bytes*8/(bandwidth*1e6) if bandwidth else 0
         queue=s.get('active',0)*compute
         score=compute*weights.get('compute',1)+transfer*weights.get('transfer',1)+queue*weights.get('queue',1)
-        rows.append({'node_id':n['id'],'eligible':not why,'reasons':why,'score':round(score,4),'compute_seconds':round(compute,4),'transfer_seconds':round(transfer,4) if bandwidth else None,'estimate_source':'实测推理吞吐' if s.get('measured_fps') else '启动估计，尚未校准','network_source':s.get('network_source','未提供，传输成本暂不参与'),'snapshot':s,'snapshot_at':n.get('observed')})
+        rows.append({'node_id':n['id'],'eligible':not why,'reasons':why,'score':round(score,4),'compute_seconds':round(compute,4),'transfer_seconds':round(transfer,4) if bandwidth else None,'estimate_source':'实测推理吞吐' if s.get('measured_fps') else '启动估计，尚未校准','network_source':s.get('network_source','未提供，传输成本暂不参与'),'snapshot':s,'snapshot_at':n.get('observed'),'pool':pool})
     eligible=[r for r in rows if r['eligible']]
     chosen=None
     if eligible:

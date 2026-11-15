@@ -18,6 +18,11 @@ class TaskInput(BaseModel):
     architecture: str|None=None
     location: str|None=Field(default=None,max_length=100)
     workflow_id: str='video-analysis'
+    # Resource-pool requirements (stage-1 admission by the pool management plane).
+    pool_cluster_id: str|None=Field(default=None,max_length=100)
+    pool_labels: list[str]=Field(default_factory=list,max_length=20)
+    min_cpu_cores: int|None=Field(default=None,ge=1,le=1024)
+    min_gpu_count: int|None=Field(default=None,ge=0,le=64)
 class NodeInput(BaseModel):
     id: str=Field(pattern=r'^[a-zA-Z0-9_-]{1,64}$')
     endpoint: str

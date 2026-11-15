@@ -97,6 +97,8 @@ class ContainerExecution:
                    'memory_budget_mb':n['memory'],'active':n['active'],'capacity':n['capacity'],
                    'runtime':n['runtime'],'kubelet':n['kubelet'],'physical_host':n['physical_host'],
                    'resource_source':'kubernetes','location':self.client().cluster}
+                for key in ('machine_id_sha256','cpu_cores','internal_ip'):
+                    if n.get(key) is not None:s[key]=n[key]
                 s['gpu_slots']=n.get('gpu_slots',0)
                 s['gpu_available']=n.get('gpu_slots',0)>0
                 if s['gpu_available']:s['tags'].append('gpu')
