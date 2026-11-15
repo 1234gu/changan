@@ -1,0 +1,172 @@
+{
+  "date": "2026-11-15",
+  "environment": "server x86_64; in-process ASGI; SQLite temporary/in-memory; all nodes and resource metrics synthetic",
+  "upstream_commit": "b964ad133e30673bbfcbfc1cc6e5bd62587632f4",
+  "python": "3.11.15",
+  "packages": {
+    "fastapi": "0.115.12",
+    "pydantic": "2.11.4",
+    "httpx": "0.28.1",
+    "psutil": "7.0.0"
+  },
+  "checks": [
+    {
+      "name": "registration_approval_resources",
+      "observations": {
+        "before_approval_candidates": 0,
+        "after_approval_candidates": 1,
+        "architecture_alias": "aarch64 -> arm64 accepted"
+      },
+      "implication": "Registration and eligibility implementation is reusable.",
+      "kind": "confirmed_behavior"
+    },
+    {
+      "name": "disable_scheduling",
+      "observations": {
+        "candidates": 0,
+        "reasons": [
+          "NOT_SCHEDULABLE"
+        ]
+      },
+      "implication": "Map this gate into new session admission.",
+      "kind": "confirmed_behavior"
+    },
+    {
+      "name": "stable_fingerprint_identity",
+      "observations": {
+        "status": "EXISTING_DEVICE",
+        "same_canonical_uuid": true
+      },
+      "implication": "Keep canonical UUID and an explicit mapping to scheduler node IDs.",
+      "kind": "confirmed_behavior"
+    },
+    {
+      "name": "existing_provider_contract",
+      "observations": {
+        "GET /nodes": 404,
+        "POST /reservations": 404,
+        "candidate_response_shape": "object containing candidates and excluded_nodes"
+      },
+      "implication": "Cannot connect by only setting CHANGAN_RESOURCE_PROVIDER_URL.",
+      "kind": "integration_gap"
+    },
+    {
+      "name": "old_sample_accepted_as_fresh",
+      "observations": {
+        "sample_age_seconds": 3600,
+        "candidate_count": 1,
+        "operational_status": "ONLINE",
+        "schedulable": true
+      },
+      "implication": "Validate collected_at as well as receive time; generated_at must not renew stale observations.",
+      "kind": "requires_fix"
+    },
+    {
+      "name": "runtime_memory_vs_accounting",
+      "observations": {
+        "required_gib": 2,
+        "accounting_available_gib": 16,
+        "runtime_available_gib": 0.25,
+        "candidate_count": 1
+      },
+      "implication": "Candidate memory means total minus projected allocation; scheduler also needs runtime headroom and budget.",
+      "kind": "integration_gap"
+    },
+    {
+      "name": "incremental_event_idempotency",
+      "observations": {
+        "first": "APPLIED",
+        "duplicate": "DUPLICATE_EVENT",
+        "older": "STALE_VERSION"
+      },
+      "implication": "Incremental event version protection is present.",
+      "kind": "confirmed_behavior"
+    },
+    {
+      "name": "gpu_summary_candidate_disagreement",
+      "observations": {
+        "candidate_count": 0,
+        "summary_gpu": {
+          "total": 1.0,
+          "used": 0.0,
+          "allocated": 1.0,
+          "available": 1.0,
+          "schedulable_available": 1.0,
+          "unavailable": 0.0,
+          "utilization_percent": 10.0,
+          "runtime_utilization_percent": 10.0,
+          "unit": "GPU",
+          "collection_status": "complete",
+          "issue_node_count": 0
+        }
+      },
+      "implication": "Summary schedulable_available is not candidate free capacity; unify presentation semantics.",
+      "kind": "requires_fix"
+    },
+    {
+      "name": "lost_status_releases_accounting",
+      "observations": {
+        "projected_status": "LOST",
+        "gpu_candidate_count": 1
+      },
+      "implication": "LOST alone cannot prove a partitioned session has stopped; retain occupancy until cleanup reconciliation.",
+      "kind": "integration_gap"
+    },
+    {
+      "name": "snapshot_rolls_back_newer_terminal",
+      "observations": {
+        "before": {
+          "version": 12,
+          "status": "SUCCEEDED"
+        },
+        "after": {
+          "version": 1,
+          "status": "RUNNING"
+        }
+      },
+      "implication": "Add snapshot epoch/watermark and per-object monotonic merge before enabling synchronization.",
+      "kind": "requires_fix"
+    },
+    {
+      "name": "snapshot_replaces_all_projections",
+      "observations": {
+        "remaining_projections": 0
+      },
+      "implication": "Snapshot is full replacement, not a task-scoped patch; agree owner and completeness.",
+      "kind": "integration_gap"
+    },
+    {
+      "name": "api_surface",
+      "observations": {
+        "paths": 31,
+        "reservation_paths": [],
+        "security_scheme_present": false
+      },
+      "implication": "No reservation API or declared authentication scheme in this revision.",
+      "kind": "integration_gap"
+    },
+    {
+      "name": "thor_smi_na_parser",
+      "observations": {
+        "input": "Separately observed on Thor1 on 2026-11-15; parser replay only",
+        "device_detected": true,
+        "per_device_vram_total_bytes": null,
+        "aggregate_sum_expression_result": 0
+      },
+      "implication": "Preserve unknown memory values; add a validated Thor collector and shared-memory semantics.",
+      "kind": "integration_gap"
+    },
+    {
+      "name": "sqlite_restart",
+      "observations": {
+        "identity_and_approval_preserved": true
+      },
+      "implication": "SQLite storage can be reused; this is a synthetic restart check.",
+      "kind": "confirmed_behavior"
+    }
+  ],
+  "count": 14,
+  "board_access": false,
+  "listening_service_started": false,
+  "upstream_source_modified": false
+}

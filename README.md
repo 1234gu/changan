@@ -42,6 +42,7 @@ python "/Users/eins/Library/Application Support/ChanganPlatform/current/scripts/
 ## 文档
 
 - [开发计划与实施记录](docs/开发计划.md)
+- [节点平台代码评估与集成计划](docs/resource-pool-review-20261115/评估与集成计划.md)（2026年11月15日；评估完成，尚未实施集成）
 - [交付物说明](docs/交付物说明.md)
 - [使用说明](docs/使用说明.md)
 - [接口与联调说明](docs/接口与联调说明.md)

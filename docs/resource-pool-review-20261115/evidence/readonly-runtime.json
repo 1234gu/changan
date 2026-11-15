@@ -1,0 +1,77 @@
+{
+  "date": "2026-11-15",
+  "captured_at": "2026-11-15T15:24:23.957948+08:00",
+  "scope": "read-only platform endpoints and Thor1 nvidia-smi; no Agent deployment or task creation",
+  "/health": {
+    "status": "ok",
+    "service": "changan-orchestrator",
+    "version": "0.5.2",
+    "time": 1794727463.962237
+  },
+  "/api/nodes": [
+    {
+      "id": "lab-1",
+      "kind": "k3s_logical",
+      "cluster_id": "changan-dev",
+      "online": false,
+      "enabled": 0,
+      "resource_source": "kubernetes"
+    },
+    {
+      "id": "lab-2",
+      "kind": "k3s_logical",
+      "cluster_id": "changan-dev",
+      "online": false,
+      "enabled": 0,
+      "resource_source": "kubernetes"
+    },
+    {
+      "id": "lab-3",
+      "kind": "k3s_logical",
+      "cluster_id": "changan-dev",
+      "online": false,
+      "enabled": 0,
+      "resource_source": "kubernetes"
+    },
+    {
+      "id": "lab-4",
+      "kind": "k3s_logical",
+      "cluster_id": "changan-dev",
+      "online": false,
+      "enabled": 0,
+      "resource_source": "kubernetes"
+    },
+    {
+      "id": "thor1",
+      "kind": "vehicle",
+      "cluster_id": "changan-thor",
+      "online": true,
+      "enabled": 1,
+      "resource_source": "kubernetes"
+    },
+    {
+      "id": "thor2",
+      "kind": "vehicle",
+      "cluster_id": "changan-thor",
+      "online": true,
+      "enabled": 1,
+      "resource_source": "kubernetes"
+    },
+    {
+      "id": "thor3",
+      "kind": "vehicle",
+      "cluster_id": "changan-thor",
+      "online": true,
+      "enabled": 1,
+      "resource_source": "kubernetes"
+    }
+  ],
+  "thor1": {
+    "command": "nvidia-smi --query-gpu=index,name,utilization.gpu,memory.total,memory.used,memory.free --format=csv,noheader,nounits",
+    "returncode": 0,
+    "stdout": "0, NVIDIA Thor, 0, [N/A], [N/A], [N/A]",
+    "stderr": "",
+    "interpretation": "GPU identified; memory total/used/free are N/A. GPU utilization is a momentary observation, not a task measurement."
+  },
+  "external_pool_url_configured": false
+}
