@@ -324,16 +324,22 @@ export function NodeDetailPage() {
                 {gpuUnavailableText ?? formatOptionalMetric(gpuUtilization, '%')}
               </Descriptions.Item>
               <Descriptions.Item label="单卡显存">
-                {gpuUnavailableText ?? (unifiedMemory ? UNIFIED_MEMORY_TEXT : (gpu?.devices.map(formatDeviceVram).join('；') || '--'))}
+                {gpuUnavailableText ??
+                  (unifiedMemory
+                    ? UNIFIED_MEMORY_TEXT
+                    : gpu?.devices.map(formatDeviceVram).join('；') || '--')}
               </Descriptions.Item>
               <Descriptions.Item label="节点总显存">
-                {gpuUnavailableText ?? (unifiedMemory ? UNIFIED_MEMORY_TEXT : formatVramBytes(gpu?.totalVramBytes))}
+                {gpuUnavailableText ??
+                  (unifiedMemory ? UNIFIED_MEMORY_TEXT : formatVramBytes(gpu?.totalVramBytes))}
               </Descriptions.Item>
               <Descriptions.Item label="已使用显存">
-                {gpuUnavailableText ?? (unifiedMemory ? UNIFIED_MEMORY_TEXT : formatVramBytes(gpu?.usedVramBytes))}
+                {gpuUnavailableText ??
+                  (unifiedMemory ? UNIFIED_MEMORY_TEXT : formatVramBytes(gpu?.usedVramBytes))}
               </Descriptions.Item>
               <Descriptions.Item label="可用显存">
-                {gpuUnavailableText ?? (unifiedMemory ? UNIFIED_MEMORY_TEXT : formatVramBytes(gpu?.availableVramBytes))}
+                {gpuUnavailableText ??
+                  (unifiedMemory ? UNIFIED_MEMORY_TEXT : formatVramBytes(gpu?.availableVramBytes))}
               </Descriptions.Item>
               <Descriptions.Item label="NPU">
                 <Tag color={node.npuSupport?.supported ? 'success' : 'default'} bordered={false}>
@@ -410,7 +416,9 @@ export function NodeDetailPage() {
               <span className="capacity-list__label">显存</span>
               {unifiedMemory ? (
                 <div className="capacity-list__unsupported">
-                  <Tag color="processing" bordered={false}>统一内存</Tag>
+                  <Tag color="processing" bordered={false}>
+                    统一内存
+                  </Tag>
                   <span>GPU 与系统内存共享，不单独计算显存</span>
                 </div>
               ) : node.videoMemory ? (

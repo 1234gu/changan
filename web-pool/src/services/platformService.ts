@@ -165,7 +165,12 @@ export interface CreatedTask {
 export async function submitPoolTask(request: PoolTaskSubmission): Promise<CreatedTask> {
   const { items } = await getExecutionBindings();
   const executionNodeIds = items
-    .filter((item) => item.bindingState === 'BOUND' && item.poolNodeId && request.poolNodeIds.includes(item.poolNodeId))
+    .filter(
+      (item) =>
+        item.bindingState === 'BOUND' &&
+        item.poolNodeId &&
+        request.poolNodeIds.includes(item.poolNodeId),
+    )
     .map((item) => item.executionNodeId);
   if (executionNodeIds.length === 0) {
     throw new Error('所选资源节点均未绑定 K3s 执行节点，无法下发');

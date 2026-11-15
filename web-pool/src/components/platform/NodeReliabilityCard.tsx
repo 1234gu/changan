@@ -40,7 +40,11 @@ export function NodeReliabilityCard({ nodeId }: { nodeId: string }) {
       }
       extra={
         <span className="node-detail-card__count">
-          {data?.executionNodeId ? `执行节点 ${data.executionNodeId}` : error ? '加载失败' : '未绑定执行节点'}
+          {data?.executionNodeId
+            ? `执行节点 ${data.executionNodeId}`
+            : error
+              ? '加载失败'
+              : '未绑定执行节点'}
         </span>
       }
     >
@@ -67,8 +71,8 @@ export function NodeReliabilityCard({ nodeId }: { nodeId: string }) {
                   </div>
                   <div className="reliability-timeline__meta">
                     失联 {time(incident.detectedAt)} · 恢复 {time(incident.linkRestoredAt)}
-                    {incident.recoverySeconds != null && `（${incident.recoverySeconds} s）`} · 影响 {incident.affectedCount} 个执行 ·
-                    任务核对 {time(incident.taskReconciledAt)}
+                    {incident.recoverySeconds != null && `（${incident.recoverySeconds} s）`} · 影响{' '}
+                    {incident.affectedCount} 个执行 · 任务核对 {time(incident.taskReconciledAt)}
                   </div>
                 </div>
               ),

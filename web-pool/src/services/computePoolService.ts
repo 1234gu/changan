@@ -50,6 +50,7 @@ export async function getComputePoolSummary(): Promise<ComputePoolSummary> {
     supportingResources: {
       ...localDetails.supportingResources,
       ...(videoMemory ? { videoMemory: mapResourceMetric(videoMemory) } : {}),
+      unifiedMemoryGpuNodes: response.data.unified_memory_gpu_nodes ?? 0,
     },
     clusters: clusterResult.items.map((cluster) => ({
       cluster: { id: cluster.id, name: cluster.name },

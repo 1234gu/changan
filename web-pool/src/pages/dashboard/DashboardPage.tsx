@@ -95,6 +95,7 @@ export function DashboardPage() {
   const onlineRate = totalNodes > 0 ? Math.round((onlineNodes / totalNodes) * 100) : 0;
   const resources = data.resourcePool.resources;
   const videoMemory = data.supportingResources.videoMemory;
+  const unifiedGpuNodes = data.supportingResources.unifiedMemoryGpuNodes ?? 0;
   const visibleResources = RESOURCE_ORDER.map((kind) => {
     const presentation = RESOURCE_PRESENTATION[kind];
     const resource = resources[kind] ?? {
@@ -190,8 +191,10 @@ export function DashboardPage() {
             const details =
               kind === 'gpu'
                 ? [
-                    { label: '显存总量', value: formatGb(videoMemory?.total ?? 0) },
-                    { label: '可用显存', value: formatGb(videoMemory?.available ?? 0) },
+                    ...(unifiedGpuNodes > 0
+                      ? [{ label: '显存', value: `统一内存 · ${unifiedGpuNodes} 节点` }]
+                      : []),
+                    { label: '独立显存总量', value: formatGb(videoMemory?.total ?? 0) },
                     { label: '运行利用率', value: utilization },
                   ]
                 : kind === 'cpu'
@@ -206,7 +209,7 @@ export function DashboardPage() {
                 ? undefined
                 : kind === 'cpu'
                   ? collectionHint
-                  : collectionHint ?? `${resource.available} ${unit} 可用`;
+                  : (collectionHint ?? `${resource.available} ${unit} 可用`);
 
             return (
               <KpiCard

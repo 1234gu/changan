@@ -144,6 +144,7 @@ export function ComputePoolPage() {
       <ResourcePoolCards
         resources={data.resources}
         videoMemory={data.supportingResources.videoMemory}
+        unifiedGpuNodes={data.supportingResources.unifiedMemoryGpuNodes ?? 0}
       />
 
       <div className="compute-pool-secondary-grid">

@@ -377,7 +377,9 @@ export function SchedulingPage() {
         minMemoryGb: values.memoryGb,
         architecture: values.architecture?.trim() || undefined,
       });
-      messageApi.success(`任务 ${created.id} 已提交，执行节点：${created.executionNodeIds.join('、')}`);
+      messageApi.success(
+        `任务 ${created.id} 已提交，执行节点：${created.executionNodeIds.join('、')}`,
+      );
       window.setTimeout(() => window.location.assign(taskDetailUrl(created.id)), 800);
     } catch (error) {
       messageApi.error(errorMessage(error));

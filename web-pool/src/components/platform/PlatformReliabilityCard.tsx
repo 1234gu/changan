@@ -54,12 +54,18 @@ export function PlatformReliabilityStrip({ platform }: { platform?: PlatformSumm
           <dt>节点失联事件</dt>
           <dd>
             {reliability.incidentCount}
-            {reliability.openIncidents > 0 && <small className="is-warning"> · {reliability.openIncidents} 未恢复</small>}
+            {reliability.openIncidents > 0 && (
+              <small className="is-warning"> · {reliability.openIncidents} 未恢复</small>
+            )}
           </dd>
         </div>
         <div>
           <dt>平均恢复耗时</dt>
-          <dd>{reliability.meanRecoverySeconds === null ? '—' : `${reliability.meanRecoverySeconds} s`}</dd>
+          <dd>
+            {reliability.meanRecoverySeconds === null
+              ? '—'
+              : `${reliability.meanRecoverySeconds} s`}
+          </dd>
         </div>
         <div>
           <dt>执行节点绑定</dt>

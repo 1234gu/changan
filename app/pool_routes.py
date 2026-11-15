@@ -39,7 +39,7 @@ def bindings(request: Request):
     """Execution node ↔ pool node binding with current admission reasons."""
     b = bridge(request)
     engine = request.app.state.engine
-    nodes = b.annotate([dict(n) for n in engine.nodes()])
+    nodes = b.annotate([dict(n) for n in engine.nodes() if n.get('enabled')])
     rows = []
     for n in nodes:
         s = n.get('snapshot') or {}

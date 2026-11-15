@@ -7,9 +7,14 @@ import { formatMetricValue } from '../presentation';
 interface ResourcePoolCardsProps {
   resources: ComputeResourceMetricMap;
   videoMemory?: ResourceMetric;
+  unifiedGpuNodes?: number;
 }
 
-export function ResourcePoolCards({ resources, videoMemory }: ResourcePoolCardsProps) {
+export function ResourcePoolCards({
+  resources,
+  videoMemory,
+  unifiedGpuNodes = 0,
+}: ResourcePoolCardsProps) {
   return (
     <section className="compute-pool-card-grid" aria-label="核心资源池总览">
       {RESOURCE_ORDER.map((kind) => {
@@ -76,7 +81,11 @@ export function ResourcePoolCards({ resources, videoMemory }: ResourcePoolCardsP
                   </dl>
                 </section>
                 <section aria-label="GPU 显存资源">
-                  <strong className="compute-pool-resource-card__layer-title">GPU 显存资源</strong>
+                  <strong className="compute-pool-resource-card__layer-title">
+                    GPU 显存资源
+                    {unifiedGpuNodes > 0 &&
+                      `（${unifiedGpuNodes} 个节点为统一内存，不计入独立显存）`}
+                  </strong>
                   <dl className="compute-pool-resource-card__metrics compute-pool-resource-card__metrics--three">
                     <div>
                       <dt>Total VRAM</dt>

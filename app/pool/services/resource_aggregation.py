@@ -260,6 +260,11 @@ def aggregate_compute_pool(
     members = _pool_members(nodes)
     active_allocations = allocations or SchedulerAllocationTotals()
     return ComputePoolSummary(
+        unified_memory_gpu_nodes=sum(
+            1
+            for node in members
+            if node.resources is not None and node.resources.gpu.memory_architecture == "unified"
+        ),
         resources=ComputeResourceMetricMap(
             cpu=_metric(
                 [_cpu(node) for node in members],

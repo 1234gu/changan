@@ -120,7 +120,7 @@ class PoolBridge:
 
     def execution_binding_map(self) -> dict[str, dict]:
         """execution node id -> {'pool_node_id', 'state'} from the stored K3s snapshots."""
-        nodes = [{'id': r['id'], 'snapshot': db.loads(r['snapshot'], {})} for r in db.query('SELECT id,snapshot FROM nodes')]
+        nodes = [{'id': r['id'], 'snapshot': db.loads(r['snapshot'], {})} for r in db.query('SELECT id,snapshot FROM nodes WHERE enabled=1')]
         out = {}
         for node_id, b in self.bindings(nodes).items():
             out[node_id] = {'state': b['state'], 'pool_node_id': str(b['record'].node_id) if b['record'] else None,
@@ -222,7 +222,8 @@ def task_statistics() -> dict:
 
 
 def node_reliability(node_id: str | None = None) -> dict:
-    where, args = ('WHERE node_id=?', (node_id,)) if node_id else ('', ())
+    # Only nodes currently enabled for execution; retired nodes keep history but do not skew the pool view.
+    where, args = ('WHERE node_id=?', (node_id,)) if node_id else ('WHERE node_id IN (SELECT id FROM nodes WHERE enabled=1)', ())
     incidents = db.query('SELECT * FROM node_incidents ' + where + ' ORDER BY detected_at DESC LIMIT 50', args)
     for row in incidents:
         row['affected'] = db.loads(row['affected'], [])

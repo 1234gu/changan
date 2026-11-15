@@ -207,13 +207,7 @@ function createNodeContribution(node: NodeDetail): NodeResourceContribution {
     memory: toSupportingMetric(node.memory, supplyEligible, isAgent, online),
     ...(node.videoMemory
       ? {
-          videoMemory: toSupportingMetric(
-            node.videoMemory,
-            supplyEligible,
-            isAgent,
-            online,
-            true,
-          ),
+          videoMemory: toSupportingMetric(node.videoMemory, supplyEligible, isAgent, online, true),
         }
       : {}),
     storage: toSupportingMetric(node.storage, supplyEligible, isAgent, online),

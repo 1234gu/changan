@@ -88,7 +88,9 @@ export function ExecutionBindingCard() {
                   <Tag color={state.color} bordered={false}>
                     {state.text}
                   </Tag>
-                  {row.poolNodeId && <Link to={buildNodeDetailPath(row.poolNodeId)}>{row.poolNodeName}</Link>}
+                  {row.poolNodeId && (
+                    <Link to={buildNodeDetailPath(row.poolNodeId)}>{row.poolNodeName}</Link>
+                  )}
                 </span>
               );
             },
