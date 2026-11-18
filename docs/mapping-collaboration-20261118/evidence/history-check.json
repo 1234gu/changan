@@ -1,0 +1,18 @@
+{
+  "tasks": {
+    "original_rows": 144,
+    "changed_or_missing": 0
+  },
+  "segments": {
+    "original_rows": 1761,
+    "changed_or_missing": 0
+  },
+  "attempts": {
+    "original_rows": 1691,
+    "changed_or_missing": 0
+  },
+  "execution_sessions": {
+    "original_rows": 193,
+    "changed_or_missing": 0
+  }
+}

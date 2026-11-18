@@ -1,0 +1,34 @@
+{
+  "id": "task_f3fc4a8912304994",
+  "input_sha256": "1c16cb6532760b2ecad1f787e48e88f8033d7e8d7177656f8578e115c16d6dd4",
+  "preset": "standard",
+  "concurrency": 4,
+  "resolution_cm": 10.0,
+  "elapsed_seconds": 111.312,
+  "quality": {
+    "registered": 18,
+    "images": 18,
+    "width": 1291,
+    "height": 1146,
+    "crs": "WGS 84 / UTM zone 15N",
+    "epsg": "32615",
+    "pixel_size": [
+      0.09997767782741242,
+      0.09994124735658419
+    ],
+    "points": 381480
+  },
+  "actual_node": "thor2",
+  "job_uid": "9aabd8f7-8fe8-439b-99bd-65c2452ed21f",
+  "pod_uid": "434a22e7-e3bd-4288-8cfc-e3ae31e44abe",
+  "cleanup_state": "DONE",
+  "artifacts_checked": [
+    "orthophoto.tif",
+    "preview.jpg",
+    "report.pdf",
+    "engine.json",
+    "shots.geojson",
+    "dsm.tif",
+    "cloud.laz"
+  ]
+}

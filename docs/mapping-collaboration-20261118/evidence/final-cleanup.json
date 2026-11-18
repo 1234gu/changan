@@ -1,0 +1,17 @@
+{
+  "task_count": 151,
+  "active_tasks": 0,
+  "unclean_attempts": 0,
+  "unclean_sessions": 0,
+  "jobs": [],
+  "pods": [],
+  "run_secret_names_checked": 24,
+  "run_secrets_remaining": [],
+  "checked_at": 1794999719.3086169,
+  "health": {
+    "status": "ok",
+    "service": "changan-orchestrator",
+    "version": "0.9.0",
+    "time": 1794999719.3165078
+  }
+}

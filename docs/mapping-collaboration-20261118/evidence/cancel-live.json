@@ -1,0 +1,27 @@
+{
+  "id": "task_23e3d5914caf4fbb",
+  "both_claimed_and_computing": true,
+  "status": "CANCELED",
+  "completed": 1,
+  "result": null,
+  "attempts": [
+    {
+      "actual_node": "thor3",
+      "phase": "prepare",
+      "status": "SUCCEEDED",
+      "cleanup_state": "DONE"
+    },
+    {
+      "actual_node": "thor2",
+      "phase": "reconstruct",
+      "status": "CANCELED",
+      "cleanup_state": "DONE"
+    },
+    {
+      "actual_node": "thor3",
+      "phase": "reconstruct",
+      "status": "CANCELED",
+      "cleanup_state": "DONE"
+    }
+  ]
+}

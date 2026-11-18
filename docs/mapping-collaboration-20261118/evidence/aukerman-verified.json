@@ -1,0 +1,228 @@
+{
+  "task_id": "task_0136d2197acd4116",
+  "task_name": "Aukerman · 双Thor同图协同 · 快速正射",
+  "image": "192.168.50.231:5500/changan/mapping-odx@sha256:e63050363a9ca484389aa7f5f73b1be8a7e7597a46d4371386b1496cbdacb19c",
+  "input_sha256": "1bac6ff30f9993ca89533c2def46255e01863a07b0c2c65a0c159ff75cde527f",
+  "preset": "preview",
+  "wall_seconds": 328.297,
+  "actual_nodes": [
+    "thor2",
+    "thor3"
+  ],
+  "source_images": 77,
+  "groups": {
+    "submodel_0000": 48,
+    "submodel_0001": 43
+  },
+  "overlap_edges": [
+    {
+      "source": "submodel_0000",
+      "target": "submodel_0001",
+      "common_images": 14
+    }
+  ],
+  "verified_units": [
+    {
+      "phase": "prepare",
+      "submodel": null,
+      "unit": "unit_9f44f3272cfb4942",
+      "attempt": "try_aca342e03a104295",
+      "actual_node": "thor2",
+      "pod_uid": "cea22fd5-9cee-4648-a2cc-8c9d84ef5e38",
+      "job_uid": "7566811b-aa24-47bf-800a-8bb1f4dcb3bf",
+      "compute_start": 1794999155.2466078,
+      "compute_end": 1794999159.9885042,
+      "metrics": {
+        "download_bytes": 543543983,
+        "download_seconds": 14.870497861062177,
+        "compute_seconds": 4.710873475996777,
+        "pack_seconds": 14.63447050191462,
+        "upload_bytes": 637291995,
+        "upload_seconds": 28.951448614825495
+      },
+      "input_artifacts": 0,
+      "cleanup_state": "DONE"
+    },
+    {
+      "phase": "reconstruct",
+      "submodel": "submodel_0000",
+      "unit": "unit_fa69b45d1b6d4149",
+      "attempt": "try_597bce41cc2b45cb",
+      "actual_node": "thor3",
+      "pod_uid": "7a194327-06fe-4e4e-9eb0-4b2e618082d5",
+      "job_uid": "b948a293-9f08-497f-aaa1-59e9a0247d02",
+      "compute_start": 1794999229.729905,
+      "compute_end": 1794999313.562358,
+      "metrics": {
+        "download_bytes": 323786227,
+        "download_seconds": 20.374514086986892,
+        "compute_seconds": 83.62920615600888,
+        "pack_seconds": 0.20741193095454946,
+        "upload_bytes": 3498556,
+        "upload_seconds": 0.5845019310363568
+      },
+      "input_artifacts": 1,
+      "cleanup_state": "DONE"
+    },
+    {
+      "phase": "reconstruct",
+      "submodel": "submodel_0001",
+      "unit": "unit_94b66f4180d84158",
+      "attempt": "try_2c56a1694dfa47e8",
+      "actual_node": "thor2",
+      "pod_uid": "e35f49bf-ed5f-43b0-821d-6d7e36c3272a",
+      "job_uid": "a9a2bbc8-7d27-4906-9b93-8c54f9dda7b0",
+      "compute_start": 1794999232.624437,
+      "compute_end": 1794999300.6661031,
+      "metrics": {
+        "download_bytes": 313477824,
+        "download_seconds": 20.258750822977163,
+        "compute_seconds": 68.00672693899833,
+        "pack_seconds": 0.15898444200865924,
+        "upload_bytes": 2642508,
+        "upload_seconds": 0.34533838101197034
+      },
+      "input_artifacts": 1,
+      "cleanup_state": "DONE"
+    },
+    {
+      "phase": "align",
+      "submodel": null,
+      "unit": "unit_9da255a528a1425d",
+      "attempt": "try_0e17f6f67705440a",
+      "actual_node": "thor2",
+      "pod_uid": "d83f4e94-9a3f-4e59-ab4c-f4056027903d",
+      "job_uid": "735b574a-bcdd-406d-8d3d-3a10e704481e",
+      "compute_start": 1794999322.781145,
+      "compute_end": 1794999325.81566,
+      "metrics": {
+        "download_bytes": 6169008,
+        "download_seconds": 2.7365612771827728,
+        "compute_seconds": 2.9464714030036703,
+        "pack_seconds": 0.23783355695195496,
+        "upload_bytes": 6145308,
+        "upload_seconds": 0.69613906100858
+      },
+      "input_artifacts": 3,
+      "cleanup_state": "DONE"
+    },
+    {
+      "phase": "toolchain",
+      "submodel": "submodel_0000",
+      "unit": "unit_72fe51f4e6b7487c",
+      "attempt": "try_dc839ff73fab4e20",
+      "actual_node": "thor3",
+      "pod_uid": "85f10b67-6604-4f65-8213-9604fa805a0e",
+      "job_uid": "ebe660d4-5d12-4a17-a0c7-430299774ff7",
+      "compute_start": 1794999349.640254,
+      "compute_end": 1794999433.5768661,
+      "metrics": {
+        "download_bytes": 327287652,
+        "download_seconds": 16.743665596004575,
+        "compute_seconds": 83.878800810955,
+        "pack_seconds": 1.3581025359453633,
+        "upload_bytes": 50970076,
+        "upload_seconds": 6.597178145952057
+      },
+      "input_artifacts": 2,
+      "cleanup_state": "DONE"
+    },
+    {
+      "phase": "toolchain",
+      "submodel": "submodel_0001",
+      "unit": "unit_8553b266a4c14449",
+      "attempt": "try_a0f17a3c25264584",
+      "actual_node": "thor2",
+      "pod_uid": "be192fe7-15ab-4c9f-81b9-0679e00483ba",
+      "job_uid": "999e7c1b-84dc-4f56-81c0-ece7730c7aa8",
+      "compute_start": 1794999354.0367308,
+      "compute_end": 1794999429.428243,
+      "metrics": {
+        "download_bytes": 316121707,
+        "download_seconds": 16.955521952942945,
+        "compute_seconds": 75.30188034405,
+        "pack_seconds": 1.2217644240008667,
+        "upload_bytes": 46783398,
+        "upload_seconds": 2.562116390094161
+      },
+      "input_artifacts": 2,
+      "cleanup_state": "DONE"
+    },
+    {
+      "phase": "merge",
+      "submodel": null,
+      "unit": "unit_81a600785d06418f",
+      "attempt": "try_d93a001ad2774779",
+      "actual_node": "thor2",
+      "pod_uid": "a8444af9-b3c3-4f59-adea-52e1fe69626c",
+      "job_uid": "2a93a25e-62f3-4c9c-9268-c79e419380bf",
+      "compute_start": 1794999455.6956549,
+      "compute_end": 1794999459.839274,
+      "metrics": {
+        "download_bytes": 97781418,
+        "download_seconds": 6.379807831952348,
+        "compute_seconds": 4.087726381025277,
+        "pack_seconds": 0.20344742201268673,
+        "upload_bytes": 14882385,
+        "upload_seconds": 3.1250810669735074
+      },
+      "input_artifacts": 3,
+      "cleanup_state": "DONE"
+    }
+  ],
+  "cross_node_compute_overlap": {
+    "reconstruct": {
+      "seconds": 68.042,
+      "peak_actual_compute_nodes": 2
+    },
+    "toolchain": {
+      "seconds": 75.392,
+      "peak_actual_compute_nodes": 2
+    }
+  },
+  "download_bytes": 1928167819,
+  "upload_bytes": 762214226,
+  "quality": {
+    "images": 77,
+    "registered": 77,
+    "width": 3563,
+    "height": 2603,
+    "crs": "WGS 84 / UTM zone 17N",
+    "epsg": "32617",
+    "pixel_size": [
+      0.09997493993174199,
+      0.09997494027299053
+    ],
+    "submodels": [
+      "submodel_0000",
+      "submodel_0001"
+    ]
+  },
+  "verified_published_artifacts": [
+    {
+      "name": "orthophoto.tif",
+      "sha256": "c559f1cf6a1b168efd72c6914f2a432c7fcf9f1faaad3c1d5a7f3b3c83494b26",
+      "bytes": 14655012
+    },
+    {
+      "name": "preview.jpg",
+      "sha256": "ebd561246bbcbeb67ad2a3e9e9ef95d148ce88fb428802a0fe56b5c02daaab2a",
+      "bytes": 170620
+    },
+    {
+      "name": "engine.json",
+      "sha256": "b6eb25307d6b8c2554cd042549e4ef5abbeb69a7d22e82030e6fc7520d0276b6",
+      "bytes": 15370
+    },
+    {
+      "name": "shots.geojson",
+      "sha256": "331b434af8a8df3f0308773afe263caf77e462a0e8fe271333ff954b18cadf7f",
+      "bytes": 35760
+    },
+    {
+      "name": "collaboration.json",
+      "sha256": "080dc51155cd7e25ec6631b5a613172c8b0fee4854f4c6e9a1d8cd5bf4f6e850",
+      "bytes": 5623
+    }
+  ]
+}

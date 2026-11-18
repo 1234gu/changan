@@ -1,0 +1,10 @@
+✔ union of time with two distinct confirmed nodes, not sum of pairs or pod duration (1.135115ms)
+✔ missing failed-end or missing actual node never proves overlap (0.216748ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 73.129059

@@ -1,0 +1,32 @@
+{
+  "id": "task_d04b812c2f2c43b9",
+  "status": "SUCCEEDED",
+  "completed": 6,
+  "total": 6,
+  "sessions": [
+    {
+      "node_id": "thor3",
+      "completed": 6,
+      "model_load_count": 1,
+      "cleanup_state": "DONE"
+    }
+  ],
+  "seconds": 9.798921823501587,
+  "actual_backends": [
+    "cuda",
+    "cuda",
+    "cuda",
+    "cuda",
+    "cuda",
+    "cuda"
+  ],
+  "fallback_reasons": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "sampled_frames": 48
+}

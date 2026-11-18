@@ -1,0 +1,239 @@
+{
+  "task_id": "task_b0b8a6727f1b4750",
+  "task_name": "两节点标准建图 · Brighton · 全链路验证",
+  "image": "192.168.50.231:5500/changan/mapping-odx@sha256:e63050363a9ca484389aa7f5f73b1be8a7e7597a46d4371386b1496cbdacb19c",
+  "input_sha256": "1c16cb6532760b2ecad1f787e48e88f8033d7e8d7177656f8578e115c16d6dd4",
+  "preset": "standard",
+  "wall_seconds": 132.895,
+  "actual_nodes": [
+    "thor2",
+    "thor3"
+  ],
+  "source_images": 18,
+  "groups": {
+    "submodel_0000": 12,
+    "submodel_0001": 12
+  },
+  "overlap_edges": [
+    {
+      "source": "submodel_0000",
+      "target": "submodel_0001",
+      "common_images": 6
+    }
+  ],
+  "verified_units": [
+    {
+      "phase": "prepare",
+      "submodel": null,
+      "unit": "unit_30671ee7f904421d",
+      "attempt": "try_1fb2921789b14c9d",
+      "actual_node": "thor2",
+      "pod_uid": "a8c4b3f9-24fe-473e-9027-bbe4d561e350",
+      "job_uid": "71bac761-c174-49da-a1c3-357e12310107",
+      "compute_start": 1794998872.056524,
+      "compute_end": 1794998875.249622,
+      "metrics": {
+        "download_bytes": 69433504,
+        "download_seconds": 1.8973872769856825,
+        "compute_seconds": 3.1610308330273256,
+        "pack_seconds": 2.0196259130025283,
+        "upload_bytes": 85997229,
+        "upload_seconds": 5.4076042181113735
+      },
+      "input_artifacts": 0,
+      "cleanup_state": "DONE"
+    },
+    {
+      "phase": "reconstruct",
+      "submodel": "submodel_0000",
+      "unit": "unit_ba17995acfd14241",
+      "attempt": "try_12860b42e71946d2",
+      "actual_node": "thor3",
+      "pod_uid": "8400b73b-e48a-463c-ab6f-5e66bcb4f76f",
+      "job_uid": "a6fb5e5d-3ddb-4eb3-a787-5a922049dcd2",
+      "compute_start": 1794998889.5510242,
+      "compute_end": 1794998903.960268,
+      "metrics": {
+        "download_bytes": 43054232,
+        "download_seconds": 1.3569082919857465,
+        "compute_seconds": 14.317527983977925,
+        "pack_seconds": 0.035287954029627144,
+        "upload_bytes": 251862,
+        "upload_seconds": 0.10172870196402073
+      },
+      "input_artifacts": 1,
+      "cleanup_state": "DONE"
+    },
+    {
+      "phase": "reconstruct",
+      "submodel": "submodel_0001",
+      "unit": "unit_4b4279768cb74ff6",
+      "attempt": "try_d9dc1464f9f34155",
+      "actual_node": "thor2",
+      "pod_uid": "21365ecb-82b1-46d0-8c06-4d4ec81886f9",
+      "job_uid": "38888fc3-3657-4933-941f-305b35853e34",
+      "compute_start": 1794998891.701344,
+      "compute_end": 1794998905.825214,
+      "metrics": {
+        "download_bytes": 42934239,
+        "download_seconds": 1.1560986971016973,
+        "compute_seconds": 14.057657166034915,
+        "pack_seconds": 0.03543962107505649,
+        "upload_bytes": 268410,
+        "upload_seconds": 0.12308751698583364
+      },
+      "input_artifacts": 1,
+      "cleanup_state": "DONE"
+    },
+    {
+      "phase": "align",
+      "submodel": null,
+      "unit": "unit_6dda2f7739af4ea1",
+      "attempt": "try_ecbcc427260e4b46",
+      "actual_node": "thor3",
+      "pod_uid": "4c37f301-754c-4107-bca3-f300526aa497",
+      "job_uid": "0f002375-2d0f-4aa7-b372-a14b286669a5",
+      "compute_start": 1794998912.89863,
+      "compute_end": 1794998914.9162061,
+      "metrics": {
+        "download_bytes": 529030,
+        "download_seconds": 0.1043536530341953,
+        "compute_seconds": 1.9538519600173458,
+        "pack_seconds": 0.047921201039571315,
+        "upload_bytes": 520820,
+        "upload_seconds": 0.17809607705567032
+      },
+      "input_artifacts": 3,
+      "cleanup_state": "DONE"
+    },
+    {
+      "phase": "toolchain",
+      "submodel": "submodel_0000",
+      "unit": "unit_fb37efd8eab44c2c",
+      "attempt": "try_66946f8d4df94d58",
+      "actual_node": "thor2",
+      "pod_uid": "ec33e072-e51c-4b87-a704-12ffd69cab79",
+      "job_uid": "c5136297-7b0f-45cf-8105-4ce85083c25b",
+      "compute_start": 1794998922.1555462,
+      "compute_end": 1794998978.165222,
+      "metrics": {
+        "download_bytes": 43306499,
+        "download_seconds": 1.3941552960313857,
+        "compute_seconds": 55.946759660029784,
+        "pack_seconds": 0.38504225097130984,
+        "upload_bytes": 13611282,
+        "upload_seconds": 1.157169413054362
+      },
+      "input_artifacts": 2,
+      "cleanup_state": "DONE"
+    },
+    {
+      "phase": "toolchain",
+      "submodel": "submodel_0001",
+      "unit": "unit_08e206bdc74446e6",
+      "attempt": "try_77cafa2d0ab24ff2",
+      "actual_node": "thor3",
+      "pod_uid": "39bafc6b-323f-40b7-bce6-78d7a5f9d931",
+      "job_uid": "ee224317-b0e4-448c-9e96-f760901a9cab",
+      "compute_start": 1794998924.409085,
+      "compute_end": 1794998982.553282,
+      "metrics": {
+        "download_bytes": 43202792,
+        "download_seconds": 1.5407159329624847,
+        "compute_seconds": 58.0774115420063,
+        "pack_seconds": 0.39770963496994227,
+        "upload_bytes": 14039313,
+        "upload_seconds": 1.1804888340411708
+      },
+      "input_artifacts": 2,
+      "cleanup_state": "DONE"
+    },
+    {
+      "phase": "merge",
+      "submodel": null,
+      "unit": "unit_692fef2f8d1d46a3",
+      "attempt": "try_127ea96999d2445c",
+      "actual_node": "thor2",
+      "pod_uid": "e8b7c1a2-af89-4b8a-869a-3c52f0bccb22",
+      "job_uid": "710c98fb-26a2-4986-b2d2-7d2fef42ccc0",
+      "compute_start": 1794998991.359665,
+      "compute_end": 1794998995.016808,
+      "metrics": {
+        "download_bytes": 27659353,
+        "download_seconds": 1.3893804920371622,
+        "compute_seconds": 3.6034313139971346,
+        "pack_seconds": 0.12631775496993214,
+        "upload_bytes": 6973427,
+        "upload_seconds": 1.3022322590695694
+      },
+      "input_artifacts": 3,
+      "cleanup_state": "DONE"
+    }
+  ],
+  "cross_node_compute_overlap": {
+    "reconstruct": {
+      "seconds": 12.259,
+      "peak_actual_compute_nodes": 2
+    },
+    "toolchain": {
+      "seconds": 53.756,
+      "peak_actual_compute_nodes": 2
+    }
+  },
+  "download_bytes": 270119649,
+  "upload_bytes": 121662343,
+  "quality": {
+    "images": 18,
+    "registered": 18,
+    "width": 1340,
+    "height": 1293,
+    "crs": "WGS 84 / UTM zone 15N",
+    "epsg": "32615",
+    "pixel_size": [
+      0.09996310055339291,
+      0.09993553585794229
+    ],
+    "submodels": [
+      "submodel_0000",
+      "submodel_0001"
+    ],
+    "points": 473630
+  },
+  "verified_published_artifacts": [
+    {
+      "name": "orthophoto.tif",
+      "sha256": "e163f4fc8e584a2c397c3d7a9da616171b961b156d9ff3f7542bea3c36712033",
+      "bytes": 2844516
+    },
+    {
+      "name": "preview.jpg",
+      "sha256": "cc7883e41c2379e551fe486349ecea50b558d8243df4b34a00407c55b4cc9498",
+      "bytes": 189508
+    },
+    {
+      "name": "engine.json",
+      "sha256": "7e01b3eb965de7d537c16a1167413a7d2445ae8d57624f8d87b515ee13938138",
+      "bytes": 14043
+    },
+    {
+      "name": "shots.geojson",
+      "sha256": "534afc65f4a1e45243ca7ef110b22ac6a1e8a3150a2e3b4f61bce321b4582a94",
+      "bytes": 8368
+    },
+    {
+      "name": "dsm.tif",
+      "sha256": "6a129e069a65c61f9079cf2937fed3e171e31c73aae8ddcc7f4c907f9c648a94",
+      "bytes": 1746588
+    },
+    {
+      "name": "cloud.laz",
+      "sha256": "bc5a637f8f439456190bf791708e7dad331aa3c0383bcb95818763f5347aabd4",
+      "bytes": 2168014
+    },
+    {
+      "name": "collaboration.json",
+      "sha256": "efb949c6609121dbac5e91a724962610963eb8d52a4156c8cb3c3e8ab22f451d",
+      "bytes": 2390
+    }
+  ]
+}
