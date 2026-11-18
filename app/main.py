@@ -203,7 +203,7 @@ def artifact(id:str,attempt:str,name:str):
     if not a:raise HTTPException(404)
     path=DATA/'tasks'/id/attempt/name
     if not path.exists():raise HTTPException(404)
-    return FileResponse(path,media_type=MIME.get(name.rsplit('.',1)[-1]),filename=None if name=='preview.jpg' else name)
+    return FileResponse(path,media_type=MIME.get(name.rsplit('.',1)[-1]),filename=name if name in ARTIFACTS and name!='preview.jpg' else None)
 @app.get('/internal/segments/{id}',dependencies=[Depends(internal)])
 def segment(id:str):
     s=db.query('SELECT path FROM segments WHERE id=?',(id,),one=True)

@@ -80,7 +80,9 @@ class ContainerExecution:
         old={n['id']:n for n in db.query('SELECT * FROM nodes')}
         try:
             nodes=await self.client().nodes()
-            app=self.application()
+            # An absent video image/model must not take the independent mapping template offline.
+            try:video_arch=self.application()['architecture']
+            except (ValueError,FileNotFoundError):video_arch=None
             pool=await self.engine.resource_provider.snapshots() if self.engine.resource_provider.enabled else None
             if len({n['id'] for n in nodes})!=len(nodes):raise ValueError('多个 Kubernetes 节点重复使用同一业务节点标签')
             seen=set()
@@ -91,7 +93,7 @@ class ContainerExecution:
                 reserved_row['n']+=sessions['n'];reserved_row['memory']+=sessions['memory']
                 reserved=reserved_row['n']
                 s={'node_id':id,'kube_node':n['name'],'node_uid':n['uid'],'healthy':n['healthy'],
-                   'models':[MODEL_ID] if n['architecture']==app['architecture'] else [],
+                   'models':[MODEL_ID] if n['architecture']==video_arch else [],
                    'architecture':n['architecture'],'tags':['cpu','onnx','container','k3s'],
                    'available_memory_mb':max(0,n['memory']-reserved_row['memory']-max(0,n['active']-reserved)*1024),
                    'memory_budget_mb':n['memory'],'active':n['active'],'capacity':n['capacity'],
@@ -103,7 +105,7 @@ class ContainerExecution:
                 s['gpu_available']=n.get('gpu_slots',0)>0
                 if s['gpu_available']:s['tags'].append('gpu')
                 s.update(container_network_snapshot(n,self.client().cluster,now))
-                last=db.query("SELECT result FROM attempts WHERE node_id=? AND backend='k3s' AND status='SUCCEEDED' ORDER BY finished DESC LIMIT 1",(id,),one=True)
+                last=db.query("SELECT result FROM attempts WHERE node_id=? AND backend='k3s' AND status='SUCCEEDED' AND json_type(result,'$.measured_fps') IN ('real','integer') ORDER BY finished DESC LIMIT 1",(id,),one=True)
                 if last:s['measured_fps']=db.loads(last['result'],{}).get('measured_fps')
                 observed=now
                 if pool is not None:

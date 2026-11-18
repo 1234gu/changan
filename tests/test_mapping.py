@@ -42,7 +42,8 @@ def test_required_contract():
     with pytest.raises(ValueError):mapping.validate_result({'id':'x','node_id':'n','task_id':'t','segment_id':'u'},{'pod_uid':'p','input_sha256':'h'},{})
 
 @pytest.mark.asyncio
-async def test_batch_fenced_finalization_and_download():
+@pytest.mark.parametrize('ending',['success','corrupt','canceled'])
+async def test_batch_fenced_finalization_and_download(ending):
     """Pod callbacks stage files; only the current successful attempt publishes them."""
     from test_container_execution import seed_container,headers,job,pod,FakeKube
     e,c,tid=seed_container(); w=db.loads(db.query("SELECT workload FROM attempts WHERE id='a1'",one=True)['workload'])|{'id':mapping.ID,'execution_mode':'batch_job'}
@@ -60,7 +61,15 @@ async def test_batch_fenced_finalization_and_download():
     assert event(r|{'quality':q|{'width':0}}).status_code==422
     assert event(r|{'artifacts':[m|{'sha256':bad} for m in r['artifacts']]}).status_code==422
     assert event(r).status_code==200 and cli.get(public).status_code==404
-    c.kube=FakeKube(job(),[pod('Succeeded')]);await c.reconcile();assert db.task_detail(tid)['status']=='SUCCEEDED' and cli.get(public).content==content
+    c.kube=FakeKube(job(),[pod('Succeeded')])
+    if ending=='canceled':e.fail_task(tid,'cancel','CANCELED')
+    if ending=='corrupt':(mapping.DATA/'tasks'/tid/'a1'/'preview.jpg').write_bytes(b'altered')
+    await c.reconcile()
+    if ending=='success':assert db.task_detail(tid)['status']=='SUCCEEDED' and cli.get(public).content==content
+    else:
+        assert db.task_detail(tid)['status']!='SUCCEEDED' and cli.get(public).status_code==404
+        assert db.task_detail(tid)['attempts'][0]['workload']['cleanup_requested']
+        if ending=='corrupt':assert '终检失败' in db.task_detail(tid)['attempts'][0]['workload']['failure']
     assert cli.post(base+'/events',headers=headers(),json={'seq':2,'status':'RUNNING'}).status_code==409
     assert 'result' not in db.task_detail(tid)['work_units'][0];await e.close()
 
@@ -77,3 +86,18 @@ def test_invalid_registry_digest(monkeypatch):
     monkeypatch.setenv('CHANGAN_MAPPING_IMAGE','registry/odx@sha256:bad')
     with pytest.raises(ValueError):mapping.application()
     assert not mapping.applications()[1]['enabled']
+
+@pytest.mark.asyncio
+async def test_independent_discovery_and_video_metric_after_mapping():
+    from test_container_execution import seed_container
+    e,c,tid=seed_container()
+    db.execute("UPDATE attempts SET status='SUCCEEDED',cleanup_state='DONE',finished=11,result=? WHERE id='a1'",(db.dumps({'measured_fps':21.5}),))
+    db.execute("INSERT INTO attempts(id,task_id,segment_id,node_id,token,status,created,updated,finished,decision,backend,cleanup_state,result) VALUES('m',?,'s2','lab-1','test','SUCCEEDED',12,14,14,'{}','k3s','DONE','{}')",(tid,))
+    n={'id':'lab-1','name':'agent-0','uid':'n1','healthy':True,'architecture':'arm64','memory':65536,'active':0,'capacity':1,'kind':'k3s','runtime':'containerd','kubelet':'test','physical_host':'host','cpu_cores':14,'ephemeral_storage_gb':100}
+    class Nodes:
+        cluster='test'
+        async def nodes(self):return [n]
+    def unavailable():raise ValueError('video image not configured')
+    c.kube=Nodes();c.application=unavailable;await c.refresh()
+    row=db.query("SELECT snapshot,error FROM nodes WHERE id='lab-1'",one=True);snap=db.loads(row['snapshot']);assert not row['error'] and snap['healthy'] and snap['models']==[] and snap['measured_fps']==21.5
+    await e.close()
