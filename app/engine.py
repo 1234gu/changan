@@ -32,6 +32,9 @@ class Engine:
         if not file.exists(): raise ValueError('上传视频不存在')
         return file
     def create(self,body,trigger='service',strategy=None,key=None):
+        if body.workflow_id=='aerial-mapping-odx':
+            from .mapping import create,MappingInput
+            return create(self,body if isinstance(body,MappingInput) else MappingInput(**body.model_dump(exclude_unset=True)),key)
         params=body.model_dump()
         self.source_path(params['source'])
         algorithm=db.query("SELECT body FROM configs WHERE category='algorithm' AND id=?",(params['algorithm'],),one=True)
@@ -124,6 +127,10 @@ class Engine:
         params=db.loads(task['params']); frozen=db.loads(task['metadata'],{}).get('algorithm_snapshot')
         algorithm={'body':db.dumps(frozen)} if frozen else db.query("SELECT body FROM configs WHERE id=? AND category='algorithm'",(params['algorithm'],),one=True)
         scheduling_params=dict(params)
+        mapping=params.get('workflow_id')=='aerial-mapping-odx'
+        if mapping:
+            from .mapping import candidate_params
+            scheduling_params=candidate_params(params)
         if self.containers:
             floor=db.loads(task['metadata'],{}).get('application',{}).get('container_memory_floor_mb',0)
             scheduling_params['min_memory_mb']=max(params['min_memory_mb'],floor)
@@ -156,6 +163,11 @@ class Engine:
             c.execute("UPDATE segments SET active_attempt=?,status='DISPATCHING' WHERE id=?",(aid,segment['id']))
             db.event(task['id'],'decision',{'stage':'schedule','state':'SUCCEEDED','decision':decision},aid,c)
         node=db.query('SELECT * FROM nodes WHERE id=?',(decision['target_node'],),one=True)
+        if mapping:
+            payload={'task_id':task['id'],'segment_id':segment['id'],'attempt_id':aid,'token':token,'target_node':node['id'],'input_sha256':db.loads(task['metadata'])['input']['sha256'],'params':params}
+            try:await self.containers.submit(task,segment,aid,payload)
+            except Exception as e:db.event(task['id'],'delivery_unknown',{'stage':'execute','state':'UNKNOWN','error_type':type(e).__name__},aid)
+            return
         payload={'task_id':task['id'],'segment_id':segment['id'],'attempt_id':aid,'token':token,'target_node':node['id'],'input_url':self.base+f"/internal/segments/{segment['id']}",'input_sha256':hashlib.sha256(Path(segment['path']).read_bytes()).hexdigest(),'callback_url':self.base+'/internal/events','params':{'sample_fps':params['sample_fps'],'confidence':params['confidence']}}
         db.event(task['id'],'dispatch_request',{'stage':'execute','state':'DISPATCHING','task_id':task['id'],'segment_id':segment['id'],'attempt_id':aid,'target_node':node['id'],'input_sha256':payload['input_sha256'],'input_bytes':Path(segment['path']).stat().st_size,'params':payload['params']},aid)
         try:
@@ -204,6 +216,8 @@ class Engine:
             db.execute('UPDATE attempts SET execution_id=?,actual_node=?,last_seq=? WHERE id=?',(body['id'],body['node_id'],seq,id))
             self.attempt_failure(id,body.get('error') or state,state); reconcile_observation(id); return {'accepted':True}
         result=body.get('result')
+        if state=='SUCCEEDED' and db.loads(a.get('workload'),{}).get('id')=='aerial-mapping-odx':
+            return {'accepted':False,'reason':'batch_completion_requires_observed_job'}
         if state=='SUCCEEDED':
             if not result or result.get('attempt_id')!=id or result.get('task_id')!=a['task_id'] or result.get('segment_id')!=a['segment_id'] or result.get('actual_node')!=a['node_id'] or result.get('model_id')!=MODEL_ID or result.get('sampled_frames',0)<=0 or len(result.get('frames',[]))!=result.get('sampled_frames'):
                 self.attempt_failure(id,'结果完整性或来源校验失败'); return {'accepted':False,'reason':'invalid_result'}

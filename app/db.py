@@ -56,6 +56,12 @@ CREATE INDEX IF NOT EXISTS alerts_status_created ON alerts(acknowledged_at,creat
 CREATE TABLE IF NOT EXISTS strategies(id TEXT PRIMARY KEY,name TEXT NOT NULL,kind TEXT NOT NULL,interval_seconds INTEGER,enabled INTEGER DEFAULT 1,params TEXT NOT NULL,next_run REAL,last_run REAL,created REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS configs(id TEXT PRIMARY KEY,category TEXT NOT NULL,name TEXT NOT NULL,body TEXT NOT NULL,created REAL NOT NULL,updated REAL NOT NULL);
 ''')
+        sc={r[1] for r in c.execute('PRAGMA table_info(segments)')}
+        if 'kind' not in sc:c.execute("ALTER TABLE segments ADD COLUMN kind TEXT NOT NULL DEFAULT 'video_segment'")
+        c.executescript("""
+CREATE TABLE IF NOT EXISTS datasets(id TEXT PRIMARY KEY,name TEXT NOT NULL,path TEXT NOT NULL,bytes INTEGER NOT NULL,sha256 TEXT NOT NULL,image_count INTEGER NOT NULL,manifest TEXT NOT NULL,created REAL NOT NULL);
+CREATE TABLE IF NOT EXISTS artifacts(attempt_id TEXT NOT NULL,name TEXT NOT NULL,bytes INTEGER NOT NULL,sha256 TEXT NOT NULL,PRIMARY KEY(attempt_id,name));
+""")
         columns={r[1] for r in c.execute('PRAGMA table_info(attempts)')}
         for name,decl in [('backend',"TEXT NOT NULL DEFAULT 'process'"),('workload','TEXT'),('cleanup_state',"TEXT NOT NULL DEFAULT 'DONE'"),('session_id','TEXT')]:
             if name not in columns:c.execute('ALTER TABLE attempts ADD COLUMN '+name+' '+decl)
@@ -77,6 +83,7 @@ CREATE INDEX IF NOT EXISTS attempts_node_transfer ON attempts(node_id,finished D
           ('round_robin','algorithm','可行节点轮询',{'version':1,'method':'round_robin','weights':{}}),
           ('resource_aware','algorithm','资源与网络感知',{'version':1,'method':'resource_aware','weights':{'compute':1,'transfer':1,'queue':1}}),
           ('video-analysis','workflow','协同视频分析',{'version':1,'enabled':True,'tags':['视频','中期'],'nodes':['validate','split','snapshot','schedule','execute','aggregate']}),
+          ('aerial-mapping-odx','workflow','航拍照片建图',{'version':1,'enabled':True,'tags':['建图','K3s'],'nodes':['validate','schedule','execute','upload','complete']}),
           ('capability-demo','workflow','五类能力验证',{'version':1,'enabled':True,'tags':['连接器'],'nodes':['api','redis','script','algorithm','platform']}),
           ('none','auth','无鉴权',{'type':'none'}),
           ('normalize-python','script','Python参数整理',{'language':'python','builtin':'normalize'}),
@@ -99,4 +106,5 @@ def task_detail(id):
         a['decision']=loads(a['decision']);a['workload']=loads(a['workload'],{})
     task['sessions']=query('SELECT id,task_id,node_id,status,created,updated,heartbeat_at,ready_at,finished,active_attempt,workload,cleanup_state,completed,model_load_count,model_load_seconds,error FROM execution_sessions WHERE task_id=? ORDER BY created',(id,))
     for session in task['sessions']:session['workload']=loads(session['workload'],{})
+    task['work_units']=[{k:v for k,v in s.items() if k not in ('start','end','path')} for s in task['segments']]
     return task

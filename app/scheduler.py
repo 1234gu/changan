@@ -15,7 +15,12 @@ def choose(nodes, params, duration, input_bytes, algorithm, cursor=0):
         if not s.get('healthy',False): why.append('执行器不健康')
         if s.get('node_id')!=n['id']: why.append('实际节点标识不匹配')
         if params.get('node_ids') and n['id'] not in params['node_ids']: why.append('不在指定节点范围')
-        if MODEL_ID not in s.get('models',[]): why.append('模型不兼容')
+        mapping=params.get('application_id')=='aerial-mapping-odx'
+        if mapping:
+            if s.get('architecture')!='arm64':why.append('建图镜像要求arm64')
+            if (s.get('cpu_cores') or 0)<params.get('concurrency',4):why.append('建图CPU资源不足')
+            if (s.get('ephemeral_storage_gb') or 0)<params.get('workspace_gb',32):why.append('建图临时存储预算不足或未知')
+        if not mapping and MODEL_ID not in s.get('models',[]): why.append('模型不兼容')
         if params.get('location') and params['location']!=s.get('location'): why.append('节点位置不匹配')
         if params.get('architecture') and params['architecture']!=s.get('architecture'): why.append('处理器架构不匹配')
         if not set(params.get('required_tags',[])).issubset(s.get('tags',[])): why.append('缺少必要标签')
@@ -38,7 +43,9 @@ def choose(nodes, params, duration, input_bytes, algorithm, cursor=0):
         transfer=input_bytes*8/(bandwidth*1e6) if bandwidth else 0
         queue=s.get('active',0)*compute
         score=compute*weights.get('compute',1)+transfer*weights.get('transfer',1)+queue*weights.get('queue',1)
-        rows.append({'node_id':n['id'],'eligible':not why,'reasons':why,'score':round(score,4),'compute_seconds':round(compute,4),'transfer_seconds':round(transfer,4) if bandwidth else None,'estimate_source':'实测推理吞吐' if s.get('measured_fps') else '启动估计，尚未校准','network_source':s.get('network_source','未提供，传输成本暂不参与'),'snapshot':s,'snapshot_at':n.get('observed'),'pool':pool})
+        if mapping:
+            compute=None;score=(1-s.get('available_memory_mb',0)/max(1,s.get('memory_budget_mb',1)))+float(s.get('active',0))+(transfer/60 if bandwidth else 0)
+        rows.append({'node_id':n['id'],'eligible':not why,'reasons':why,'score':round(score,4),'compute_seconds':round(compute,4) if compute is not None else None,'transfer_seconds':round(transfer,4) if bandwidth else None,'estimate_source':'建图：内存/占用及传输评分；计算耗时尚未校准' if mapping else '实测推理吞吐' if s.get('measured_fps') else '启动估计，尚未校准','network_source':s.get('network_source','未提供，传输成本暂不参与'),'snapshot':s,'snapshot_at':n.get('observed'),'pool':pool})
     eligible=[r for r in rows if r['eligible']]
     chosen=None
     if eligible:

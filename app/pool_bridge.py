@@ -294,11 +294,10 @@ def projections(pool_by_exec: dict[str, dict], *, sessions_only=False, active_on
             'finished_at': iso(row['finished']), 'error': row['error'], 'last_event_id': None, 'updated_at': iso(row['updated']),
             'scope': 'session', 'cleanup_state': row['cleanup_state'],
         })
-    if sessions_only:
-        return out
     clauses, args = scope('a')
-    if active_only:
-        clauses.append("a.status IN ('PENDING','WAITING_SESSION','DISPATCHING','ACCEPTED','RUNNING','UNKNOWN')")
+    batch="json_extract(a.workload,'$.execution_mode')='batch_job'"
+    if sessions_only:clauses.append(batch)
+    if active_only:clauses.append("(("+batch+" AND a.cleanup_state!='DONE') OR (COALESCE(json_extract(a.workload,'$.execution_mode'),'')!='batch_job' AND a.status IN ('PENDING','WAITING_SESSION','DISPATCHING','ACCEPTED','RUNNING','UNKNOWN')))")
     attempts = db.query(
         'SELECT a.*,s.ordinal FROM attempts a JOIN segments s ON s.id=a.segment_id '
         + ('WHERE ' + ' AND '.join(clauses) if clauses else '') + ' ORDER BY a.created DESC LIMIT ?', (*args, limit))
@@ -306,14 +305,16 @@ def projections(pool_by_exec: dict[str, dict], *, sessions_only=False, active_on
         pool = pool_by_exec.get(a['node_id'], {})
         if not pool.get('pool_node_id'):
             continue
+        w=db.loads(a['workload'],{});is_batch=w.get('execution_mode')=='batch_job'
+        capacity={'cpu_cores':w.get('cpu_cores',0),'memory_gb':(w.get('memory_mb') or 0)/1024,'gpu_count':0} if is_batch and a['cleanup_state']!='DONE' else None
         out.append({
-            'event_version': int(a['updated'] * 1000), 'task_id': a['task_id'], 'shard_id': 'segment-%d' % (a['ordinal'] + 1),
+            'event_version': int(a['updated'] * 1000), 'task_id': a['task_id'], 'shard_id': a['segment_id'] if is_batch else 'segment-%d' % (a['ordinal'] + 1),
             'attempt_id': a['id'], 'physical_node_id': pool['pool_node_id'], 'executor_id': a['node_id'],
-            'k3s': {'cluster_id': cluster_id, 'namespace': None, 'job_name': a.get('execution_id'), 'pod_uid': None, 'container_id': None},
-            'status': ATTEMPT_STATUS.get(a['status'], 'QUEUED'), 'allocated_resources': None, 'queue_length': None,
+            'k3s': {'cluster_id': cluster_id, 'namespace': None, 'job_name': w.get('job_name',a.get('execution_id')), 'pod_uid': w.get('pod_uid'), 'container_id': None},
+            'status': ('RUNNING' if a.get('actual_node') else 'STARTING') if capacity else ATTEMPT_STATUS.get(a['status'], 'QUEUED'), 'allocated_resources': capacity, 'queue_length': None,
             'occurred_at': iso(a['updated']), 'started_at': iso(a['started']), 'finished_at': iso(a['finished']),
             'error': a['error'], 'last_event_id': None, 'updated_at': iso(a['updated']),
-            'scope': 'attempt', 'session_id': a.get('session_id'),
+            'scope': 'batch' if is_batch else 'attempt', 'session_id': a.get('session_id'),
         })
     return out
 

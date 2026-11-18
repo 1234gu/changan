@@ -97,7 +97,7 @@ class ContainerExecution:
                    'memory_budget_mb':n['memory'],'active':n['active'],'capacity':n['capacity'],
                    'runtime':n['runtime'],'kubelet':n['kubelet'],'physical_host':n['physical_host'],
                    'resource_source':'kubernetes','location':self.client().cluster}
-                for key in ('machine_id_sha256','cpu_cores','internal_ip'):
+                for key in ('machine_id_sha256','cpu_cores','internal_ip','ephemeral_storage_gb'):
                     if n.get(key) is not None:s[key]=n[key]
                 s['gpu_slots']=n.get('gpu_slots',0)
                 s['gpu_available']=n.get('gpu_slots',0)>0
@@ -132,6 +132,9 @@ class ContainerExecution:
                 observe_node(n,False,'K3s/资源池快照不可用')
             raise
     async def submit(self,task,segment,aid,payload):
+        if db.loads(task['metadata'])['application'].get('id')=='aerial-mapping-odx':
+            from .mapping import submit
+            return await submit(self,task,segment,aid,payload)
         if db.loads(task['metadata'])['application'].get('execution_mode')=='task_session':
             return await self.sessions.submit(task,segment,aid,payload)
         a=db.query('SELECT * FROM attempts WHERE id=?',(aid,),one=True)
@@ -162,7 +165,7 @@ class ContainerExecution:
                     w['last_api_error']=time.time();save(a,w)
                     db.event(a['task_id'],'container_api_unavailable',{'stage':'execute','state':'UNKNOWN','message':'K3s 状态待核对，保留资源占用','error_type':type(e).__name__},a['id'])
     async def reconcile_one(self,a):
-        w=workload(a);k=self.client();name=w['job_name']
+        w=workload(a);k=self.client();name=w.get('job_name') or (('mapping-' if w.get('execution_mode')=='batch_job' else 'video-')+a['id'].replace('_','-'))
         job=await k.job(name);pods=await k.pods(name)
         a=db.query('SELECT * FROM attempts WHERE id=?',(a['id'],),one=True);w=workload(a)
         t=db.query('SELECT * FROM tasks WHERE id=?',(a['task_id'],),one=True)
@@ -219,7 +222,10 @@ class ContainerExecution:
                 body={'attempt_id':a['id'],'task_id':a['task_id'],'segment_id':a['segment_id'],'node_id':a['node_id'],
                       'token':a['token'],'id':w['pod_uid'],'seq':latest['last_seq']+1,'status':'SUCCEEDED','progress':1,
                       'result':db.loads(latest['result'])}
-                await self.engine.ingest(body)
+                if w.get('id')=='aerial-mapping-odx':
+                    from .mapping import complete
+                    complete(latest,body)
+                else:await self.engine.ingest(body)
             else:
                 logs={}
                 for p in pods:
@@ -291,14 +297,16 @@ async def container_input(aid:str,request:Request):
 async def upload_artifact(aid:str,name:str,request:Request):
     a,w=authenticate(aid,request)
     if a['status']=='FINALIZING':raise HTTPException(409,'结果已封存')
-    if name not in ('preview-0.jpg','preview-1.jpg','preview-2.jpg'):raise HTTPException(422,'产物名称不允许')
+    from .mapping import ARTIFACTS
+    mapping=w.get('id')=='aerial-mapping-odx'
+    if name not in (ARTIFACTS if mapping else ('preview-0.jpg','preview-1.jpg','preview-2.jpg')):raise HTTPException(422,'产物名称不允许')
     folder=DATA/'tasks'/a['task_id']/aid;folder.mkdir(parents=True,exist_ok=True)
     tmp=folder/(name+'.'+secrets.token_hex(6)+'.tmp');size=0;digest=hashlib.sha256()
     try:
         with tmp.open('wb') as f:
             async for chunk in request.stream():
                 size+=len(chunk)
-                if size>8*1024**2:raise HTTPException(413,'产物超过8MiB')
+                if size>(4*1024**3 if mapping else 8*1024**2):raise HTTPException(413,'产物超过配额')
                 digest.update(chunk);f.write(chunk)
             f.flush();os.fsync(f.fileno())
         if not size or digest.hexdigest()!=request.headers.get('x-content-sha256'):raise HTTPException(422,'产物摘要不一致')
@@ -308,12 +316,16 @@ async def upload_artifact(aid:str,name:str,request:Request):
         # races the result transaction. Repeated identical uploads are idempotent.
         with db.connect() as c:
             c.execute('BEGIN IMMEDIATE')
+            authenticate(aid,request)
             current=c.execute('SELECT status FROM attempts WHERE id=?',(aid,)).fetchone()
             if current['status'] in TERMINAL or current['status']=='FINALIZING':raise HTTPException(409,'结果已封存')
             destination=folder/name
             if destination.exists():
-                if hashlib.sha256(destination.read_bytes()).hexdigest()!=digest.hexdigest():raise HTTPException(409,'已上传产物不可更改')
+                from .mapping import sha
+                stored=c.execute('SELECT sha256 FROM artifacts WHERE attempt_id=? AND name=?',(aid,name)).fetchone() if mapping else None
+                if (stored[0] if stored else sha(destination))!=digest.hexdigest():raise HTTPException(409,'已上传产物不可更改')
             else:tmp.replace(destination)
+            if mapping:c.execute('INSERT OR IGNORE INTO artifacts(attempt_id,name,bytes,sha256) VALUES(?,?,?,?)',(aid,name,size,digest.hexdigest()))
         fd=os.open(folder,os.O_RDONLY)
         try:os.fsync(fd)
         finally:os.close(fd)
@@ -327,6 +339,9 @@ async def container_event(aid:str,request:Request):
         from .session_execution import attempt_event
         return await attempt_event(aid,request)
     a,w=authenticate(aid,request)
+    if w.get('id')=='aerial-mapping-odx':
+        from .mapping import event
+        return await event(a,w,request)
     raw=await request.body()
     if len(raw)>16*1024**2:raise HTTPException(413,'结果超过16MiB')
     import json

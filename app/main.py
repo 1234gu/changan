@@ -8,6 +8,7 @@ from .config import DATA, ROOT, TOKEN, API_KEY, TERMINAL
 from . import db
 from .engine import Engine
 from .alerts import router as alerts_router
+from .mapping import MappingInput, router as mapping_router
 from .schemas import TaskInput,NodeInput,StrategyInput,CandidateInput
 from .capabilities import run_capabilities, connector_call, redact
 from .pool_bridge import PoolBridge
@@ -26,12 +27,13 @@ async def lifespan(app):
     except asyncio.CancelledError: pass
     if pool:await pool.stop()
     await engine.close()
-app=FastAPI(title='车群协同任务编排 API',version='0.7.0',lifespan=lifespan)
+app=FastAPI(title='车群协同任务编排 API',version='0.8.0',lifespan=lifespan)
 app.state.engine=engine
 if pool:
     pool.install(app)
     app.include_router(pool_platform_router)
 app.include_router(alerts_router)
+app.include_router(mapping_router)
 from .container_execution import router as container_router
 app.include_router(container_router)
 from .session_execution import router as session_router
@@ -68,7 +70,7 @@ async def access(request:Request,call_next):
 def internal(x_internal_token:str=Header(default='')):
     if not secrets.compare_digest(x_internal_token,TOKEN): raise HTTPException(401,'内部认证失败')
 @app.get('/health')
-def health(): return {'status':'ok','service':'changan-orchestrator','version':'0.7.0','time':time.time()}
+def health(): return {'status':'ok','service':'changan-orchestrator','version':'0.8.0','time':time.time()}
 @app.get('/api/overview')
 def overview():
     totals=db.query('SELECT status,count(*) n FROM tasks GROUP BY status')
@@ -138,7 +140,7 @@ def segment_video(task_id:str,segment_id:str):
     return FileResponse(row['path'],media_type='video/mp4')
 
 @app.post('/api/tasks')
-def create_task(body:TaskInput,idempotency_key:str|None=Header(default=None)):
+def create_task(body:MappingInput|TaskInput,idempotency_key:str|None=Header(default=None)):
     try: id=engine.create(body,key=idempotency_key)
     except ValueError as e: raise HTTPException(422,str(e))
     return {'id':id,'task':db.task_detail(id)}
@@ -178,7 +180,7 @@ def rerun(id:str):
     t=db.task_detail(id)
     if not t:raise HTTPException(404)
     p=t['params'];p['name']=t['name']+' · 重跑'
-    return {'id':engine.create(TaskInput(**p))}
+    return {'id':engine.create(MappingInput(**p) if p.get('workflow_id')=='aerial-mapping-odx' else TaskInput(**p))}
 @app.get('/api/tasks/{id}/export')
 def export(id:str,format:str='json'):
     t=task(id)
@@ -192,12 +194,14 @@ def task_video(id:str):
     t=task(id);return FileResponse(engine.source_path(t['source']))
 @app.get('/api/tasks/{id}/artifacts/{attempt}/{name}')
 def artifact(id:str,attempt:str,name:str):
-    if name not in ['preview-0.jpg','preview-1.jpg','preview-2.jpg']:raise HTTPException(404)
+    from .mapping import ARTIFACTS,MIME
+    if name not in ['preview-0.jpg','preview-1.jpg','preview-2.jpg'] and name not in ARTIFACTS:raise HTTPException(404)
+    if name in ARTIFACTS and not db.query('SELECT name FROM artifacts WHERE attempt_id=? AND name=?',(attempt,name),one=True):raise HTTPException(404)
     a=db.query('SELECT id FROM attempts WHERE id=? AND task_id=?',(attempt,id),one=True)
     if not a:raise HTTPException(404)
     path=DATA/'tasks'/id/attempt/name
     if not path.exists():raise HTTPException(404)
-    return FileResponse(path)
+    return FileResponse(path,media_type=MIME.get(name.rsplit('.',1)[-1]),filename=None if name=='preview.jpg' else name)
 @app.get('/internal/segments/{id}',dependencies=[Depends(internal)])
 def segment(id:str):
     s=db.query('SELECT path FROM segments WHERE id=?',(id,),one=True)
@@ -256,7 +260,7 @@ def config_export(category:str,id:str):
     return Response(db.dumps(row),media_type='application/json',headers={'Content-Disposition':f'attachment; filename="config.json"'})
 @app.delete('/api/configs/{category}/{id}')
 def delete_config(category:str,id:str):
-    if id in ['round_robin','resource_aware','video-analysis','capability-demo','none']:raise HTTPException(409,'内置配置不可删除')
+    if id in ['round_robin','resource_aware','video-analysis','aerial-mapping-odx','capability-demo','none']:raise HTTPException(409,'内置配置不可删除')
     db.execute('DELETE FROM configs WHERE category=? AND id=?',(category,id));return {'deleted':id}
 @app.post('/api/connectors/{id}/call')
 async def call_connector(id:str,body:dict={}):

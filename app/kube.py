@@ -30,6 +30,7 @@ class Kube:
             budget=min(memory,int(labels.get('changan.io/memory-mib',memory)))
             output.append({'id':labels[LABEL],'name':n.metadata.name,'uid':n.metadata.uid,'healthy':ready,
                 'architecture':labels.get('kubernetes.io/arch'),'memory':budget,'active':active,
+                'ephemeral_storage_gb':float(parse_quantity(n.status.allocatable.get('ephemeral-storage','0')))/1024**3,
                 'gpu_slots':int(n.status.allocatable.get('nvidia.com/gpu','0')),'capacity':int(labels.get('changan.io/slots','1')),'kind':labels.get('changan.io/kind','k3s_node'),
                 'runtime':n.status.node_info.container_runtime_version,'kubelet':n.status.node_info.kubelet_version,
                 'physical_host':labels.get('changan.io/physical-host',n.metadata.name),
