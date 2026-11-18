@@ -1,0 +1,16 @@
+# Apply after deploy/rbac.yaml on the real three-Thor cluster.
+# Keep the historical object name so this replaces, rather than adds to, the quota.
+# Admission remains bounded: <=3 single-node jobs, each <=8 CPU / 48 GiB;
+# the scheduler also enforces one execution slot per node.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: video-budget
+  namespace: changan
+spec:
+  hard:
+    pods: "12"
+    requests.cpu: "24"
+    limits.cpu: "24"
+    requests.memory: 144Gi
+    limits.memory: 144Gi

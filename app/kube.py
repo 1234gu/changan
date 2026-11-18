@@ -20,7 +20,7 @@ class Kube:
         return await asyncio.to_thread(fn,*args,**kwargs,_request_timeout=(3,8))
     async def nodes(self):
         nodes=await self.call(self.core.list_node,label_selector=LABEL)
-        pods=await self.call(self.core.list_namespaced_pod,self.namespace,label_selector='app='+APP)
+        pods=await self.call(self.core.list_namespaced_pod,self.namespace,label_selector='app in (changan-video,changan-mapping)')
         output=[]
         for n in nodes.items:
             labels=n.metadata.labels; ready=any(c.type=='Ready' and c.status=='True' for c in n.status.conditions or [])
@@ -50,7 +50,7 @@ class Kube:
         return (await self.call(self.core.list_namespaced_event,self.namespace,field_selector='involvedObject.uid='+uid)).items
     async def submit(self,manifest,payload):
         name=manifest['metadata']['name']
-        secret={'apiVersion':'v1','kind':'Secret','metadata':{'name':name,'labels':{'app':APP}},'stringData':{'payload.json':__import__('json').dumps(payload)}}
+        secret={'apiVersion':'v1','kind':'Secret','metadata':{'name':name,'labels':dict(manifest['metadata']['labels'])},'stringData':{'payload.json':__import__('json').dumps(payload)}}
         try: await self.call(self.core.create_namespaced_secret,self.namespace,secret)
         except ApiException as e:
             if e.status!=409:raise

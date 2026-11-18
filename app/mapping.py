@@ -2,7 +2,7 @@
 The legacy segments table is now typed work-unit storage; mapping has no time range.
 No user-selected images, arbitrary commands or generic workloads are exposed in v1.
 """
-import asyncio, hashlib, json, math, os, secrets, time, zipfile
+import asyncio, hashlib, json, math, os, re, secrets, time, zipfile
 from pathlib import Path
 from fastapi import APIRouter, File, UploadFile, Request, HTTPException
 from pydantic import BaseModel, Field, ConfigDict
@@ -42,7 +42,7 @@ def sha(file):
 
 def application():
     image=os.getenv('CHANGAN_MAPPING_IMAGE','')
-    if not image or '@sha256:' not in image:raise ValueError('建图镜像尚未配置为固定摘要')
+    if not re.fullmatch(r'[^@\s]+@sha256:[0-9a-f]{64}',image):raise ValueError('建图镜像尚未配置为固定摘要')
     return {'id':ID,'version':'1','protocol_version':1,'execution_mode':'batch_job','image':image,'architecture':'arm64','engine':'ODX','engine_version':'3.8.6','gpu_access':False,'container_memory_floor_mb':8192,'image_pull_secret':os.getenv('CHANGAN_IMAGE_PULL_SECRET')}
 
 def dataset(source):
@@ -52,8 +52,10 @@ def dataset(source):
 
 @router.get('/api/applications')
 def applications():
+    try: enabled=bool(application()) and os.getenv('CHANGAN_BACKEND','k3s')=='k3s'
+    except ValueError: enabled=False
     return [{'id':'video-analysis','name':'视频分析','enabled':True,'input_type':'video','execution_mode':'task_session'},
-            {'id':ID,'name':'航拍建图','enabled':bool(os.getenv('CHANGAN_MAPPING_IMAGE')),'input_type':'photo_bundle','execution_mode':'batch_job'}]
+            {'id':ID,'name':'航拍建图','enabled':enabled,'input_type':'photo_bundle','execution_mode':'batch_job'}]
 
 @router.get('/api/datasets')
 def datasets():
@@ -92,7 +94,9 @@ def create(engine,body,key=None):
     if body.attempt_timeout>body.deadline_seconds:raise ValueError('单次超时不能超过任务截止时限')
     alg=db.query("SELECT body FROM configs WHERE category='algorithm' AND id=?",(body.algorithm,),one=True)
     if not alg:raise ValueError('调度算法不存在')
-    meta={'application':app,'input':{k:d[k] for k in ['id','name','bytes','sha256','image_count']},'algorithm_snapshot':db.loads(alg['body']),'workflow_snapshot':{'nodes':['validate','schedule','execute','upload','complete']},'execution_backend':'k3s'}
+    workflow=db.query("SELECT body FROM configs WHERE category='workflow' AND id=?",(ID,),one=True)
+    if not workflow or not db.loads(workflow['body']).get('enabled',True):raise ValueError('建图工作流不存在或已禁用')
+    meta={'application':app,'input':{k:d[k] for k in ['id','name','bytes','sha256','image_count']},'algorithm_snapshot':db.loads(alg['body']),'workflow_snapshot':db.loads(workflow['body']),'execution_backend':'k3s'}
     with db.connect() as c:
         c.execute('BEGIN IMMEDIATE')
         if key:
@@ -112,7 +116,9 @@ def candidate_params(params):
 def manifest(a,w,params):
     from .kube import job_manifest
     m=job_manifest(a,w,params);spec=m['spec']['template']['spec'];container=spec['containers'][0];container['name']='mapping'
-    m['metadata']['labels']['changan.io/application']=ID;spec['terminationGracePeriodSeconds']=20
+    for meta in (m['metadata'],m['spec']['template']['metadata']):
+        meta['labels'].update({'app':'changan-mapping','changan.io/application':ID})
+    spec['terminationGracePeriodSeconds']=20
     container['resources']={'requests':{'cpu':str(params['concurrency']),'memory':str(params['min_memory_mb'])+'Mi','ephemeral-storage':str(params['workspace_gb'])+'Gi'},'limits':{'cpu':str(params['concurrency']),'memory':str(params['min_memory_mb'])+'Mi','ephemeral-storage':str(params['workspace_gb'])+'Gi'}}
     spec['volumes'][1]['emptyDir']['sizeLimit']=str(params['workspace_gb']-2)+'Gi';spec['volumes'][2]['emptyDir']['sizeLimit']='2Gi'
     container['env'] += [{'name':'HOME','value':'/work'},{'name':'TMPDIR','value':'/tmp'},{'name':'PYTHONDONTWRITEBYTECODE','value':'1'}]
@@ -130,17 +136,25 @@ async def submit(controller,task,unit,aid,payload):
 def required(preset):
     return {'orthophoto.tif','preview.jpg','report.pdf','engine.json','shots.geojson'} | ({'dsm.tif','cloud.laz'} if preset=='standard' else set())
 
-def validate_result(a,w,r):
+def validate_result(a,w,r,*,verify_content=False):
     if not isinstance(r,dict):raise ValueError('缺少结果manifest')
     expected={'application_id':ID,'engine_version':'3.8.6','attempt_id':a['id'],'task_id':a['task_id'],'work_unit_id':a['segment_id'],'actual_node':a['node_id'],'pod_uid':w['pod_uid'],'input_sha256':w['input_sha256'],'device':'cpu'}
     if any(r.get(k)!=v for k,v in expected.items()):raise ValueError('建图结果来源不一致')
     task=db.query('SELECT params,metadata FROM tasks WHERE id=?',(a['task_id'],),one=True);params=db.loads(task['params']);meta=db.loads(task['metadata']);q=r.get('quality',{})
+    if not isinstance(q,dict):raise ValueError('无效质量摘要')
     if q.get('images')!=meta['input']['image_count'] or not isinstance(q.get('registered'),int) or not 0<q['registered']<=q['images'] or not q.get('crs'):raise ValueError('重建覆盖或坐标信息无效')
-    items=r.get('artifacts',[]);names=[m.get('name') for m in items]
+    if not all(type(q.get(k)) is int and q[k]>0 for k in ('width','height')):raise ValueError('无效栅格尺寸')
+    def vector(v,n):return isinstance(v,list) and len(v)==n and all(type(i) in (int,float) and math.isfinite(i) for i in v)
+    if not vector(q.get('pixel_size'),2) or min(q['pixel_size'])<=0 or not isinstance(q.get('corners'),list) or len(q['corners'])!=4 or not all(vector(v,2) for v in q['corners']):raise ValueError('无效空间范围')
+    if params['preset']=='standard' and (type(q.get('points')) is not int or q['points']<=0):raise ValueError('缺少点云计数')
+    items=r.get('artifacts')
+    if not isinstance(items,list) or not all(isinstance(m,dict) and isinstance(m.get('name'),str) and type(m.get('bytes')) is int and m['bytes']>0 and re.fullmatch('[0-9a-f]{64}',str(m.get('sha256',''))) for m in items):raise ValueError('产物清单格式无效')
+    names=[m['name'] for m in items]
     if len(set(names))!=len(names) or set(names)!=required(params['preset']):raise ValueError('必需建图产物不完整')
     for m in items:
         file=DATA/'tasks'/a['task_id']/a['id']/m['name'];stored=db.query('SELECT bytes,sha256 FROM artifacts WHERE attempt_id=? AND name=?',(a['id'],m['name']),one=True)
         if not stored or stored['bytes']!=m.get('bytes') or stored['sha256']!=m.get('sha256') or not file.is_file() or file.stat().st_size!=stored['bytes']:raise ValueError('产物未持久化或摘要不一致')
+        if verify_content and sha(file)!=stored['sha256']:raise ValueError('落盘产物内容摘要不符')
     for m in items:m['url']='/api/tasks/'+a['task_id']+'/artifacts/'+a['id']+'/'+m['name']
     return r|{'image':w['image'],'job_uid':w['job_uid'],'pod_uid':w['pod_uid'],'kube_node':w['node_name'],'execution_backend':'k3s','execution_mode':'batch_job'}
 
@@ -165,7 +179,7 @@ async def event(a,w,request):
 
 def complete(a,body):
     """Only the coordinator calls this after checking Job/Pod success."""
-    w=db.loads(a['workload']);r=validate_result(a,w,body.get('result'))
+    w=db.loads(a['workload']);r=validate_result(a,w,body.get('result'),verify_content=True)
     with db.connect() as c:
         c.execute('BEGIN IMMEDIATE');s=c.execute('SELECT active_attempt FROM segments WHERE id=?',(a['segment_id'],)).fetchone();t=c.execute('SELECT status FROM tasks WHERE id=?',(a['task_id'],)).fetchone();cur=c.execute('SELECT status FROM attempts WHERE id=?',(a['id'],)).fetchone()
         if cur[0] in TERMINAL or t[0] in TERMINAL or s[0]!=a['id']:return {'accepted':False}

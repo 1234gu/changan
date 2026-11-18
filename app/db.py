@@ -106,5 +106,5 @@ def task_detail(id):
         a['decision']=loads(a['decision']);a['workload']=loads(a['workload'],{})
     task['sessions']=query('SELECT id,task_id,node_id,status,created,updated,heartbeat_at,ready_at,finished,active_attempt,workload,cleanup_state,completed,model_load_count,model_load_seconds,error FROM execution_sessions WHERE task_id=? ORDER BY created',(id,))
     for session in task['sessions']:session['workload']=loads(session['workload'],{})
-    task['work_units']=[{k:v for k,v in s.items() if k not in ('start','end','path')} for s in task['segments']]
+    task['work_units']=[{k:s[k] for k in ('id','kind','ordinal','status','active_attempt')} for s in task['segments']]
     return task

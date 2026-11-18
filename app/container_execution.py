@@ -201,6 +201,18 @@ class ContainerExecution:
                 self.engine.attempt_failure(a['id'],'K3s Job 不存在，已核实无旧 Pod')
                 db.execute("UPDATE attempts SET cleanup_state='DONE' WHERE id=?",(a['id'],))
             return
+        # No Pod exists yet if the Job controller was denied at namespace admission.
+        # Observe bounded retries without bypassing quota or failing transient contention.
+        if w.get('execution_mode')=='batch_job' and not pods and not w.get('pod_uid') and time.time()-w.get('admission_checked',a['created'])>10:
+            updates={'admission_checked':time.time()}
+            events=await k.pod_events(job.metadata.uid)
+            denied=next((e for e in reversed(events) if e.reason=='FailedCreate'),None)
+            if denied:
+                import re
+                reason=re.sub(r'pods "[^"]+"','Pod',denied.message or 'FailedCreate')[:600]
+                updates['admission_message']=reason
+                if reason!=w.get('admission_message'):db.event(a['task_id'],'job_admission',{'stage':'execute','state':'PENDING','message':reason},a['id'])
+            save(a,updates)
         details=[]
         for p in pods:
             status=p.status;cs=(status.container_statuses or [])
@@ -224,7 +236,9 @@ class ContainerExecution:
                       'result':db.loads(latest['result'])}
                 if w.get('id')=='aerial-mapping-odx':
                     from .mapping import complete
-                    complete(latest,body)
+                    try:await asyncio.to_thread(complete,latest,body)
+                    except (ValueError,FileNotFoundError) as exc:
+                        w['failure']='建图成果终检失败：'+str(exc);w['terminal_after_cleanup']='FAILED'
                 else:await self.engine.ingest(body)
             else:
                 logs={}
