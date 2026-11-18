@@ -119,6 +119,10 @@ def test_retry_waits_for_cleanup_and_parallel_nodes_are_distinct(pipeline):
     db.execute("UPDATE attempts SET cleanup_state='DONE' WHERE id=?",(a['id'],));assert pipe.ready(u)
     a,w,r=attempt(tid,u);nodes=pipe.scheduling_nodes([{'id':'thor2'},{'id':'thor3'}],db.query('SELECT * FROM tasks WHERE id=?',(tid,),one=True))
     assert nodes[0]['session_blocked'] and not nodes[1].get('session_blocked')
+    finish(a,r)
+    # Once the first board is idle it must not take the last sparse child too.
+    other=units(tid,'reconstruct')[1];nodes=pipe.scheduling_nodes([{'id':'thor2'},{'id':'thor3'}],db.query('SELECT * FROM tasks WHERE id=?',(tid,),one=True),other)
+    assert '两个不同节点' in nodes[0]['session_blocked'] and not nodes[1].get('session_blocked')
 
 @pytest.mark.parametrize('kind',['traversal','absolute','link','device','duplicate','oversize'])
 def test_safe_archive(monkeypatch,tmp_path,kind):

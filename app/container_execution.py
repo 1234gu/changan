@@ -168,7 +168,6 @@ class ContainerExecution:
                     db.event(a['task_id'],'container_api_unavailable',{'stage':'execute','state':'UNKNOWN','message':'K3s 状态待核对，保留资源占用','error_type':type(e).__name__},a['id'])
     async def reconcile_one(self,a):
         w=workload(a);k=self.client();name=w.get('job_name') or (('mapping-' if w.get('execution_mode')=='batch_job' else 'video-')+a['id'].replace('_','-'))
-        observation_started=time.time()
         observed_uid=w.get('job_uid')
         job=await k.job(name);pods=await k.pods(name)
         a=db.query('SELECT * FROM attempts WHERE id=?',(a['id'],),one=True);w=workload(a)

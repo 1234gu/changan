@@ -76,12 +76,21 @@ def inputs(unit):
 def input_hash(entries):
     return hashlib.sha256(json.dumps(entries,sort_keys=True,separators=(",",":")).encode()).hexdigest()
 
-def scheduling_nodes(nodes, task):
+def scheduling_nodes(nodes, task, unit=None):
     p=db.loads(task["params"])
     active=db.query("SELECT DISTINCT node_id FROM attempts WHERE task_id=? AND cleanup_state!='DONE'",(task["id"],))
     busy={a["node_id"] for a in active}
+    # Fence the last remaining sparse unit onto another real node if all other
+    # sparse units ran on just one. Even when a board goes offline, a request for
+    # collaborative mapping must never silently become a single-board success.
+    excluded=set()
+    if unit and unit['kind']=='mapping_reconstruct':
+        peers=db.query("SELECT s.status,a.node_id FROM segments s LEFT JOIN attempts a ON a.id=s.active_attempt WHERE s.task_id=? AND s.kind='mapping_reconstruct' AND s.id!=?",(task['id'],unit['id']))
+        used={r['node_id'] for r in peers if r['node_id'] and r['status'] not in ('PENDING','FAILED','CANCELED','TIMED_OUT')}
+        if len(used)==1 and len(peers)>0 and all(r['node_id'] and r['status']!='PENDING' for r in peers):excluded=used
     for n in nodes:
-        if n["id"] in busy:n["session_blocked"]="同一建图任务每节点只运行一个阶段单元"
+        if n['id'] in excluded:n['session_blocked']='同图协同至少两个不同节点参与稀疏重建，等待另一合格节点'
+        elif n["id"] in busy:n["session_blocked"]="同一建图任务每节点只运行一个阶段单元"
         elif len(busy)>=p["max_nodes"]:n["session_blocked"]="已达到本任务协同节点上限"
     return nodes
 
@@ -159,6 +168,7 @@ def complete(a,r,c):
         total=c.execute("SELECT total FROM tasks WHERE id=?",(a["task_id"],)).fetchone()[0]
         if count!=total:raise ValueError("融合发布时仍有未成功的必要阶段")
         node_rows=c.execute("SELECT DISTINCT a.actual_node FROM attempts a JOIN segments s ON s.active_attempt=a.id WHERE s.task_id=? AND s.kind IN ('mapping_reconstruct','mapping_toolchain')",(a["task_id"],)).fetchall()
+        if len({x[0] for x in node_rows if x[0]})<2:raise ValueError('缺少两个实际计算节点，不发布为多节点协同成功')
         r["collaboration"]={"compute_nodes":[x[0] for x in node_rows],"work_units":total,"submodels":r["quality"]["submodels"]}
         c.execute("UPDATE tasks SET status='SUCCEEDED',finished=?,updated=?,result=? WHERE id=?",(time.time(),time.time(),db.dumps(r),a["task_id"]))
     db.event(a["task_id"],"mapping_unit_complete",{"stage":phase,"state":"SUCCEEDED","unit_id":a["segment_id"],"submodel":r.get("submodel"),"node_id":a["node_id"],"metrics":r["metrics"]},a["id"],c)

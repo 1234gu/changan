@@ -137,7 +137,7 @@ class Engine:
         nodes=self.nodes(task['id']);size=Path(segment['path']).stat().st_size
         if mapping and params.get('execution_mode')=='collaborative':
             from .mapping_pipeline import scheduling_nodes,inputs
-            nodes=scheduling_nodes(nodes,task);deps=inputs(segment)
+            nodes=scheduling_nodes(nodes,task,segment);deps=inputs(segment)
             if deps:size=sum(x['bytes'] for x in deps)
         decision=choose(nodes,scheduling_params,segment['end']-segment['start'],size,db.loads(algorithm['body']),self.cursor)
         if not decision['target_node']:
