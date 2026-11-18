@@ -1,0 +1,20 @@
+{
+  "tasks": {
+    "original": 131,
+    "lost_or_changed": 0
+  },
+  "segments": {
+    "original": 1733,
+    "lost_or_changed": 0
+  },
+  "attempts": {
+    "original": 1665,
+    "lost_or_changed": 0
+  },
+  "execution_sessions": {
+    "original": 190,
+    "lost_or_changed": 0
+  },
+  "integrity_check": "ok",
+  "foreign_key_violations": []
+}

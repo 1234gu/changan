@@ -1,0 +1,586 @@
+[
+  {
+    "label": "brighton",
+    "task_id": "task_ef1d44a21d43469d",
+    "status": "SUCCEEDED",
+    "task_seconds": 337.368,
+    "created": 1794989526.935437,
+    "finished": 1794989864.303434,
+    "cleaned": true,
+    "artifacts": [
+      {
+        "name": "orthophoto.tif",
+        "bytes": 2584920,
+        "sha256": "9ebf17c3de5ebd53fe21f02485379775e728a939934de5b049b3ea7553602e85"
+      },
+      {
+        "name": "preview.jpg",
+        "bytes": 185658,
+        "sha256": "2af8b8656048ed8c87ac738f7ac0e814719315352389902cff919e6a6178d656"
+      },
+      {
+        "name": "report.pdf",
+        "bytes": 7696684,
+        "sha256": "56f46f483401e2cb99096b5958e7f145ec23b3c84b4af5919634a3e13f1ece1f"
+      },
+      {
+        "name": "engine.json",
+        "bytes": 58655,
+        "sha256": "7ff28084f68dca3bedf49176cc6be20376c6cf8c2963301e20536e389f7e71c6"
+      },
+      {
+        "name": "shots.geojson",
+        "bytes": 8376,
+        "sha256": "22db0615512fd7eba577b85f0b8a00ba1cfe7e01ed5b0ca41cc14ed2c5f01788"
+      },
+      {
+        "name": "dsm.tif",
+        "bytes": 1606872,
+        "sha256": "41578412115654a79f2324fbd404c48b751882a40ab0db9f70056d9c6516c47d"
+      },
+      {
+        "name": "cloud.laz",
+        "bytes": 1779513,
+        "sha256": "6c898061fe45726fd224209817997ed9012ce8e5844ae59d42f115467237df9c"
+      }
+    ],
+    "quality": {
+      "registered": 18,
+      "images": 18,
+      "width": 1279,
+      "height": 1248,
+      "crs": "WGS 84 / UTM zone 15N",
+      "epsg": "32615",
+      "corners": [
+        [
+          576646.8577893301,
+          5188232.47741291
+        ],
+        [
+          576646.8577893301,
+          5188107.71581003
+        ],
+        [
+          576774.7498566736,
+          5188232.47741291
+        ],
+        [
+          576774.7498566736,
+          5188107.71581003
+        ]
+      ],
+      "pixel_size": [
+        0.09999379776667605,
+        0.0999692330772702
+      ],
+      "points": 385517
+    },
+    "worker_seconds": 112.62,
+    "image": "192.168.50.231:5500/changan/mapping-odx@sha256:59dd55d445e3d9cf37a3aae9050ebd5235c91cb4728a08a5257aa9a66a9c7466",
+    "job_uid": "c546a867-fce7-4d75-9e62-45337d1d4dce",
+    "pod_uid": "aba58f1a-9e39-4c1a-923d-e5a5c736110c",
+    "node": "thor2"
+  },
+  {
+    "label": "aukerman",
+    "task_id": "task_821e3e65b2074984",
+    "status": "SUCCEEDED",
+    "task_seconds": 316.682,
+    "created": 1794989808.873539,
+    "finished": 1794990125.555081,
+    "cleaned": true,
+    "artifacts": [
+      {
+        "name": "orthophoto.tif",
+        "bytes": 13336626,
+        "sha256": "962ade4192892a789299443fb53848c818dc9213c2d65c6034a0e67ac3d2cf60"
+      },
+      {
+        "name": "preview.jpg",
+        "bytes": 162677,
+        "sha256": "8ca8ac11bb246c27f941c5d63f0fc9d506f8c0d4ecc469c2308053aa5beb67fc"
+      },
+      {
+        "name": "report.pdf",
+        "bytes": 9329663,
+        "sha256": "a12d972458861202361977e5661c43faadd8197f067fb88e781fdbec94e5ae3b"
+      },
+      {
+        "name": "engine.json",
+        "bytes": 47116,
+        "sha256": "b92d2ce4401ac5bbcba940aa0b60f1a57e2ba2f9bd90ba33e8a56ad28200812e"
+      },
+      {
+        "name": "shots.geojson",
+        "bytes": 35301,
+        "sha256": "c7e058785360352015f44b2be89480f771540fb300e0946affeea234f342f4fe"
+      }
+    ],
+    "quality": {
+      "registered": 76,
+      "images": 77,
+      "width": 3475,
+      "height": 2579,
+      "crs": "WGS 84 / UTM zone 17N",
+      "epsg": "32617",
+      "corners": [
+        [
+          436861.7991904984,
+          4572926.452580741
+        ],
+        [
+          436861.7991904984,
+          4572668.595511773
+        ],
+        [
+          437209.241344304,
+          4572926.452580741
+        ],
+        [
+          437209.241344304,
+          4572668.595511773
+        ]
+      ],
+      "pixel_size": [
+        0.09998335361311533,
+        0.09998335361303043
+      ]
+    },
+    "worker_seconds": 280.19,
+    "image": "192.168.50.231:5500/changan/mapping-odx@sha256:59dd55d445e3d9cf37a3aae9050ebd5235c91cb4728a08a5257aa9a66a9c7466",
+    "job_uid": "a5c1e367-a867-4237-8e16-8aa7d92b6c81",
+    "pod_uid": "e0f3a5d2-1da1-46dd-a696-6bdc413b013e",
+    "node": "thor3"
+  },
+  {
+    "label": "browser",
+    "task_id": "task_5963242c012a4c7f",
+    "status": "SUCCEEDED",
+    "task_seconds": 109.622,
+    "created": 1794990493.163923,
+    "finished": 1794990602.786232,
+    "cleaned": true,
+    "artifacts": [
+      {
+        "name": "orthophoto.tif",
+        "bytes": 2621276,
+        "sha256": "773e9a202ef4e7924f325911931c590c4e696a3d92399d0088fc89cfe7ff041f"
+      },
+      {
+        "name": "preview.jpg",
+        "bytes": 190064,
+        "sha256": "97abd97e91905f8caf8f40858a0c95945b89c03dbb4d9f3f0eb2e838a4ff6531"
+      },
+      {
+        "name": "report.pdf",
+        "bytes": 7851761,
+        "sha256": "3b52614969c3eda193ff8845636a3fcb90adc066a545bebd567c5bfaf7a5ee45"
+      },
+      {
+        "name": "engine.json",
+        "bytes": 58656,
+        "sha256": "c6dda21bf7f158baad030646c2d51a24b421e6025a11ba4da39f3ca638b6d37c"
+      },
+      {
+        "name": "shots.geojson",
+        "bytes": 8354,
+        "sha256": "99d3177cb7b576aacb04e9c694c9b31169d8f233b51381886ed50bf41aac3428"
+      },
+      {
+        "name": "dsm.tif",
+        "bytes": 1641352,
+        "sha256": "dda5d2bd35d2d07262a6429c97231db50622bc32cc6d365c7d28ae112c6710a4"
+      },
+      {
+        "name": "cloud.laz",
+        "bytes": 1688344,
+        "sha256": "069c1c3816f3a8d163aeb394a09631bafb7fa5cf27379b15660f07b8e8367d43"
+      }
+    ],
+    "quality": {
+      "registered": 18,
+      "images": 18,
+      "width": 1275,
+      "height": 1240,
+      "crs": "WGS 84 / UTM zone 15N",
+      "epsg": "32615",
+      "corners": [
+        [
+          576646.7303638471,
+          5188232.215244813
+        ],
+        [
+          576646.7303638471,
+          5188108.224673527
+        ],
+        [
+          576774.1447952789,
+          5188232.215244813
+        ],
+        [
+          576774.1447952789,
+          5188108.224673527
+        ]
+      ],
+      "pixel_size": [
+        0.09993288739748737,
+        0.09999239619806288
+      ],
+      "points": 367416
+    },
+    "worker_seconds": 105.27,
+    "image": "192.168.50.231:5500/changan/mapping-odx@sha256:59dd55d445e3d9cf37a3aae9050ebd5235c91cb4728a08a5257aa9a66a9c7466",
+    "job_uid": "d720dd54-76fb-44f9-8ebe-c1a90fb05ca0",
+    "pod_uid": "3cc34002-4bac-4f69-8b50-fe398453c08a",
+    "node": "thor2"
+  },
+  {
+    "label": "cancel",
+    "task_id": "task_cdab704a2030484d",
+    "status": "CANCELED",
+    "task_seconds": 1.504,
+    "created": 1794990493.778599,
+    "finished": 1794990495.282516,
+    "cleaned": true,
+    "artifacts": []
+  },
+  {
+    "label": "aukerman-auto",
+    "task_id": "task_6380630cb0dc46c4",
+    "status": "SUCCEEDED",
+    "task_seconds": 285.307,
+    "created": 1794990793.406375,
+    "finished": 1794991078.7138538,
+    "cleaned": true,
+    "artifacts": [
+      {
+        "name": "orthophoto.tif",
+        "bytes": 14494962,
+        "sha256": "1a49b8f92004c882d945737c5cc9acd74ab276bf7871c369f08bf980d3d2c0a2"
+      },
+      {
+        "name": "preview.jpg",
+        "bytes": 172731,
+        "sha256": "7c07d5f35d563e42c3253b2bd35b3330ae09779aa6b11603f5061ce556377e7e"
+      },
+      {
+        "name": "report.pdf",
+        "bytes": 9471939,
+        "sha256": "b87d2780db9070ad55ad7cb6863a829a7909400cf763273fd4d52200ab099ab3"
+      },
+      {
+        "name": "engine.json",
+        "bytes": 46989,
+        "sha256": "340ac530bccacd67e97b0985deba315f7710e1116feb5aa085f670588cffa89a"
+      },
+      {
+        "name": "shots.geojson",
+        "bytes": 35747,
+        "sha256": "66cbe00ea5c25af2d4be769fb98196e7b5bee1e6699e53dac07da5e20f8a036f"
+      }
+    ],
+    "quality": {
+      "registered": 77,
+      "images": 77,
+      "width": 3539,
+      "height": 2670,
+      "crs": "WGS 84 / UTM zone 17N",
+      "epsg": "32617",
+      "corners": [
+        [
+          436856.005906702,
+          4572936.665151678
+        ],
+        [
+          436856.005906702,
+          4572669.688425156
+        ],
+        [
+          437209.87505844794,
+          4572936.665151678
+        ],
+        [
+          437209.87505844794,
+          4572669.688425156
+        ]
+      ],
+      "pixel_size": [
+        0.09999128334160014,
+        0.09999128334147486
+      ]
+    },
+    "worker_seconds": 280.32,
+    "image": "192.168.50.231:5500/changan/mapping-odx@sha256:59dd55d445e3d9cf37a3aae9050ebd5235c91cb4728a08a5257aa9a66a9c7466",
+    "job_uid": "16b66dda-e459-4485-adc6-7ffc1f78a6a1",
+    "pod_uid": "9cb9ab8e-9a4e-4d81-8a1c-a5dd980d7857",
+    "node": "thor2"
+  },
+  {
+    "label": "video",
+    "task_id": "task_0cdaf9567247427d",
+    "status": "SUCCEEDED",
+    "task_seconds": 25.411,
+    "created": 1794989734.752183,
+    "finished": 1794989760.16341,
+    "cleaned": true,
+    "artifacts": [],
+    "frames": 48,
+    "completed": 6,
+    "model_load_count": 1,
+    "runtime": {
+      "policy": "auto",
+      "actual_backend": "cuda",
+      "ort_version": "1.24.0",
+      "gpu": {
+        "device_id": 0,
+        "uuid": "GPU-a7c66ad2-6dbb-0ab8-c1a2-37ba6dba3600",
+        "name": "NVIDIA Thor",
+        "visible_devices": 1
+      },
+      "fallback_reason": null,
+      "cuda_compute_events": 203,
+      "provider_events": {
+        "CUDAExecutionProvider": 203
+      },
+      "timings": {
+        "session_seconds": 7.919115850992966,
+        "warmup_seconds": 6.189411006984301,
+        "verification_seconds": 0.0028103039949201047,
+        "initialization_seconds": 14.338196108990815
+      },
+      "initialization_stages": [
+        {
+          "name": "device",
+          "started_at": 1794989737.4216285,
+          "seconds": 0.19586008897749707
+        },
+        {
+          "name": "model_load",
+          "started_at": 1794989737.6183257,
+          "seconds": 7.919115850992966,
+          "backend": "cuda"
+        },
+        {
+          "name": "warmup",
+          "started_at": 1794989745.537543,
+          "seconds": 6.189411006984301,
+          "backend": "cuda"
+        }
+      ],
+      "providers": [
+        "CUDAExecutionProvider",
+        "CPUExecutionProvider"
+      ]
+    }
+  },
+  {
+    "label": "video-final",
+    "task_id": "task_e47d259e8bfc4dd0",
+    "status": "SUCCEEDED",
+    "task_seconds": 10.555,
+    "created": 1794990716.093718,
+    "finished": 1794990726.649059,
+    "cleaned": true,
+    "artifacts": [],
+    "frames": 48,
+    "completed": 6,
+    "model_load_count": 1,
+    "runtime": {
+      "policy": "auto",
+      "actual_backend": "cuda",
+      "ort_version": "1.24.0",
+      "gpu": {
+        "device_id": 0,
+        "uuid": "GPU-a7c66ad2-6dbb-0ab8-c1a2-37ba6dba3600",
+        "name": "NVIDIA Thor",
+        "visible_devices": 1
+      },
+      "fallback_reason": null,
+      "cuda_compute_events": 203,
+      "provider_events": {
+        "CUDAExecutionProvider": 203
+      },
+      "timings": {
+        "session_seconds": 0.2138025300228037,
+        "warmup_seconds": 0.40396316099213436,
+        "verification_seconds": 0.00242354697547853,
+        "initialization_seconds": 0.7852897010161541
+      },
+      "initialization_stages": [
+        {
+          "name": "device",
+          "started_at": 1794990718.946645,
+          "seconds": 0.14288496802328154
+        },
+        {
+          "name": "model_load",
+          "started_at": 1794990719.0903354,
+          "seconds": 0.2138025300228037,
+          "backend": "cuda"
+        },
+        {
+          "name": "warmup",
+          "started_at": 1794990719.3042014,
+          "seconds": 0.40396316099213436,
+          "backend": "cuda"
+        }
+      ],
+      "providers": [
+        "CUDAExecutionProvider",
+        "CPUExecutionProvider"
+      ]
+    }
+  },
+  {
+    "label": "mapping-release",
+    "task_id": "task_0973065e4b3746c3",
+    "status": "SUCCEEDED",
+    "task_seconds": 111.329,
+    "created": 1794991250.778086,
+    "finished": 1794991362.1075299,
+    "cleaned": true,
+    "artifacts": [
+      {
+        "name": "orthophoto.tif",
+        "bytes": 2443292,
+        "sha256": "f947304f0a719f2f6f7f1177923edf10f89271e6fc206788f8bd7dac19cd203d"
+      },
+      {
+        "name": "preview.jpg",
+        "bytes": 173228,
+        "sha256": "30ad1ff303e0bcd1740c9f7f1df17505015944709892f5bf00c826cdd65692db"
+      },
+      {
+        "name": "report.pdf",
+        "bytes": 7396869,
+        "sha256": "12816678fa4aab522295b4a7e8c36a5027162ca34d447a9c03d4afce0d62097b"
+      },
+      {
+        "name": "engine.json",
+        "bytes": 58644,
+        "sha256": "b3bfeb8cb89b5703b33ca27118c32d6df844e760288ced5dbc6ce306f0f01482"
+      },
+      {
+        "name": "shots.geojson",
+        "bytes": 8372,
+        "sha256": "4c3b516f44f727549fb45d0a769c4e5249e328dc3160b2828198495ad856919d"
+      },
+      {
+        "name": "dsm.tif",
+        "bytes": 1524706,
+        "sha256": "d6d200bd5981046fa3d27df81cc7667a6f293685bf489ba6d9a75632cb587cc2"
+      },
+      {
+        "name": "cloud.laz",
+        "bytes": 1721959,
+        "sha256": "eac1d3c992d7abfa7142dc2429aee7d536ddb32badad91fe0c8e05b63c49299b"
+      }
+    ],
+    "quality": {
+      "registered": 18,
+      "images": 18,
+      "width": 1281,
+      "height": 1097,
+      "crs": "WGS 84 / UTM zone 15N",
+      "epsg": "32615",
+      "corners": [
+        [
+          576646.5028660714,
+          5188218.123497805
+        ],
+        [
+          576646.5028660714,
+          5188108.473702917
+        ],
+        [
+          576774.5787863213,
+          5188218.123497805
+        ],
+        [
+          576774.5787863213,
+          5188108.473702917
+        ]
+      ],
+      "pixel_size": [
+        0.099981202380888,
+        0.09995423417297296
+      ],
+      "points": 371249
+    },
+    "worker_seconds": 107.37,
+    "image": "192.168.50.231:5500/changan/mapping-odx@sha256:59dd55d445e3d9cf37a3aae9050ebd5235c91cb4728a08a5257aa9a66a9c7466",
+    "job_uid": "33b9327d-2ff8-495c-9a73-e7a13d6915a4",
+    "pod_uid": "ed799409-89c2-4052-ba1a-9869d76fa8ca",
+    "node": "thor2"
+  },
+  {
+    "label": "video-release",
+    "task_id": "task_35bd577de05d4fe0",
+    "status": "SUCCEEDED",
+    "task_seconds": 14.417,
+    "created": 1794991250.784371,
+    "finished": 1794991265.2015529,
+    "cleaned": true,
+    "artifacts": [],
+    "frames": 48,
+    "completed": 6,
+    "model_load_count": 1,
+    "runtime": {
+      "policy": "auto",
+      "actual_backend": "cuda",
+      "ort_version": "1.24.0",
+      "gpu": {
+        "device_id": 0,
+        "uuid": "GPU-a7c66ad2-6dbb-0ab8-c1a2-37ba6dba3600",
+        "name": "NVIDIA Thor",
+        "visible_devices": 1
+      },
+      "fallback_reason": null,
+      "cuda_compute_events": 203,
+      "provider_events": {
+        "CUDAExecutionProvider": 203
+      },
+      "timings": {
+        "session_seconds": 0.16958170500583947,
+        "warmup_seconds": 0.4140622820123099,
+        "verification_seconds": 0.002413161040749401,
+        "initialization_seconds": 0.6889926180010661
+      },
+      "initialization_stages": [
+        {
+          "name": "device",
+          "started_at": 1794991253.8436797,
+          "seconds": 0.08024608896812424
+        },
+        {
+          "name": "model_load",
+          "started_at": 1794991253.924781,
+          "seconds": 0.16958170500583947,
+          "backend": "cuda"
+        },
+        {
+          "name": "warmup",
+          "started_at": 1794991254.0944262,
+          "seconds": 0.4140622820123099,
+          "backend": "cuda"
+        }
+      ],
+      "providers": [
+        "CUDAExecutionProvider",
+        "CPUExecutionProvider"
+      ]
+    }
+  },
+  {
+    "label": "cancel-compute",
+    "task_id": "task_e234f906ff4d4ad8",
+    "status": "CANCELED",
+    "node": "thor3",
+    "phase_at_cancel": "opensfm",
+    "observed_phase_at": 1794991553.5677361,
+    "pod_uid": "0d8d84b5-602e-41c7-9005-7a23c109b30d",
+    "task_seconds": 9.201,
+    "cleaned": true,
+    "artifacts": []
+  }
+]

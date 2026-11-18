@@ -1,0 +1,13 @@
+{
+  "source_commit": "ac877dccdf8038d3e74051ef5e7ef5356303917d",
+  "clean_source": true,
+  "files_verified": 104,
+  "previous": "releases/20261118-f08361b",
+  "active": "releases/20261118-ac877dc",
+  "archive_sha256": "1019d16b5cef6285bafd20d9231d3cece28829ae2db4825e05b1bb734a7fd085",
+  "before_switch": {
+    "tasks": 0,
+    "attempts": 0,
+    "sessions": 0
+  }
+}

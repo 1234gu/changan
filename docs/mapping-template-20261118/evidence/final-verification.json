@@ -1,0 +1,102 @@
+{
+  "at": 1794991657.087415,
+  "active_release": "releases/20261118-ac877dc",
+  "source_commit": "ac877dccdf8038d3e74051ef5e7ef5356303917d",
+  "release_files_unchanged": 104,
+  "total_tasks": 143,
+  "active_counts": {
+    "tasks": 0,
+    "attempts": 0,
+    "sessions": 0
+  },
+  "remaining_k3s": {
+    "jobs": [],
+    "pods": [],
+    "secrets": []
+  },
+  "inventory_source": "Thor1 administrator kubectl metadata-only inventory; runtime ServiceAccount has no Secret-list permission",
+  "applications": [
+    {
+      "id": "video-analysis",
+      "name": "视频分析",
+      "enabled": true,
+      "input_type": "video",
+      "execution_mode": "task_session"
+    },
+    {
+      "id": "aerial-mapping-odx",
+      "name": "航拍建图",
+      "enabled": true,
+      "input_type": "photo_bundle",
+      "execution_mode": "batch_job"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "thor1",
+      "k3s_healthy": true,
+      "pool": {
+        "mode": "enforce",
+        "state": "BOUND",
+        "pool_node_id": "ee4c8fd0-7150-438b-a56a-7a81b2a73631",
+        "node_name": "thor1",
+        "cluster_id": "thor-k3s",
+        "labels": [
+          "gpu:thor",
+          "arch:arm64",
+          "k3s:changan-thor"
+        ],
+        "cpu_cores": 14,
+        "gpu_count": 1,
+        "reasons": [
+          "资源池：采集状态 OFFLINE"
+        ]
+      }
+    },
+    {
+      "id": "thor2",
+      "k3s_healthy": true,
+      "pool": {
+        "mode": "enforce",
+        "state": "BOUND",
+        "pool_node_id": "963192d1-83b2-4d9c-98e4-bb8c97fc7b76",
+        "node_name": "thor2",
+        "cluster_id": "thor-k3s",
+        "labels": [
+          "gpu:thor",
+          "arch:arm64",
+          "k3s:changan-thor"
+        ],
+        "cpu_cores": 14,
+        "gpu_count": 1,
+        "reasons": []
+      }
+    },
+    {
+      "id": "thor3",
+      "k3s_healthy": true,
+      "pool": {
+        "mode": "enforce",
+        "state": "BOUND",
+        "pool_node_id": "c3f8e0af-9dfe-4ffb-9d2c-b68c3df50258",
+        "node_name": "thor3",
+        "cluster_id": "thor-k3s",
+        "labels": [
+          "gpu:thor",
+          "arch:arm64",
+          "k3s:changan-thor"
+        ],
+        "cpu_cores": 14,
+        "gpu_count": 1,
+        "reasons": []
+      }
+    }
+  ],
+  "evidence_tasks": 10,
+  "rejected_inputs": {
+    "generic": 422,
+    "inject_image": 422,
+    "invalid_concurrency": 422,
+    "invalid_resolution": 422
+  }
+}
