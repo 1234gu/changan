@@ -100,6 +100,7 @@ def create(engine,body,key=None):
         image=os.getenv('CHANGAN_MAPPING_COLLAB_IMAGE','')
         if not re.fullmatch(r'[^@\s]+@sha256:[0-9a-f]{64}',image):raise ValueError('协同建图镜像尚未配置为固定摘要')
         app=dict(app,image=image,version='2',pipeline_version=1)
+        if math.ceil(d['image_count']/body.submodel_size)>8:raise ValueError('本版最多8个子模型，请增加每组目标照片数')
         if body.submodel_size>=d['image_count']:raise ValueError('每个子模型的目标照片数必须小于输入照片数')
         if body.node_ids and len(set(body.node_ids))<2:raise ValueError('协同模式至少需要两个候选节点')
     if body.attempt_timeout>body.deadline_seconds:raise ValueError('单次超时不能超过任务截止时限')

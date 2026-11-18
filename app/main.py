@@ -27,7 +27,7 @@ async def lifespan(app):
     except asyncio.CancelledError: pass
     if pool:await pool.stop()
     await engine.close()
-app=FastAPI(title='车群协同任务编排 API',version='0.8.0',lifespan=lifespan)
+app=FastAPI(title='车群协同任务编排 API',version='0.9.0',lifespan=lifespan)
 app.state.engine=engine
 if pool:
     pool.install(app)
@@ -70,7 +70,7 @@ async def access(request:Request,call_next):
 def internal(x_internal_token:str=Header(default='')):
     if not secrets.compare_digest(x_internal_token,TOKEN): raise HTTPException(401,'内部认证失败')
 @app.get('/health')
-def health(): return {'status':'ok','service':'changan-orchestrator','version':'0.8.0','time':time.time()}
+def health(): return {'status':'ok','service':'changan-orchestrator','version':'0.9.0','time':time.time()}
 @app.get('/api/overview')
 def overview():
     totals=db.query('SELECT status,count(*) n FROM tasks GROUP BY status')

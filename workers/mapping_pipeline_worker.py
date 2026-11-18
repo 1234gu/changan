@@ -177,12 +177,12 @@ def main(p):
         elif phase=='reconstruct':
             recon=json.loads((project/'opensfm/reconstruction.json').read_text())
             if not recon or not any(r.get('shots') for r in recon):raise ValueError('子模型没有有效稀疏重建')
-            file=out/'state.tar.gz';pack(file,[project/'opensfm'/n for n in ('config.yaml','camera_models.json','reference_lla.json','reconstruction.json','tracks.csv')]);files[file.name]=file
+            file=out/'state.tar.gz';pack(file,[project/'opensfm'/n for n in ('image_list.txt','config.yaml','camera_models.json','reference_lla.json','reconstruction.json','tracks.csv')]);files[file.name]=file
         elif phase=='align':
             plan=json.loads((ROOT/'plan.json').read_text())
             for g in plan['submodels']:
                 sp=ROOT/'submodels'/g['id']/'opensfm';file=out/('aligned-'+g['id']+'.tar.gz')
-                pack(file,[sp/n for n in ('config.yaml','camera_models.json','reference_lla.json','reconstruction.json','tracks.csv')]);files[file.name]=file
+                pack(file,[sp/n for n in ('image_list.txt','config.yaml','camera_models.json','reference_lla.json','reconstruction.json','tracks.csv')]);files[file.name]=file
         elif phase=='toolchain':
             required=['odm_orthophoto/odm_orthophoto_cut.tif','odm_orthophoto/odm_orthophoto_feathered.tif','odm_orthophoto/cutline.gpkg','odm_report/shots.geojson']
             if params['preset']=='standard':required+=['odm_dem/dsm.tif','odm_georeferencing/odm_georeferenced_model.laz']
