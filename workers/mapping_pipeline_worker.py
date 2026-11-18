@@ -58,7 +58,18 @@ def final_products(root,plan,preset):
     ortho=root/'odm_orthophoto/odm_orthophoto.tif';shot=root/'odm_report/shots.geojson'
     features=json.loads(shot.read_text())['features']
     # Upstream merge_geojson_shots deduplicates by filename/id.
-    registered=len(features)
+    expected={}
+    for g in plan['submodels']:
+        sub=json.loads((root/'submodels'/g['id']/'odm_report/shots.geojson').read_text())['features']
+        names={f['properties']['filename'] for f in sub}
+        if not names or not names<=set(g['images']):raise ValueError('子模型配准照片来源无效')
+        expected.update({f['properties']['filename']:f for f in sub})
+    names={f['properties']['filename'] for f in features}
+    if names!=set(expected):raise ValueError('融合相机清单未包含所有子模型成果')
+    # Pinned upstream fails to update its dedup set after the first model.
+    # Normalize the public merged camera list; do not count duplicates as coverage.
+    merged=json.loads(shot.read_text());merged['features']=list(expected.values())
+    shot.write_text(json.dumps(merged));registered=len(expected)
     ds=gdal.Open(str(ortho));srs=ds.GetSpatialRef() if ds else None
     if not srs or ds.RasterXSize<=0 or ds.RasterYSize<=0:raise ValueError('融合正射图缺少空间参考')
     gt=ds.GetGeoTransform();w,h=ds.RasterXSize,ds.RasterYSize
@@ -125,6 +136,13 @@ def main(p):
                 download(base+'/dependency/'+str(index),dest,entry['sha256'],entry['bytes'])
                 total+=extract(dest,ROOT.parent,params['workspace_gb']*1024**3-total)
                 dest.unlink()
+        if phase=='merge':
+            merge_plan=json.loads((ROOT/'plan.json').read_text())
+            if {d.name for d in (ROOT/'submodels').iterdir() if d.is_dir()}!={g['id'] for g in merge_plan['submodels']}:raise ValueError('融合输入子模型集合不一致')
+            required=['odm_orthophoto/odm_orthophoto_cut.tif','odm_orthophoto/odm_orthophoto_feathered.tif','odm_report/shots.geojson']
+            if params['preset']=='standard':required+=['odm_dem/dsm.tif','odm_georeferencing/odm_georeferenced_model.laz']
+            for g in merge_plan['submodels']:
+                if any(not (ROOT/'submodels'/g['id']/n).is_file() for n in required):raise ValueError('缺失子模型成果，拒绝部分融合')
         project=ROOT/'submodels'/group if group else ROOT
         if phase=='reconstruct':(project/'opensfm/split_merge_stop_at_reconstruction.txt').touch()
         if phase=='toolchain':
