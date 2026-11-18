@@ -1,0 +1,65 @@
+{
+  "inspected_at": "2026-11-18T15:14:14.429577+08:00",
+  "source_commit": "37de4c3564a053e0132ec861ec86f7e9448cd020",
+  "current_release": "/Users/eins/code/changanPlatform/releases/20261115-37de4c3",
+  "health": {
+    "status": "ok",
+    "service": "changan-orchestrator",
+    "version": "0.7.0",
+    "time": 1794986056.870359
+  },
+  "enabled_nodes": [
+    {
+      "id": "thor1",
+      "kind": "vehicle",
+      "online": true,
+      "snapshot": {
+        "architecture": "arm64",
+        "cpu_cores": 14.0,
+        "memory_budget_mb": 65536,
+        "available_memory_mb": 65536,
+        "active": 0,
+        "capacity": 1,
+        "models": [
+          "yolox-tiny-coco-416-v1"
+        ],
+        "gpu_available": true
+      }
+    },
+    {
+      "id": "thor2",
+      "kind": "vehicle",
+      "online": true,
+      "snapshot": {
+        "architecture": "arm64",
+        "cpu_cores": 14.0,
+        "memory_budget_mb": 65536,
+        "available_memory_mb": 65536,
+        "active": 0,
+        "capacity": 1,
+        "models": [
+          "yolox-tiny-coco-416-v1"
+        ],
+        "gpu_available": true
+      }
+    },
+    {
+      "id": "thor3",
+      "kind": "vehicle",
+      "online": true,
+      "snapshot": {
+        "architecture": "arm64",
+        "cpu_cores": 14.0,
+        "memory_budget_mb": 65536,
+        "available_memory_mb": 65536,
+        "active": 0,
+        "capacity": 1,
+        "models": [
+          "yolox-tiny-coco-416-v1"
+        ],
+        "gpu_available": true
+      }
+    }
+  ],
+  "note": "现有节点读数不是ODX资源画像；memory_budget_mb是配置预算。未新建或执行业务任务。"
+}

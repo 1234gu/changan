@@ -1,0 +1,68 @@
+{
+  "inspected_at": "2026-11-18T15:14:14.429577+08:00",
+  "upstream_repositories": [
+    {
+      "url": "https://github.com/WebODM/WebODM",
+      "commit": "4084ebaacc65c082962e518beab0806dd649bb69",
+      "commit_date": "2026-11-17T03:23:17-05:00",
+      "server_path": "/root/projects/changan-orchestrator/tmp/research-webodm-20261118/WebODM-proxy"
+    },
+    {
+      "url": "https://github.com/WebODM/ODX",
+      "commit": "aff8287f42006e73a51264ebef1e54dede0de3b4",
+      "commit_date": "2026-11-08T12:01:03-05:00",
+      "server_path": "/root/projects/changan-orchestrator/tmp/research-webodm-20261118/ODX-proxy"
+    },
+    {
+      "url": "https://github.com/WebODM/NodeODX",
+      "commit": "02296467c0ca2142c2c7771876788bacbed102f6",
+      "commit_date": "2026-10-16T13:41:55-04:00",
+      "server_path": "/root/projects/changan-orchestrator/tmp/research-webodm-20261118/NodeODX-proxy"
+    }
+  ],
+  "odx_source_version": "3.8.6",
+  "images": {
+    "latest": {
+      "source": "https://hub.docker.com/v2/repositories/webodm/odx/tags/latest",
+      "name": "latest",
+      "last_updated": "2026-11-08T17:30:45.099011Z",
+      "digest": "sha256:1c4389e63d1778e4e8372503296696ce4a908cb82165c82d20e185ac4d850b4f",
+      "images": [
+        {
+          "architecture": "amd64",
+          "variant": null,
+          "os": "linux",
+          "digest": "sha256:431e5d04e151eb8e514b377bf834d0fd4f1c4da132d9ce03d36d54fe6c0517a2",
+          "size": 513688158
+        },
+        {
+          "architecture": "arm64",
+          "variant": null,
+          "os": "linux",
+          "digest": "sha256:f68dc137f97ac4668f9b2e3e81e1acfb270f13936554c98a9c340c44a872bc41",
+          "size": 451490670
+        }
+      ]
+    },
+    "gpu": {
+      "source": "https://hub.docker.com/v2/repositories/webodm/odx/tags/gpu",
+      "name": "gpu",
+      "last_updated": "2026-11-08T17:46:22.034241Z",
+      "digest": "sha256:13f4a42e3a36b1e53d00bfc18e9d5bc8e53b24aa0a83285147dc4f8481a87b2b",
+      "images": [
+        {
+          "architecture": "amd64",
+          "variant": null,
+          "os": "linux",
+          "digest": "sha256:d81e3f37079c0e5c74c2fb8d744e66b83376ff9d54c4a73a1ff2007066109470",
+          "size": 5506406267
+        }
+      ]
+    }
+  },
+  "limits": [
+    "只查询镜像标签元数据，没有拉取镜像/启动容器。",
+    "Docker标签摘要与源码HEAD不是同一种身份；未核验镜像构建溯源，不据此断言镜像来自上述commit。",
+    "linux/arm64清单存在不等于Thor运行已验证。"
+  ]
+}
