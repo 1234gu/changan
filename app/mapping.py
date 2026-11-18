@@ -24,7 +24,7 @@ class MappingInput(BaseModel):
     preset: Literal['standard','preview']='standard'
     execution_mode: Literal['single','collaborative']='single'
     max_nodes: int=Field(default=2,ge=2,le=3)
-    submodel_size: int=Field(default=36,ge=4,le=250)
+    submodel_size: int=Field(default=40,ge=4,le=250)
     split_overlap_m: float=Field(default=35,ge=1,le=500,allow_inf_nan=False)
     min_registered_ratio: float=Field(default=0.90,ge=0.5,le=1,allow_inf_nan=False)
     concurrency: int=Field(default=4,ge=1,le=8)

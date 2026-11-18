@@ -168,6 +168,8 @@ class ContainerExecution:
                     db.event(a['task_id'],'container_api_unavailable',{'stage':'execute','state':'UNKNOWN','message':'K3s 状态待核对，保留资源占用','error_type':type(e).__name__},a['id'])
     async def reconcile_one(self,a):
         w=workload(a);k=self.client();name=w.get('job_name') or (('mapping-' if w.get('execution_mode')=='batch_job' else 'video-')+a['id'].replace('_','-'))
+        observation_started=time.time()
+        observed_uid=w.get('job_uid')
         job=await k.job(name);pods=await k.pods(name)
         a=db.query('SELECT * FROM attempts WHERE id=?',(a['id'],),one=True);w=workload(a)
         t=db.query('SELECT * FROM tasks WHERE id=?',(a['task_id'],),one=True)
@@ -198,6 +200,9 @@ class ContainerExecution:
         if not job:
             # submit response can be lost; absence is definitive only after querying job and pods.
             if not pods:
+                # Submission and observation run concurrently. An earlier 404 cannot
+                # invalidate a Job UID committed after this observation began.
+                if w.get('job_uid')!=observed_uid:return
                 if not w.get('job_uid') and time.time()-a['created']<30:return
                 await k.delete_secret(name)
                 self.engine.attempt_failure(a['id'],'K3s Job 不存在，已核实无旧 Pod')
