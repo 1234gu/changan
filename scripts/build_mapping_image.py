@@ -12,12 +12,15 @@ REG='https://registry-1.docker.io/v2/webodm/odx/'
 def main():
     p=argparse.ArgumentParser();p.add_argument('--prefetch',action='store_true');p.add_argument('--output',type=Path,default=ROOT/'tmp/mapping/odx-arm64.tar');a=p.parse_args()
     cache=a.output.parent/'blobs/sha256';cache.mkdir(parents=True,exist_ok=True)
-    token=json.load(urllib.request.urlopen('https://auth.docker.io/token?service=registry.docker.io&scope=repository:webodm/odx:pull',timeout=30))['token']
+    token=None
+    def auth():return json.load(urllib.request.urlopen('https://auth.docker.io/token?service=registry.docker.io&scope=repository:webodm/odx:pull',timeout=30))['token']
     def fetch(d,kind='blobs'):
         dest=cache/d.split(':')[1]
         if dest.exists():
             with dest.open('rb') as f:
                 if hashlib.file_digest(f,'sha256').hexdigest()==dest.name:return dest
+        nonlocal token
+        if token is None:token=auth()
         req=urllib.request.Request(REG+kind+'/'+d,headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json'})
         tmp=dest.with_suffix('.partial');h=hashlib.sha256()
         with urllib.request.urlopen(req,timeout=90) as r,tmp.open('wb') as f:
@@ -32,7 +35,7 @@ def main():
         h=hashlib.sha256(raw).hexdigest();(cache/h).write_bytes(raw);return {'digest':'sha256:'+h,'size':len(raw),'mediaType':media}
     layer=io.BytesIO()
     with tarfile.open(fileobj=layer,mode='w') as t:
-        for file in ['workers/mapping_worker.py','workers/photo_bundle.py']:
+        for file in ['workers/mapping_worker.py','workers/photo_bundle.py','workers/mapping_pipeline_worker.py','workers/mapping_odx_stage.py']:
             raw=(ROOT/file).read_bytes();i=tarfile.TarInfo('opt/changan/'+Path(file).name);i.size=len(raw);i.mode=0o644;t.addfile(i,io.BytesIO(raw))
     raw=layer.getvalue();layers=[dict(l,mediaType='application/vnd.oci.image.layer.v1.tar+gzip') for l in m['layers']];layers.append(descriptor(gzip.compress(raw,mtime=0),'application/vnd.oci.image.layer.v1.tar+gzip'))
     cfg['rootfs']['diff_ids'].append('sha256:'+hashlib.sha256(raw).hexdigest());cfg['config'].update(Entrypoint=['python3','-u','/opt/changan/mapping_worker.py'],Cmd=[],WorkingDir='/code');cfg.setdefault('history',[]).append({'created_by':'changan mapping batch adapter'})

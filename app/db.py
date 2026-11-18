@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS configs(id TEXT PRIMARY KEY,category TEXT NOT NULL,na
         sc={r[1] for r in c.execute('PRAGMA table_info(segments)')}
         if 'kind' not in sc:c.execute("ALTER TABLE segments ADD COLUMN kind TEXT NOT NULL DEFAULT 'video_segment'")
         c.executescript("""
+CREATE TABLE IF NOT EXISTS mapping_units(unit_id TEXT PRIMARY KEY REFERENCES segments(id),spec TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS datasets(id TEXT PRIMARY KEY,name TEXT NOT NULL,path TEXT NOT NULL,bytes INTEGER NOT NULL,sha256 TEXT NOT NULL,image_count INTEGER NOT NULL,manifest TEXT NOT NULL,created REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS artifacts(attempt_id TEXT NOT NULL,name TEXT NOT NULL,bytes INTEGER NOT NULL,sha256 TEXT NOT NULL,PRIMARY KEY(attempt_id,name));
 """)
@@ -107,4 +108,7 @@ def task_detail(id):
     task['sessions']=query('SELECT id,task_id,node_id,status,created,updated,heartbeat_at,ready_at,finished,active_attempt,workload,cleanup_state,completed,model_load_count,model_load_seconds,error FROM execution_sessions WHERE task_id=? ORDER BY created',(id,))
     for session in task['sessions']:session['workload']=loads(session['workload'],{})
     task['work_units']=[{k:s[k] for k in ('id','kind','ordinal','status','active_attempt')} for s in task['segments']]
+    if task['params'].get('execution_mode')=='collaborative':
+        specs={r['unit_id']:loads(r['spec']) for r in query('SELECT m.* FROM mapping_units m JOIN segments s ON m.unit_id=s.id WHERE s.task_id=?',(id,))}
+        for u in task['work_units']:u.update(specs.get(u['id'],{}))
     return task

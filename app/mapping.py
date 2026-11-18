@@ -22,6 +22,11 @@ class MappingInput(BaseModel):
     source: str=Field(pattern=r'^dataset_[a-f0-9]{16}$')
     algorithm: Literal['resource_aware','round_robin']='resource_aware'
     preset: Literal['standard','preview']='standard'
+    execution_mode: Literal['single','collaborative']='single'
+    max_nodes: int=Field(default=2,ge=2,le=3)
+    submodel_size: int=Field(default=36,ge=4,le=250)
+    split_overlap_m: float=Field(default=35,ge=1,le=500,allow_inf_nan=False)
+    min_registered_ratio: float=Field(default=0.90,ge=0.5,le=1,allow_inf_nan=False)
     concurrency: int=Field(default=4,ge=1,le=8)
     resolution_cm: float=Field(default=10,ge=2,le=100,allow_inf_nan=False)
     min_memory_mb: int=Field(default=16384,ge=8192,le=49152)
@@ -91,6 +96,12 @@ async def upload_dataset(file:UploadFile=File(...)):
 def create(engine,body,key=None):
     if engine.backend!='k3s':raise ValueError('建图模板仅支持K3s容器执行')
     d=dataset(body.source);params=body.model_dump();app=application();now=time.time();tid=db.uid('task')
+    if body.execution_mode=='collaborative':
+        image=os.getenv('CHANGAN_MAPPING_COLLAB_IMAGE','')
+        if not re.fullmatch(r'[^@\s]+@sha256:[0-9a-f]{64}',image):raise ValueError('协同建图镜像尚未配置为固定摘要')
+        app=dict(app,image=image,version='2',pipeline_version=1)
+        if body.submodel_size>=d['image_count']:raise ValueError('每个子模型的目标照片数必须小于输入照片数')
+        if body.node_ids and len(set(body.node_ids))<2:raise ValueError('协同模式至少需要两个候选节点')
     if body.attempt_timeout>body.deadline_seconds:raise ValueError('单次超时不能超过任务截止时限')
     alg=db.query("SELECT body FROM configs WHERE category='algorithm' AND id=?",(body.algorithm,),one=True)
     if not alg:raise ValueError('调度算法不存在')
@@ -102,10 +113,13 @@ def create(engine,body,key=None):
         if key:
             old=c.execute('SELECT id,params FROM tasks WHERE idempotency_key=?',(key,)).fetchone()
             if old:
-                if db.loads(old['params'])!=params:raise ValueError('幂等键对应参数不一致')
+                if MappingInput(**db.loads(old['params'])).model_dump()!=params:raise ValueError('幂等键对应参数不一致')
                 return old['id']
         c.execute('INSERT INTO tasks(id,name,source,status,created,updated,params,metadata,total,idempotency_key,started) VALUES(?,?,?,?,?,?,?,?,?,?,?)',(tid,body.name,body.source,'RUNNING',now,now,db.dumps(params),db.dumps(meta),1,key,now))
-        c.execute('INSERT INTO segments(id,task_id,ordinal,start,end,path,kind) VALUES(?,?,0,0,0,?,?)',(db.uid('unit'),tid,d['path'],'photo_reconstruction'))
+        if body.execution_mode=='collaborative':
+            from .mapping_pipeline import add
+            add(c,tid,0,d['path'],'prepare')
+        else:c.execute('INSERT INTO segments(id,task_id,ordinal,start,end,path,kind) VALUES(?,?,0,0,0,?,?)',(db.uid('unit'),tid,d['path'],'photo_reconstruction'))
         db.event(tid,'created',{'stage':'validate','state':'SUCCEEDED','application_id':ID,'image_count':d['image_count']},conn=c)
     return tid
 
@@ -128,6 +142,12 @@ async def submit(controller,task,unit,aid,payload):
     from .container_execution import save,stage
     a=db.query('SELECT * FROM attempts WHERE id=?',(aid,),one=True);app=db.loads(task['metadata'])['application'];snapshot=db.loads(db.query('SELECT snapshot FROM nodes WHERE id=?',(a['node_id'],),one=True)['snapshot']);params=db.loads(task['params']);base=os.getenv('CHANGAN_CONTAINER_BASE',controller.engine.base)+'/internal/container/'+aid
     w={**app,'job_name':'mapping-'+aid.replace('_','-'),'cluster':controller.client().cluster,'namespace':controller.client().namespace,'kube_node':snapshot['kube_node'],'target_node':a['node_id'],'input_sha256':payload['input_sha256'],'memory_mb':params['min_memory_mb'],'cpu_cores':params['concurrency'],'created_at':time.time()}
+    if params.get('execution_mode')=='collaborative':
+        from .mapping_pipeline import get,inputs,input_hash
+        spec=get(unit['id']);entries=inputs(unit)
+        if entries:payload['input_sha256']=input_hash(entries)
+        w.update(phase=spec['phase'],submodel=spec['submodel'],inputs=entries,input_sha256=payload['input_sha256'])
+        payload.update(phase=spec['phase'],submodel=spec['submodel'],inputs=entries)
     db.execute("UPDATE attempts SET workload=?,cleanup_state='PENDING',backend='k3s' WHERE id=?",(db.dumps(w),aid));payload.update(base_url=base,input_url=base+'/input',callback_url=base+'/events',params=params)
     job=await controller.client().submit(manifest(a,w,params),payload);save(a,{'job_uid':job.metadata.uid});stage(a,'SUBMITTED','建图Job已提交，等待目标Thor执行')
     db.event(a['task_id'],'job_submitted',{'stage':'execute','state':'SUBMITTED','job_name':w['job_name'],'job_uid':job.metadata.uid,'image':w['image'],'application_id':ID},aid)
@@ -137,6 +157,9 @@ def required(preset):
     return {'orthophoto.tif','preview.jpg','report.pdf','engine.json','shots.geojson'} | ({'dsm.tif','cloud.laz'} if preset=='standard' else set())
 
 def validate_result(a,w,r,*,verify_content=False):
+    if w.get('phase'):
+        from .mapping_pipeline import validate_result as validate_stage
+        return validate_stage(a,w,r,verify_content)
     if not isinstance(r,dict):raise ValueError('缺少结果manifest')
     expected={'application_id':ID,'engine_version':'3.8.6','attempt_id':a['id'],'task_id':a['task_id'],'work_unit_id':a['segment_id'],'actual_node':a['node_id'],'pod_uid':w['pod_uid'],'input_sha256':w['input_sha256'],'device':'cpu'}
     if any(r.get(k)!=v for k,v in expected.items()):raise ValueError('建图结果来源不一致')
@@ -184,5 +207,9 @@ def complete(a,body):
         c.execute('BEGIN IMMEDIATE');s=c.execute('SELECT active_attempt FROM segments WHERE id=?',(a['segment_id'],)).fetchone();t=c.execute('SELECT status FROM tasks WHERE id=?',(a['task_id'],)).fetchone();cur=c.execute('SELECT status FROM attempts WHERE id=?',(a['id'],)).fetchone()
         if cur[0] in TERMINAL or t[0] in TERMINAL or s[0]!=a['id']:return {'accepted':False}
         now=time.time();c.execute("UPDATE attempts SET status='SUCCEEDED',finished=?,updated=?,result=?,progress=1 WHERE id=?",(now,now,db.dumps(r),a['id']));c.execute("UPDATE segments SET status='SUCCEEDED',result=? WHERE id=?",(db.dumps(r),a['segment_id']))
+        if w.get('phase'):
+            from .mapping_pipeline import complete as complete_stage
+            complete_stage(a,r,c)
+            return {'accepted':True}
         c.execute("UPDATE tasks SET status='SUCCEEDED',completed=1,finished=?,updated=?,result=? WHERE id=?",(now,now,db.dumps(r),a['task_id']));db.event(a['task_id'],'stage',{'stage':'complete','state':'SUCCEEDED','message':'K3s进程成功且必需建图成果已持久化'},a['id'],c)
     return {'accepted':True}

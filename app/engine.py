@@ -134,7 +134,12 @@ class Engine:
         if self.containers:
             floor=db.loads(task['metadata'],{}).get('application',{}).get('container_memory_floor_mb',0)
             scheduling_params['min_memory_mb']=max(params['min_memory_mb'],floor)
-        decision=choose(self.nodes(task['id']),scheduling_params,segment['end']-segment['start'],Path(segment['path']).stat().st_size,db.loads(algorithm['body']),self.cursor)
+        nodes=self.nodes(task['id']);size=Path(segment['path']).stat().st_size
+        if mapping and params.get('execution_mode')=='collaborative':
+            from .mapping_pipeline import scheduling_nodes,inputs
+            nodes=scheduling_nodes(nodes,task);deps=inputs(segment)
+            if deps:size=sum(x['bytes'] for x in deps)
+        decision=choose(nodes,scheduling_params,segment['end']-segment['start'],size,db.loads(algorithm['body']),self.cursor)
         if not decision['target_node']:
             last=db.query("SELECT at FROM events WHERE task_id=? AND type='no_candidate' ORDER BY id DESC LIMIT 1",(task['id'],),one=True)
             if not last or time.time()-last['at']>5:
@@ -263,6 +268,7 @@ class Engine:
                     db.execute("UPDATE attempts SET status='UNKNOWN' WHERE id=?",(a['id'],))
                     db.event(a['task_id'],'worker_unknown',{'stage':'execute','state':'UNKNOWN','message':'执行端失联，等待核对'},a['id'])
     def aggregate(self,task):
+        if db.loads(task['params']).get('workflow_id')=='aerial-mapping-odx':return  # Mapping publishes only through verified final-stage completion.
         segments=db.query('SELECT * FROM segments WHERE task_id=? ORDER BY ordinal',(task['id'],))
         if not segments or len(segments)!=task['total'] or any(s['status']!='SUCCEEDED' or not s['result'] for s in segments): return
         counts={}; frames=[]; previews=[]; provenance=[]
@@ -321,7 +327,7 @@ class Engine:
                 if task['id'] not in self.preparing and len(self.preparing)<2: self.preparing[task['id']]=asyncio.create_task(self.prepare(task['id']))
                 continue
             if db.query("SELECT id FROM segments WHERE task_id=? AND status='FAILED'",(task['id'],),one=True):
-                self.fail_task(task['id'],'必要片段达到重试上限，聚合失败'); continue
+                self.fail_task(task['id'],'必要工作单元达到重试上限，无法发布完整成果'); continue
             count=db.query("SELECT count(*) n FROM segments WHERE task_id=? AND status='SUCCEEDED'",(task['id'],),one=True)['n']
             if count!=task['completed']:db.execute('UPDATE tasks SET completed=? WHERE id=?',(count,task['id']))
             if count==task['total']: self.aggregate(task); continue
@@ -330,6 +336,9 @@ class Engine:
                 # Ready-but-idle containers take segments still parked on cold sessions (no retry counted).
                 self.containers.sessions.rebalance(task['id'])
             pending=db.query("SELECT * FROM segments WHERE task_id=? AND status='PENDING' ORDER BY ordinal",(task['id'],))
+            if params.get('execution_mode')=='collaborative':
+                from .mapping_pipeline import ready
+                pending=[s for s in pending if ready(s)]
             if not pending:continue
             before=db.query('SELECT count(*) n FROM attempts WHERE task_id=?',(task['id'],),one=True)['n']
             for s in pending:

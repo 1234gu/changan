@@ -302,10 +302,14 @@ async def claim(aid:str,request:Request):
     reconcile_observation(aid)
     return {'accepted':True}
 
+from .mapping_pipeline import dependency_input
+router.add_api_route('/internal/container/{aid}/dependency/{index}',dependency_input,methods=['GET'])
+
 @router.get('/internal/container/{aid}/input')
 async def container_input(aid:str,request:Request):
     from fastapi.responses import FileResponse
-    a,_=authenticate(aid,request)
+    a,w=authenticate(aid,request)
+    if w.get('phase') not in (None,'prepare'):raise HTTPException(403,'此阶段仅可读取声明的前置产物')
     s=db.query('SELECT path FROM segments WHERE id=?',(a['segment_id'],),one=True)
     return FileResponse(s['path'])
 
@@ -315,7 +319,9 @@ async def upload_artifact(aid:str,name:str,request:Request):
     if a['status']=='FINALIZING':raise HTTPException(409,'结果已封存')
     from .mapping import ARTIFACTS
     mapping=w.get('id')=='aerial-mapping-odx'
-    if name not in (ARTIFACTS if mapping else ('preview-0.jpg','preview-1.jpg','preview-2.jpg')):raise HTTPException(422,'产物名称不允许')
+    from .mapping_pipeline import allowed_artifact
+    if w.get('phase') and not (allowed_artifact(a,name) or (w['phase']=='merge' and name in ARTIFACTS)):raise HTTPException(422,'该阶段不接收此产物')
+    if not w.get('phase') and name not in (ARTIFACTS if mapping else ('preview-0.jpg','preview-1.jpg','preview-2.jpg')):raise HTTPException(422,'产物名称不允许')
     folder=DATA/'tasks'/a['task_id']/aid;folder.mkdir(parents=True,exist_ok=True)
     tmp=folder/(name+'.'+secrets.token_hex(6)+'.tmp');size=0;digest=hashlib.sha256()
     try:

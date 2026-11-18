@@ -12,7 +12,11 @@ def digest(file):
     return h.hexdigest()
 
 def main():
-    p=json.loads(Path('/run/task/payload.json').read_text()); base=p['base_url']; http=requests.Session();http.trust_env=False
+    p=json.loads(Path('/run/task/payload.json').read_text())
+    if p.get('phase'):
+        from mapping_pipeline_worker import main as stage_main
+        stage_main(p);return
+    base=p['base_url']; http=requests.Session();http.trust_env=False
     http.headers.update({'X-Attempt-Token':p['token'],'X-Pod-UID':os.environ['POD_UID']});seq=0
     def send(endpoint,obj):
         for retry in range(4):

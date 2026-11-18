@@ -197,6 +197,7 @@ def task_video(id:str):
 @app.get('/api/tasks/{id}/artifacts/{attempt}/{name}')
 def artifact(id:str,attempt:str,name:str):
     from .mapping import ARTIFACTS,MIME
+    ARTIFACTS=ARTIFACTS|{'collaboration.json'}
     if name not in ['preview-0.jpg','preview-1.jpg','preview-2.jpg'] and name not in ARTIFACTS:raise HTTPException(404)
     if name in ARTIFACTS and not db.query("SELECT f.name FROM artifacts f JOIN attempts a ON a.id=f.attempt_id JOIN tasks t ON t.id=a.task_id JOIN segments s ON s.id=a.segment_id WHERE f.attempt_id=? AND f.name=? AND t.id=? AND t.status='SUCCEEDED' AND a.status='SUCCEEDED' AND s.active_attempt=a.id",(attempt,name,id),one=True):raise HTTPException(404)
     a=db.query('SELECT id FROM attempts WHERE id=? AND task_id=?',(attempt,id),one=True)
