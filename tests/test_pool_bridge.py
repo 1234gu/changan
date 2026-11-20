@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from app import db, main
 from app.config import MODEL_ID
-from app.pool_bridge import machine_digest, projections, task_statistics
+from app.pool_bridge import machine_digest, projections, recent_task_events, task_statistics
 from app.scheduler import choose
 
 MACHINE_ID = 'ddf7514a39054be3b68c4a9d42324676'
@@ -22,6 +22,10 @@ def clean_pool(monkeypatch):
     for record in bridge.store.list_nodes():
         bridge.store.delete_node(record.node_id)
     monkeypatch.setenv('CHANGAN_POOL_ADMISSION', 'enforce')
+    # Tests must not inherit an administrator key from a developer's private .env.
+    monkeypatch.setattr(main, 'API_KEY', '')
+    # Agent-auth cases set their own token explicitly; other tests stay isolated.
+    monkeypatch.setattr(main, 'POOL_AGENT_TOKEN', '')
     yield
 
 
@@ -57,9 +61,11 @@ def execution_node(machine_id=MACHINE_ID):
     db.execute("UPDATE nodes SET observed=?,snapshot=?,error=NULL,enabled=1 WHERE id='lab-1'", (time.time(), db.dumps(snapshot)))
 
 
-def approved(node_id):
+def approved(node_id, resource_report=None):
     assert client.post(f'/api/v1/nodes/{node_id}/approve').status_code == 200
-    assert client.post(f'/api/v1/nodes/{node_id}/resources', json=report()).status_code == 200
+    assert client.post(
+        f'/api/v1/nodes/{node_id}/resources', json=resource_report or report()
+    ).status_code == 200
 
 
 def lab1(params=None):
@@ -164,6 +170,54 @@ def test_session_allocation_counts_once_until_cleanup_done():
     assert listed['source'] == 'task_database' and listed['total'] == 4
 
 
+def test_unified_gpu_dashboard_uses_collected_system_memory():
+    node_id, response = register()
+    assert response.status_code == 201
+    approved(node_id, report(gpu_unified=True))
+
+    summary = client.get('/api/v1/compute-pool/summary').json()
+    assert summary['unified_memory_gpu_nodes'] == 1
+    assert summary['resources']['gpu']['total'] == 1
+    assert summary['resources']['gpu']['runtime_utilization_percent'] == 24.0
+    assert summary['video_memory']['total'] == 125.0
+    assert summary['video_memory']['used'] == 30.0
+    assert summary['video_memory']['available'] == 95.0
+    assert summary['video_memory']['runtime_utilization_percent'] == 24.0
+
+
+def test_non_unified_gpu_dashboard_keeps_gpu_report_values():
+    resource_report = report(gpu_unified=False)
+    resource_report['gpu'].update({
+        'memory_architecture': 'dedicated',
+        'total_vram_bytes': 16 * 2**30,
+        'used_vram_bytes': 4 * 2**30,
+        'available_vram_bytes': 12 * 2**30,
+        'utilization_percent': 60.0,
+    })
+    node_id, response = register()
+    assert response.status_code == 201
+    approved(node_id, resource_report)
+
+    summary = client.get('/api/v1/compute-pool/summary').json()
+    assert summary['unified_memory_gpu_nodes'] == 0
+    assert summary['resources']['gpu']['runtime_utilization_percent'] == 60.0
+    assert summary['video_memory']['total'] == 16.0
+    assert summary['video_memory']['used'] == 4.0
+    assert summary['video_memory']['available'] == 12.0
+    assert summary['video_memory']['runtime_utilization_percent'] == 25.0
+
+
+def test_unknown_gpu_memory_architecture_does_not_fall_back_to_system_memory():
+    node_id, response = register()
+    assert response.status_code == 201
+    approved(node_id, report(gpu_unified=False))
+
+    summary = client.get('/api/v1/compute-pool/summary').json()
+    assert summary['unified_memory_gpu_nodes'] == 0
+    assert summary['resources']['gpu']['runtime_utilization_percent'] == 0.0
+    assert summary['video_memory']['total'] == 0.0
+
+
 def test_external_projection_writes_are_not_mounted():
     assert client.put('/api/v1/scheduler/executions/snapshot', json={}).status_code in (404, 405)
     assert client.post('/api/v1/scheduler/execution-events', json={}).status_code in (404, 405)
@@ -177,6 +231,57 @@ def test_platform_summary_reports_task_statistics():
     assert stats['completion_rate'] == 0.75
     body = client.get('/api/v1/platform/summary').json()
     assert body['tasks']['completion_rate'] == 0.75 and body['admission_mode'] == 'enforce'
+
+
+def test_recent_task_events_include_created_and_synthesized_terminal_states():
+    now = time.time()
+    rows = [
+        ('task_success', 'success', 'SUCCEEDED', now - 50, now - 5, None),
+        ('task_failed', 'failed\nname', 'FAILED', now - 40, now - 4, 'private stack and token'),
+        ('task_canceled', 'canceled', 'CANCELED', now - 30, now - 3, None),
+        ('task_timeout', 'timeout', 'TIMED_OUT', now - 20, now - 2, None),
+        ('task_running', 'running', 'RUNNING', now - 1, None, None),
+    ]
+    for task_id, name, status, created, finished, error in rows:
+        db.execute(
+            'INSERT INTO tasks(id,name,source,status,created,updated,finished,params,error) '
+            'VALUES(?,?,?,?,?,?,?,?,?)',
+            (task_id, name, 'demo', status, created, finished or created, finished, '{}', error),
+        )
+
+    items = recent_task_events(20)
+    terminal = {item['target_id']: item for item in items if item['event_type'] != 'TASK_CREATED'}
+    assert terminal['task_success']['event_type'] == 'TASK_SUCCEEDED'
+    assert terminal['task_success']['level'] == 'INFO'
+    assert terminal['task_failed']['event_type'] == 'TASK_FAILED'
+    assert terminal['task_failed']['level'] == 'ERROR'
+    assert terminal['task_canceled']['event_type'] == 'TASK_CANCELED'
+    assert terminal['task_canceled']['level'] == 'WARNING'
+    assert terminal['task_timeout']['event_type'] == 'TASK_TIMED_OUT'
+    assert 'private stack' not in terminal['task_failed']['message']
+    assert '\n' not in terminal['task_failed']['message']
+    assert any(item['target_id'] == 'task_running' and item['event_type'] == 'TASK_CREATED' for item in items)
+    assert [item['occurred_at'] for item in items] == sorted(
+        (item['occurred_at'] for item in items), reverse=True
+    )
+
+
+def test_recent_task_events_api_limit_validation_and_auth(monkeypatch):
+    now = time.time()
+    for index in range(3):
+        db.execute(
+            'INSERT INTO tasks(id,name,source,status,created,updated,params) VALUES(?,?,?,?,?,?,?)',
+            (f'task_{index}', f'task {index}', 'demo', 'RUNNING', now + index, now + index, '{}'),
+        )
+    assert client.get('/api/v1/events?limit=0').status_code == 422
+    assert client.get('/api/v1/events?limit=101').status_code == 422
+    body = client.get('/api/v1/events?limit=2').json()
+    assert body['total'] == 2 and len(body['items']) == 2
+    assert body['items'][0]['target_id'] == 'task_2'
+
+    monkeypatch.setattr(main, 'API_KEY', 'admin-key')
+    assert client.get('/api/v1/events').status_code == 401
+    assert client.get('/api/v1/events', headers={'X-API-Key': 'admin-key'}).status_code == 200
 
 
 def test_agent_reporting_requires_agent_token_not_api_key(monkeypatch):

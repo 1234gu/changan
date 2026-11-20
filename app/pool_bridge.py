@@ -221,6 +221,64 @@ def task_statistics() -> dict:
     }
 
 
+TASK_EVENT_META = {
+    'SUCCEEDED': ('TASK_SUCCEEDED', 'INFO', '执行完成'),
+    'FAILED': ('TASK_FAILED', 'ERROR', '执行失败'),
+    'CANCELED': ('TASK_CANCELED', 'WARNING', '已取消'),
+    'TIMED_OUT': ('TASK_TIMED_OUT', 'ERROR', '执行超时'),
+}
+
+
+def _task_event_name(value: str | None) -> str:
+    """Keep dashboard messages single-line and bounded; task details own raw errors."""
+    name = ' '.join(str(value or '未命名任务').split())
+    return name[:80] + ('…' if len(name) > 80 else '')
+
+
+def recent_task_events(limit: int = 8) -> list[dict]:
+    """Task lifecycle events projected from authoritative task rows.
+
+    Success historically did not emit ``task_terminal`` into the event table, so
+    projecting creation and terminal events from ``tasks`` avoids silently
+    omitting completed tasks and also prevents duplicate terminal entries.
+    """
+    rows = db.query(
+        """
+        SELECT id, name, 'QUEUED' AS event_status, created AS occurred_at, 'created' AS phase
+          FROM tasks
+        UNION ALL
+        SELECT id, name, status AS event_status, COALESCE(finished, updated) AS occurred_at,
+               'terminal' AS phase
+          FROM tasks
+         WHERE status IN ('SUCCEEDED','FAILED','CANCELED','TIMED_OUT')
+        ORDER BY occurred_at DESC
+        LIMIT ?
+        """,
+        (limit,),
+    )
+    events = []
+    for row in rows:
+        name = _task_event_name(row['name'])
+        if row['phase'] == 'created':
+            event_type, level, message = 'TASK_CREATED', 'INFO', f'任务《{name}》已创建'
+            status = 'QUEUED'
+        else:
+            status = row['event_status']
+            event_type, level, suffix = TASK_EVENT_META[status]
+            message = f'任务《{name}》{suffix}'
+        events.append({
+            'id': f"task:{row['id']}:{row['phase']}",
+            'event_type': event_type,
+            'level': level,
+            'message': message,
+            'occurred_at': iso(row['occurred_at']),
+            'target_id': row['id'],
+            'target_type': 'task',
+            'task_status': status,
+        })
+    return events
+
+
 def node_reliability(node_id: str | None = None) -> dict:
     # Only nodes currently enabled for execution; retired nodes keep history but do not skew the pool view.
     where, args = ('WHERE node_id=?', (node_id,)) if node_id else ('WHERE node_id IN (SELECT id FROM nodes WHERE enabled=1)', ())

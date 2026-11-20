@@ -131,7 +131,14 @@ def _gpu(node: NodeRecord) -> _Contribution:
         return _Contribution(0, 0, 0, valid=False)
 
     capacity = float(report.gpu.device_count)
-    utilization = report.gpu.utilization_percent or 0
+    # Thor/Jetson GPUs share system memory.  For the current dashboard contract,
+    # present the collected unified-memory utilization as the GPU runtime value;
+    # dedicated/unknown-memory GPUs keep their device-reported utilization.
+    utilization = (
+        report.memory.utilization_percent
+        if report.gpu.memory_architecture == "unified"
+        else report.gpu.utilization_percent or 0
+    )
     can_schedule = node.schedulable and report.gpu.available
     return _Contribution(
         capacity,
@@ -151,11 +158,17 @@ def _video_memory(node: NodeRecord) -> _Contribution:
         return _Contribution(0, 0, 0, valid=False)
 
     bytes_per_gib = 1024**3
-    total = report.gpu.total_vram_bytes / bytes_per_gib
-    used = report.gpu.used_vram_bytes / bytes_per_gib
-    available = report.gpu.available_vram_bytes / bytes_per_gib
+    if report.gpu.memory_architecture == "unified":
+        total = report.memory.total_bytes / bytes_per_gib
+        used = report.memory.used_bytes / bytes_per_gib
+        available = report.memory.available_bytes / bytes_per_gib
+        memory_utilization = report.memory.utilization_percent
+    else:
+        total = report.gpu.total_vram_bytes / bytes_per_gib
+        used = report.gpu.used_vram_bytes / bytes_per_gib
+        available = report.gpu.available_vram_bytes / bytes_per_gib
+        memory_utilization = (used / total * 100) if total > 0 else 0
     schedulable = available if node.schedulable else 0
-    memory_utilization = (used / total * 100) if total > 0 else 0
     return _Contribution(
         capacity=total,
         schedulable_capacity=schedulable,

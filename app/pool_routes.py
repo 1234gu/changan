@@ -66,6 +66,14 @@ def summary(request: Request):
     }
 
 
+@router.get('/api/v1/events')
+def recent_events(request: Request, limit: int = Query(8, ge=1, le=100)):
+    """Recent task lifecycle events for the pool dashboard."""
+    bridge(request)
+    items = pool_bridge.recent_task_events(limit)
+    return {'items': items, 'total': len(items), 'updated_at': utcnow(), 'source': 'task_database'}
+
+
 @router.get('/api/v1/platform/nodes/{pool_node_id}/reliability')
 def reliability(request: Request, pool_node_id: UUID):
     b = bridge(request)

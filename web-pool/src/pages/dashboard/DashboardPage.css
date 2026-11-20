@@ -391,3 +391,2216 @@
     justify-content: flex-start;
   }
 }
+
+/* Vehicle cockpit dashboard ------------------------------------------------ */
+.dashboard {
+  position: relative;
+  max-width: none;
+  color: #dbe9ff;
+  background-color: #07111f;
+  background-image:
+    linear-gradient(rgb(61 173 255 / 4%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(61 173 255 / 4%) 1px, transparent 1px),
+    radial-gradient(circle at 18% 4%, rgb(32 139 255 / 17%), transparent 34%),
+    radial-gradient(circle at 82% 18%, rgb(22 218 202 / 9%), transparent 31%),
+    linear-gradient(145deg, #081526 0%, #07111f 48%, #0a1727 100%);
+  background-position: center;
+  background-size: 32px 32px, 32px 32px, auto, auto, auto;
+}
+
+.dashboard .page-header__eyebrow {
+  color: #4fdcff;
+}
+
+.dashboard .page-header h1 {
+  color: #f1f7ff;
+  font-size: 28px;
+  letter-spacing: 0.02em;
+}
+
+.dashboard .page-header p {
+  color: #8fa5c3;
+}
+
+.dashboard-heading__live {
+  color: #b6c9e2;
+  background: rgb(9 28 48 / 82%);
+  border-color: rgb(77 195 255 / 22%);
+  box-shadow: inset 0 0 24px rgb(45 155 255 / 5%);
+}
+
+.dashboard-heading__live span:not(.live-dot),
+.dashboard-heading__live time {
+  color: #9fb4cf;
+}
+
+.live-dot {
+  background: #42e6c3;
+  box-shadow: 0 0 12px rgb(66 230 195 / 70%);
+}
+
+.live-dot::after {
+  background: rgb(66 230 195 / 24%);
+}
+
+.dashboard .kpi-card.ant-card {
+  background:
+    linear-gradient(135deg, rgb(24 56 86 / 94%), rgb(10 29 49 / 96%)),
+    #0c1c30;
+  border-color: rgb(91 177 232 / 18%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 4%),
+    0 12px 28px rgb(0 6 18 / 20%);
+}
+
+.dashboard .kpi-card.ant-card::before {
+  width: 2px;
+  box-shadow: 0 0 14px var(--kpi-accent);
+}
+
+.dashboard .kpi-card.ant-card:hover {
+  border-color: color-mix(in srgb, var(--kpi-accent) 55%, #19324d);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 5%),
+    0 14px 34px rgb(0 8 20 / 36%),
+    0 0 22px color-mix(in srgb, var(--kpi-accent) 10%, transparent);
+}
+
+.dashboard .kpi-card__title,
+.dashboard .kpi-card__unit,
+.dashboard .kpi-card__hint,
+.dashboard .kpi-card__details,
+.dashboard .kpi-card__details > div {
+  color: #8fa5c1;
+}
+
+.dashboard .kpi-card__value,
+.dashboard .kpi-card__details dd {
+  color: #f2f7ff;
+}
+
+.dashboard .kpi-card__icon {
+  background: color-mix(in srgb, var(--kpi-accent) 15%, #0b2036);
+  border: 1px solid color-mix(in srgb, var(--kpi-accent) 26%, transparent);
+}
+
+.vehicle-fleet,
+.resource-pool-overview {
+  position: relative;
+  margin-top: 18px;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgb(15 39 64 / 94%), rgb(8 24 42 / 96%)),
+    #0a1b2d;
+  border: 1px solid rgb(74 177 235 / 18%);
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 4%),
+    0 18px 50px rgb(0 6 18 / 24%);
+}
+
+.vehicle-fleet::before,
+.resource-pool-overview::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(75 217 255 / 65%), transparent);
+  content: '';
+}
+
+.vehicle-fleet {
+  padding: 22px 24px 14px;
+}
+
+.vehicle-fleet__header,
+.dashboard-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.vehicle-fleet__header h2,
+.dashboard-section-heading h2 {
+  margin: 3px 0 0;
+  color: #eef7ff;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.vehicle-fleet__header p,
+.dashboard-section-heading p {
+  margin: 5px 0 0;
+  color: #8097b5;
+  font-size: 12px;
+}
+
+.vehicle-fleet__eyebrow,
+.dashboard-section-heading > div > span {
+  color: #47d7ff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.vehicle-fleet__counter {
+  display: flex;
+  min-width: 128px;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 7px;
+  padding: 8px 12px;
+  color: #91a8c6;
+  background: rgb(8 25 43 / 75%);
+  border: 1px solid rgb(73 207 255 / 20%);
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.vehicle-fleet__counter strong {
+  color: #4de4ff;
+  font-size: 25px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 16px rgb(77 228 255 / 35%);
+}
+
+.vehicle-fleet__stage {
+  position: relative;
+  display: flex;
+  min-height: 352px;
+  flex-direction: column;
+  justify-content: flex-end;
+  margin-top: 10px;
+  padding: 18px 20px 4px;
+  overflow: visible;
+  background:
+    radial-gradient(ellipse at 50% 90%, rgb(37 151 220 / 12%), transparent 48%),
+    linear-gradient(90deg, transparent 49.9%, rgb(64 193 255 / 5%) 50%, transparent 50.1%);
+}
+
+.vehicle-fleet__vehicles {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: 100%;
+  flex: 1;
+  align-items: end;
+  justify-content: center;
+  gap: 28px 24px;
+  margin: 0 auto 52px;
+}
+
+.vehicle-fleet__vehicles--single {
+  max-width: 310px;
+  grid-template-columns: minmax(220px, 310px);
+}
+
+.vehicle-fleet__vehicles--compact {
+  max-width: 780px;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+}
+
+.vehicle-fleet__vehicles--dense {
+  max-width: 1240px;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+}
+
+.vehicle-node {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 154px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 18px 18px 13px;
+  color: inherit;
+  background:
+    linear-gradient(180deg, rgb(27 61 91 / 66%), rgb(7 24 42 / 86%)),
+    #0a1d31;
+  border: 1px solid rgb(67 190 244 / 20%);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 4%),
+    0 12px 28px rgb(0 7 18 / 22%);
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.vehicle-node::after {
+  position: absolute;
+  bottom: -31px;
+  left: 50%;
+  width: 1px;
+  height: 30px;
+  background: linear-gradient(#3acaf3, rgb(58 202 243 / 10%));
+  box-shadow: 0 0 8px rgb(58 202 243 / 52%);
+  content: '';
+}
+
+.vehicle-node:hover,
+.vehicle-node:focus-visible {
+  color: inherit;
+  border-color: rgb(72 219 255 / 66%);
+  outline: none;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 6%),
+    0 16px 34px rgb(0 7 18 / 32%),
+    0 0 26px rgb(52 193 238 / 13%);
+  transform: translateY(-4px) scale(1.015);
+}
+
+.vehicle-node__telemetry {
+  position: absolute;
+  top: 10px;
+  right: 11px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #7f9bb9;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
+
+.vehicle-node__telemetry i {
+  width: 5px;
+  height: 5px;
+  background: #47e2c0;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgb(71 226 192 / 78%);
+}
+
+.vehicle-node__svg {
+  width: min(150px, 72%);
+  height: auto;
+  margin-bottom: 2px;
+  overflow: visible;
+  filter: drop-shadow(0 0 10px rgb(62 201 255 / 24%));
+  transition: filter 180ms ease;
+}
+
+.vehicle-node:hover .vehicle-node__svg,
+.vehicle-node:focus-visible .vehicle-node__svg {
+  filter: drop-shadow(0 0 14px rgb(62 218 255 / 44%));
+}
+
+.vehicle-node__body {
+  fill: rgb(19 61 91 / 92%);
+  stroke: #55d9ff;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.vehicle-node__halo {
+  fill: rgb(45 199 244 / 7%);
+}
+
+.vehicle-node__window {
+  fill: rgb(53 201 241 / 16%);
+  stroke: rgb(127 225 255 / 70%);
+  stroke-width: 1;
+}
+
+.vehicle-node__detail {
+  fill: none;
+  stroke: rgb(123 218 248 / 58%);
+  stroke-linecap: round;
+  stroke-width: 1;
+}
+
+.vehicle-node__wheel {
+  fill: #07111e;
+  stroke: #5cdfff;
+  stroke-width: 1.5;
+}
+
+.vehicle-node__wheel-core {
+  fill: #53d8fa;
+}
+
+.vehicle-node > strong {
+  width: 100%;
+  overflow: hidden;
+  color: #ebf8ff;
+  font-size: 13px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vehicle-node > small {
+  width: 100%;
+  margin-top: 3px;
+  overflow: hidden;
+  color: #7793b1;
+  font-size: 10px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vehicle-fleet__data-bus {
+  position: absolute;
+  right: 12%;
+  bottom: 65px;
+  left: 12%;
+  z-index: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #34c8f3 18%, #34c8f3 82%, transparent);
+  box-shadow: 0 0 10px rgb(52 200 243 / 35%);
+  opacity: 0.55;
+}
+
+.vehicle-fleet__hub {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  min-width: 286px;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 20px;
+  color: #50d9ff;
+  background: linear-gradient(90deg, rgb(17 57 85 / 92%), rgb(10 39 63 / 96%));
+  border: 1px solid rgb(74 211 255 / 36%);
+  border-radius: 10px;
+  box-shadow: 0 0 24px rgb(41 178 229 / 12%);
+  font-size: 20px;
+}
+
+.vehicle-fleet__hub > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.vehicle-fleet__hub strong {
+  color: #e9f8ff;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.vehicle-fleet__hub span {
+  margin-top: 2px;
+  color: #7796b6;
+  font-size: 9px;
+}
+
+.vehicle-fleet__empty {
+  display: flex;
+  min-height: 250px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #486a88;
+  font-size: 34px;
+}
+
+.vehicle-fleet__empty strong {
+  margin-top: 14px;
+  color: #c2d5e8;
+  font-size: 15px;
+}
+
+.vehicle-fleet__empty span {
+  margin-top: 6px;
+  color: #7890aa;
+  font-size: 11px;
+}
+
+.vehicle-fleet__note {
+  margin: 8px 0 0;
+  color: #607b99;
+  font-size: 9px;
+  text-align: right;
+}
+
+.vehicle-node-popover .ant-popover-inner {
+  padding: 0;
+  overflow: hidden;
+  background: #0b1c2f;
+  border: 1px solid rgb(74 199 245 / 34%);
+  box-shadow: 0 18px 48px rgb(0 6 18 / 55%);
+}
+
+.vehicle-node-popover .ant-popover-arrow::before {
+  background: #0b1c2f !important;
+}
+
+.node-resource-popover {
+  width: 322px;
+  color: #b8cbe0;
+}
+
+.node-resource-popover__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 13px 15px 11px;
+  background: linear-gradient(90deg, rgb(38 116 158 / 28%), transparent);
+  border-bottom: 1px solid rgb(91 184 230 / 16%);
+}
+
+.node-resource-popover__header > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.node-resource-popover__header strong {
+  overflow: hidden;
+  color: #eff9ff;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-resource-popover__header span {
+  color: #7896b5;
+  font-size: 10px;
+}
+
+.node-resource-popover__status {
+  flex: 0 0 auto;
+  color: #52e4c2 !important;
+}
+
+.node-resource-popover dl {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 8px 15px 11px;
+}
+
+.node-resource-popover dl > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgb(93 142 179 / 9%);
+}
+
+.node-resource-popover dl > div:last-child {
+  border-bottom: 0;
+}
+
+.node-resource-popover dt,
+.node-resource-popover dd {
+  margin: 0;
+  font-size: 10px;
+}
+
+.node-resource-popover dt {
+  color: #7992ad;
+}
+
+.node-resource-popover dd {
+  color: #d5e5f4;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.resource-pool-overview {
+  padding: 20px 22px 22px;
+}
+
+.dashboard-section-heading {
+  margin-bottom: 15px;
+}
+
+.dashboard-section-heading p {
+  text-align: right;
+}
+
+.resource-pool-overview__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.resource-pool-card {
+  position: relative;
+  min-width: 0;
+  min-height: 176px;
+  padding: 15px;
+  overflow: hidden;
+  color: inherit;
+  background:
+    linear-gradient(155deg, color-mix(in srgb, var(--resource-card-accent) 8%, transparent), transparent 45%),
+    rgb(7 25 43 / 78%);
+  border: 1px solid rgb(88 164 207 / 16%);
+  border-radius: 11px;
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.resource-pool-card:hover,
+.resource-pool-card:focus-visible {
+  color: inherit;
+  border-color: color-mix(in srgb, var(--resource-card-accent) 48%, #24445f);
+  outline: none;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--resource-card-accent) 10%, transparent);
+  transform: translateY(-2px);
+}
+
+.resource-pool-card__heading,
+.resource-pool-card__value,
+.resource-pool-card__utilization {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.resource-pool-card__heading > span {
+  color: #8fa7c1;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.resource-pool-card__heading i {
+  color: var(--resource-card-accent);
+  font-size: 16px;
+  font-style: normal;
+  text-shadow: 0 0 12px color-mix(in srgb, var(--resource-card-accent) 60%, transparent);
+}
+
+.resource-pool-card__value {
+  justify-content: flex-start;
+  margin-top: 10px;
+}
+
+.resource-pool-card__value strong {
+  color: #f3f8ff;
+  font-size: clamp(25px, 2vw, 34px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.resource-pool-card__value span {
+  align-self: flex-end;
+  color: #7790ab;
+  font-size: 10px;
+}
+
+.resource-pool-card__bar {
+  height: 3px;
+  margin-top: 12px;
+  overflow: hidden;
+  background: rgb(100 145 177 / 14%);
+  border-radius: 4px;
+}
+
+.resource-pool-card__bar i {
+  display: block;
+  height: 100%;
+  background: var(--resource-card-accent);
+  border-radius: inherit;
+  box-shadow: 0 0 9px var(--resource-card-accent);
+}
+
+.resource-pool-card__utilization {
+  margin-top: 5px;
+  color: #6f88a3;
+  font-size: 9px;
+}
+
+.resource-pool-card__utilization strong {
+  color: var(--resource-card-accent);
+  font-size: 10px;
+}
+
+.resource-pool-card__details {
+  display: flex;
+  min-height: 29px;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 9px;
+  color: #7790aa;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.dashboard .platform-strip {
+  margin-top: 18px;
+  margin-bottom: 0;
+  color: #d5e3f2;
+  background: linear-gradient(135deg, rgb(14 39 64 / 95%), rgb(8 25 43 / 97%));
+  border-color: rgb(78 173 226 / 18%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%);
+}
+
+.dashboard .platform-strip--empty,
+.dashboard .platform-strip__rate,
+.dashboard .platform-strip__metrics dt {
+  color: #8399b4;
+}
+
+.dashboard .platform-strip__metrics dd {
+  color: #edf5ff;
+}
+
+.dashboard .platform-strip__metrics small {
+  color: #738aa5;
+}
+
+.dashboard .platform-strip__icon {
+  color: #34536f;
+}
+
+.dashboard .platform-strip .ant-progress-text {
+  color: #dff7ef !important;
+}
+
+.dashboard-grid {
+  margin-top: 18px;
+}
+
+.dashboard-card.ant-card {
+  background: linear-gradient(145deg, rgb(15 38 62 / 96%), rgb(8 24 41 / 98%));
+  border-color: rgb(80 166 218 / 17%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 3%),
+    0 14px 34px rgb(0 6 18 / 18%);
+}
+
+.dashboard-card > .ant-card-head {
+  border-bottom-color: rgb(96 161 202 / 12%);
+}
+
+.section-title__icon {
+  color: #4fd7ff;
+  background: rgb(47 151 207 / 13%);
+  border: 1px solid rgb(76 196 242 / 16%);
+}
+
+.section-title h2 {
+  color: #e8f2fc;
+}
+
+.section-title span:not(.section-title__icon),
+.card-context {
+  color: #7b93ae;
+}
+
+.dashboard-card .ant-btn-link {
+  color: #49ccee;
+}
+
+.task-metric,
+.status-list__row {
+  background: rgb(8 27 46 / 72%);
+  border-color: rgb(87 154 195 / 14%);
+}
+
+.task-metric strong,
+.status-list__row strong {
+  color: #ecf5ff;
+}
+
+.task-metric .ant-badge-status-text,
+.task-metric > span:last-child,
+.status-list__row .ant-badge-status-text {
+  color: #7e96b1;
+}
+
+.dashboard .resource-progress {
+  border-bottom-color: rgb(91 150 191 / 13%);
+}
+
+.dashboard .resource-progress__amount,
+.dashboard .resource-progress__footer,
+.dashboard .resource-progress .ant-progress-text {
+  color: #7890aa;
+}
+
+.dashboard .resource-progress__amount strong,
+.dashboard .resource-progress__footer strong {
+  color: #b9c9da;
+}
+
+.dashboard .event-list .ant-list-item {
+  border-block-end-color: rgb(89 147 187 / 12%);
+}
+
+.dashboard .event-list__message,
+.dashboard a.event-list__message {
+  color: #c8d9ea;
+}
+
+.dashboard .event-list__type,
+.dashboard .event-list__time {
+  color: #738ba6;
+}
+
+.dashboard .cluster-summary {
+  background: rgb(8 27 46 / 72%);
+  border-color: rgb(89 153 193 / 14%);
+}
+
+.dashboard .cluster-summary:hover {
+  background: rgb(13 38 61 / 92%);
+  border-color: rgb(75 195 239 / 36%);
+}
+
+.dashboard .cluster-summary__identity strong {
+  color: #dce9f7;
+}
+
+.dashboard .cluster-summary__identity .ant-badge-status-text,
+.dashboard .cluster-summary__meta {
+  color: #7890aa;
+}
+
+.dashboard .cluster-summary__icon {
+  color: #4ccff2;
+  background: rgb(49 151 204 / 14%);
+}
+
+.dashboard .cluster-summary__resources .ant-tag {
+  color: #9cb3c9;
+  background: rgb(72 119 153 / 18%);
+}
+
+.dashboard .binding-table .ant-table,
+.dashboard .binding-table .ant-table-container,
+.dashboard .binding-table .ant-table-cell,
+.dashboard .binding-table .ant-table-thead > tr > th,
+.dashboard .binding-table .ant-table-tbody > tr > td {
+  color: #b9cadd;
+  background: transparent;
+  border-color: rgb(87 147 185 / 12%);
+}
+
+.dashboard .binding-table .ant-table-thead > tr > th {
+  color: #7f97b1;
+}
+
+.dashboard .binding-table .ant-table-tbody > tr:hover > td {
+  background: rgb(35 83 116 / 15%) !important;
+}
+
+.dashboard .binding-reasons {
+  color: #6f88a3;
+}
+
+@media (max-width: 1440px) {
+  .vehicle-fleet__vehicles--dense {
+    max-width: 940px;
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+  }
+
+  .resource-pool-overview__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .vehicle-fleet__vehicles--dense {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+
+  .resource-pool-overview__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .vehicle-fleet,
+  .resource-pool-overview {
+    border-radius: 14px;
+  }
+
+  .vehicle-fleet {
+    padding-inline: 14px;
+  }
+
+  .vehicle-fleet__header,
+  .dashboard-section-heading {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .vehicle-fleet__counter {
+    align-self: flex-start;
+    justify-content: flex-start;
+  }
+
+  .vehicle-fleet__stage {
+    padding-inline: 0;
+  }
+
+  .vehicle-fleet__vehicles--compact,
+  .vehicle-fleet__vehicles--dense {
+    grid-template-columns: 1fr;
+  }
+
+  .vehicle-fleet__hub {
+    min-width: 0;
+    width: min(286px, 100%);
+  }
+
+  .dashboard-section-heading p {
+    text-align: left;
+  }
+
+  .resource-pool-overview__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .node-resource-popover {
+    width: min(322px, calc(100vw - 32px));
+  }
+}
+
+/* Vehicle cockpit scene v2 */
+.vehicle-fleet {
+  isolation: isolate;
+}
+
+.vehicle-fleet__stage {
+  position: relative;
+  display: grid;
+  min-height: 470px;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  justify-content: stretch;
+  place-items: center;
+  margin-top: 14px;
+  padding: 28px 34px 34px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 79%, rgb(41 187 230 / 17%), transparent 24%),
+    radial-gradient(ellipse at 50% 34%, rgb(29 108 167 / 11%), transparent 48%),
+    linear-gradient(180deg, rgb(5 19 34 / 18%), rgb(4 17 31 / 88%));
+  border: 1px solid rgb(85 196 235 / 10%);
+  border-radius: 15px;
+}
+
+.vehicle-fleet__stage::before,
+.vehicle-fleet__stage::after {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  content: '';
+}
+
+.vehicle-fleet__stage::before {
+  inset: 10px;
+  background:
+    linear-gradient(#54dfff, #54dfff) 0 0 / 30px 1px no-repeat,
+    linear-gradient(#54dfff, #54dfff) 0 0 / 1px 30px no-repeat,
+    linear-gradient(#54dfff, #54dfff) 100% 0 / 30px 1px no-repeat,
+    linear-gradient(#54dfff, #54dfff) 100% 0 / 1px 30px no-repeat,
+    linear-gradient(#54dfff, #54dfff) 0 100% / 30px 1px no-repeat,
+    linear-gradient(#54dfff, #54dfff) 0 100% / 1px 30px no-repeat,
+    linear-gradient(#54dfff, #54dfff) 100% 100% / 30px 1px no-repeat,
+    linear-gradient(#54dfff, #54dfff) 100% 100% / 1px 30px no-repeat;
+  opacity: 0.2;
+}
+
+.vehicle-fleet__stage::after {
+  top: 0;
+  right: 12%;
+  left: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(74 222 255 / 55%), transparent);
+  box-shadow: 0 0 14px rgb(74 222 255 / 24%);
+}
+
+.vehicle-fleet__stage--triangle,
+.vehicle-fleet__stage--diamond {
+  min-height: 570px;
+}
+
+.vehicle-fleet__stage--convoy,
+.vehicle-fleet__stage--grid {
+  min-height: 590px;
+}
+
+.vehicle-fleet__scene,
+.vehicle-fleet__grid,
+.vehicle-fleet__lane,
+.vehicle-fleet__hud,
+.vehicle-fleet__pulse,
+.vehicle-fleet__data-core {
+  position: absolute;
+  pointer-events: none;
+}
+
+.vehicle-fleet__scene {
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.vehicle-fleet__grid {
+  right: -9%;
+  bottom: -58%;
+  left: -9%;
+  height: 128%;
+  background-image:
+    linear-gradient(rgb(72 190 230 / 11%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(72 190 230 / 10%) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to top, #000 34%, transparent 92%);
+  opacity: 0.7;
+  transform: perspective(430px) rotateX(62deg);
+  transform-origin: center bottom;
+}
+
+.vehicle-fleet__lane {
+  bottom: -20%;
+  width: 1px;
+  height: 108%;
+  background: linear-gradient(to top, transparent, rgb(86 215 255 / 35%), transparent 82%);
+  box-shadow: 0 0 12px rgb(72 207 250 / 22%);
+  transform-origin: bottom;
+}
+
+.vehicle-fleet__lane--left {
+  left: 22%;
+  transform: rotate(17deg);
+}
+
+.vehicle-fleet__lane--right {
+  right: 22%;
+  transform: rotate(-17deg);
+}
+
+.vehicle-fleet__hud {
+  bottom: -155px;
+  left: 50%;
+  border: 1px solid rgb(75 218 255 / 17%);
+  border-radius: 50%;
+  box-shadow:
+    0 0 28px rgb(60 198 240 / 6%),
+    inset 0 0 28px rgb(60 198 240 / 4%);
+  transform: translateX(-50%) rotateX(66deg);
+}
+
+.vehicle-fleet__hud--outer {
+  width: min(710px, 76%);
+  aspect-ratio: 1;
+  border-style: dashed;
+}
+
+.vehicle-fleet__hud--inner {
+  bottom: -80px;
+  width: min(430px, 52%);
+  aspect-ratio: 1;
+}
+
+.vehicle-fleet__tracks {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  opacity: 0.42;
+  stroke: rgb(78 216 255 / 42%);
+  stroke-dasharray: 8 18;
+  stroke-linecap: round;
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.vehicle-fleet__tracks path:nth-child(2) {
+  opacity: 0.48;
+  stroke-dasharray: 2 14;
+}
+
+.vehicle-fleet__tracks path:nth-child(3) {
+  opacity: 0.34;
+  stroke-dasharray: 4 14;
+}
+
+.vehicle-fleet__pulse {
+  bottom: 74px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: #8beaff;
+  border-radius: 50%;
+  box-shadow: 0 0 12px 3px rgb(68 211 255 / 38%);
+  opacity: 0.7;
+}
+
+.vehicle-fleet__pulse--one {
+  margin-left: -175px;
+  animation: fleet-pulse-left 8s ease-in-out infinite;
+}
+
+.vehicle-fleet__pulse--two {
+  margin-left: 170px;
+  animation: fleet-pulse-right 9s 1.3s ease-in-out infinite;
+}
+
+.vehicle-fleet__data-core {
+  bottom: 28px;
+  left: 50%;
+  width: 76px;
+  height: 23px;
+  background: radial-gradient(ellipse, rgb(84 225 255 / 34%), rgb(35 160 213 / 9%) 48%, transparent 72%);
+  border: 1px solid rgb(94 225 255 / 26%);
+  border-radius: 50%;
+  box-shadow: 0 0 30px rgb(51 190 234 / 14%);
+  transform: translateX(-50%);
+}
+
+.vehicle-fleet__data-core::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  background: #86ebff;
+  border-radius: 50%;
+  box-shadow: 0 0 14px #54dfff;
+  content: '';
+  transform: translate(-50%, -50%);
+}
+
+.vehicle-fleet__vehicles {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  max-width: 1240px;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  align-content: center;
+  margin: 0 auto;
+  padding: 22px 34px 42px;
+}
+
+.vehicle-fleet__vehicles--single,
+.vehicle-fleet__vehicles--pair,
+.vehicle-fleet__vehicles--triangle,
+.vehicle-fleet__vehicles--diamond,
+.vehicle-fleet__vehicles--grid {
+  display: grid;
+}
+
+.vehicle-fleet__vehicles--single {
+  max-width: 350px;
+  grid-template-columns: minmax(220px, 280px);
+}
+
+.vehicle-fleet__vehicles--single .vehicle-node {
+  --vehicle-width: clamp(224px, 18vw, 274px);
+}
+
+.vehicle-fleet__vehicles--pair {
+  max-width: 770px;
+  grid-template-columns: repeat(2, minmax(180px, 238px));
+  column-gap: clamp(64px, 9vw, 150px);
+}
+
+.vehicle-fleet__vehicles--pair .vehicle-node {
+  --vehicle-width: clamp(190px, 15vw, 230px);
+}
+
+.vehicle-fleet__vehicles--triangle {
+  max-width: 670px;
+  grid-template-columns: repeat(2, minmax(150px, 190px));
+  gap: 6px clamp(72px, 9vw, 140px);
+}
+
+.vehicle-fleet__vehicles--triangle .vehicle-node {
+  --vehicle-width: clamp(150px, 12vw, 184px);
+}
+
+.vehicle-fleet__vehicles--triangle .vehicle-node:first-child {
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+
+.vehicle-fleet__vehicles--triangle .vehicle-node:nth-child(n + 2) {
+  --formation-scale: 0.9;
+}
+
+.vehicle-fleet__vehicles--diamond {
+  max-width: 650px;
+  grid-template-columns: repeat(2, minmax(150px, 188px));
+  gap: 0 clamp(58px, 8vw, 124px);
+}
+
+.vehicle-fleet__vehicles--diamond .vehicle-node {
+  --vehicle-width: clamp(148px, 11vw, 180px);
+}
+
+.vehicle-fleet__vehicles--diamond .vehicle-node:nth-child(1),
+.vehicle-fleet__vehicles--diamond .vehicle-node:nth-child(4) {
+  --formation-scale: 0.88;
+}
+
+.vehicle-fleet__vehicles--diamond .vehicle-node:nth-child(2),
+.vehicle-fleet__vehicles--diamond .vehicle-node:nth-child(3) {
+  --formation-offset: 10px;
+}
+
+.vehicle-fleet__vehicles--convoy {
+  display: flex;
+  max-width: 1040px;
+  flex-wrap: wrap;
+  gap: 4px clamp(10px, 1.5vw, 24px);
+}
+
+.vehicle-fleet__vehicles--convoy .vehicle-node {
+  --vehicle-width: clamp(142px, 12vw, 176px);
+  flex: 0 1 21%;
+}
+
+.vehicle-fleet__vehicles--convoy .vehicle-node:nth-child(n + 5) {
+  --formation-scale: 0.91;
+}
+
+.vehicle-fleet__vehicles--grid {
+  max-width: 1180px;
+  max-height: 570px;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 6px 14px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: rgb(70 190 229 / 35%) transparent;
+  scrollbar-width: thin;
+}
+
+.vehicle-fleet__vehicles--grid .vehicle-node {
+  --vehicle-width: clamp(124px, 9vw, 150px);
+}
+
+.vehicle-node {
+  --formation-offset: 0px;
+  --formation-scale: 1;
+  --vehicle-width: 176px;
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-self: center;
+  padding: 4px 5px 8px;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  cursor: pointer;
+  text-decoration: none;
+  transform: translateY(var(--formation-offset)) scale(var(--formation-scale));
+  transform-origin: center center;
+  transition:
+    transform 200ms ease,
+    filter 200ms ease;
+}
+
+.vehicle-node::before {
+  position: absolute;
+  bottom: 39px;
+  left: 50%;
+  width: min(92%, 178px);
+  height: 22px;
+  background: radial-gradient(ellipse, rgb(68 215 255 / 26%), transparent 68%);
+  border-radius: 50%;
+  content: '';
+  opacity: 0.55;
+  transform: translateX(-50%);
+  transition:
+    opacity 180ms ease,
+    filter 180ms ease;
+}
+
+.vehicle-node::after {
+  position: absolute;
+  bottom: 29px;
+  left: 50%;
+  width: 1px;
+  height: 17px;
+  background: linear-gradient(rgb(82 218 255 / 6%), rgb(82 218 255 / 58%), transparent);
+  box-shadow: 0 0 8px rgb(58 202 243 / 32%);
+  content: '';
+}
+
+.vehicle-node:hover,
+.vehicle-node:focus-visible {
+  color: inherit;
+  background: none;
+  border: 0;
+  outline: none;
+  box-shadow: none;
+  filter: brightness(1.1);
+  transform: translateY(calc(var(--formation-offset) - 6px)) scale(calc(var(--formation-scale) + 0.025));
+}
+
+.vehicle-node:focus-visible .vehicle-node__visual {
+  outline: 1px solid rgb(100 224 255 / 68%);
+  outline-offset: 5px;
+}
+
+.vehicle-node__telemetry {
+  position: relative;
+  top: auto;
+  right: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: -2px;
+  color: #7293ae;
+  font-family: Consolas, monospace;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+}
+
+.vehicle-node__telemetry i {
+  width: 4px;
+  height: 4px;
+  background: #70dffc;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgb(78 213 250 / 68%);
+}
+
+.vehicle-node__visual {
+  position: relative;
+  display: grid;
+  width: min(var(--vehicle-width), 100%);
+  place-items: center;
+  perspective: 600px;
+  transition:
+    filter 200ms ease,
+    transform 200ms ease;
+}
+
+.vehicle-node:hover .vehicle-node__visual,
+.vehicle-node:focus-visible .vehicle-node__visual {
+  filter: drop-shadow(0 0 14px rgb(55 210 255 / 18%));
+  transform: scale(1.025);
+}
+
+.vehicle-node__visual::before,
+.vehicle-node__visual::after {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  border: 1px solid rgb(91 218 255 / 13%);
+  border-radius: 50%;
+  content: '';
+  transform: translate(-50%, -50%) rotateX(66deg);
+}
+
+.vehicle-node__visual::before {
+  width: 116%;
+  aspect-ratio: 1;
+  border-style: dashed;
+}
+
+.vehicle-node__visual::after {
+  width: 85%;
+  aspect-ratio: 1;
+}
+
+.vehicle-node__bracket {
+  position: absolute;
+  top: 48%;
+  z-index: 2;
+  width: 15px;
+  height: 34px;
+  border-block: 1px solid rgb(98 221 255 / 38%);
+  opacity: 0.5;
+  transform: translateY(-50%);
+}
+
+.vehicle-node__bracket--left {
+  left: -2px;
+  border-left: 1px solid rgb(98 221 255 / 38%);
+}
+
+.vehicle-node__bracket--right {
+  right: -2px;
+  border-right: 1px solid rgb(98 221 255 / 38%);
+}
+
+.vehicle-node__svg {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  filter: drop-shadow(0 12px 14px rgb(0 6 18 / 40%)) drop-shadow(0 0 7px rgb(60 206 250 / 20%));
+  transform: rotateX(3deg);
+  transform-origin: center center;
+  transition: filter 180ms ease;
+}
+
+.vehicle-node:hover .vehicle-node__svg,
+.vehicle-node:focus-visible .vehicle-node__svg {
+  filter: drop-shadow(0 15px 16px rgb(0 6 18 / 45%)) drop-shadow(0 0 11px rgb(62 218 255 / 38%));
+}
+
+.vehicle-node__ground-glow {
+  fill: rgb(54 209 250 / 19%);
+}
+
+.vehicle-node__wake {
+  fill: none;
+  opacity: 0.38;
+  stroke: rgb(80 215 255 / 60%);
+  stroke-dasharray: 3 6;
+  stroke-linecap: round;
+  stroke-width: 1;
+}
+
+.vehicle-node__wheels rect {
+  fill: #020913;
+  stroke: rgb(95 205 237 / 40%);
+  stroke-width: 1;
+}
+
+.vehicle-node__body {
+  stroke: #65dcfa;
+  stroke-linejoin: round;
+  stroke-width: 1.25;
+}
+
+.vehicle-node__body-ridge,
+.vehicle-node__side-line,
+.vehicle-node__accent {
+  fill: none;
+  stroke: rgb(125 225 251 / 47%);
+  stroke-linecap: round;
+  stroke-width: 0.9;
+}
+
+.vehicle-node__body-ridge {
+  opacity: 0.22;
+}
+
+.vehicle-node__hood {
+  fill: rgb(16 58 87 / 44%);
+  stroke: rgb(125 225 251 / 38%);
+  stroke-width: 0.8;
+}
+
+.vehicle-node__windshield,
+.vehicle-node__canopy,
+.vehicle-node__rear-glass {
+  stroke: rgb(140 230 255 / 58%);
+  stroke-width: 0.9;
+}
+
+.vehicle-node__rear-glass {
+  fill: rgb(29 117 153 / 24%);
+}
+
+.vehicle-node__lamps path {
+  fill: #b9f5ff;
+  stroke: #72e5ff;
+  stroke-width: 0.6;
+}
+
+.vehicle-node__lamps .vehicle-node__lamp--rear {
+  fill: #5de0f8;
+  opacity: 0.68;
+}
+
+.vehicle-node__sensor circle,
+.vehicle-node__sensor path {
+  fill: rgb(27 133 174 / 40%);
+  stroke: rgb(132 235 255 / 72%);
+  stroke-width: 0.9;
+}
+
+.vehicle-node__sensor circle:nth-child(2) {
+  fill: #6ee5fb;
+  opacity: 0.7;
+}
+
+.vehicle-node__sensor path {
+  fill: none;
+  opacity: 0.6;
+}
+
+.vehicle-node > strong {
+  width: 100%;
+  margin-top: -2px;
+  overflow: hidden;
+  color: #edfaff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-shadow: 0 0 12px rgb(75 216 255 / 16%);
+  white-space: nowrap;
+}
+
+.vehicle-node > small {
+  width: 100%;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #6f8ba7;
+  font-size: 9px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vehicle-fleet__empty {
+  position: relative;
+  z-index: 3;
+  min-height: 340px;
+}
+
+.vehicle-fleet__note {
+  margin: 9px 0 0;
+  color: #607b99;
+  font-size: 9px;
+  text-align: right;
+}
+
+.node-resource-popover dd {
+  max-width: 192px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes fleet-pulse-left {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: translate(-110px, 20px);
+  }
+
+  50% {
+    opacity: 0.78;
+    transform: translate(100px, -20px);
+  }
+}
+
+@keyframes fleet-pulse-right {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: translate(90px, 14px);
+  }
+
+  50% {
+    opacity: 0.72;
+    transform: translate(-95px, -18px);
+  }
+}
+
+@media (max-width: 1500px) {
+  .vehicle-fleet__stage {
+    padding-inline: 22px;
+  }
+
+  .vehicle-fleet__vehicles {
+    padding-inline: 20px;
+  }
+
+  .vehicle-fleet__vehicles--convoy .vehicle-node {
+    --vehicle-width: clamp(138px, 11.5vw, 164px);
+  }
+}
+
+@media (max-width: 1100px) {
+  .vehicle-fleet__vehicles--pair {
+    column-gap: 48px;
+  }
+
+  .vehicle-fleet__vehicles--triangle,
+  .vehicle-fleet__vehicles--diamond {
+    column-gap: 44px;
+  }
+
+  .vehicle-fleet__vehicles--convoy .vehicle-node {
+    --vehicle-width: clamp(132px, 17vw, 158px);
+    flex-basis: 29%;
+  }
+}
+
+@media (max-width: 720px) {
+  .vehicle-fleet__stage {
+    min-height: 430px;
+    padding: 20px 4px 28px;
+  }
+
+  .vehicle-fleet__stage--triangle,
+  .vehicle-fleet__stage--diamond,
+  .vehicle-fleet__stage--convoy,
+  .vehicle-fleet__stage--grid {
+    min-height: 560px;
+  }
+
+  .vehicle-fleet__vehicles {
+    padding-inline: 8px;
+  }
+
+  .vehicle-fleet__vehicles--pair,
+  .vehicle-fleet__vehicles--triangle,
+  .vehicle-fleet__vehicles--diamond {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 8px;
+  }
+
+  .vehicle-fleet__vehicles--pair .vehicle-node,
+  .vehicle-fleet__vehicles--triangle .vehicle-node,
+  .vehicle-fleet__vehicles--diamond .vehicle-node {
+    --vehicle-width: min(39vw, 150px);
+  }
+
+  .vehicle-fleet__vehicles--convoy .vehicle-node {
+    --vehicle-width: min(38vw, 145px);
+    flex-basis: 44%;
+  }
+
+  .vehicle-fleet__vehicles--grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vehicle-fleet__vehicles--grid .vehicle-node {
+    --vehicle-width: min(36vw, 138px);
+  }
+
+  .vehicle-fleet__note {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vehicle-fleet__pulse {
+    animation: none;
+  }
+
+  .vehicle-node,
+  .vehicle-node__visual,
+  .vehicle-node__svg {
+    transition: none;
+  }
+}
+
+/* Vehicle cockpit scene v3: realistic SUV fleet */
+.vehicle-fleet__header {
+  position: relative;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 150px;
+}
+
+.vehicle-fleet__header h2 {
+  margin: 0;
+  color: #f2fbff;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-shadow: 0 0 22px rgb(60 207 255 / 20%);
+}
+
+.vehicle-fleet__header h2::before,
+.vehicle-fleet__header h2::after {
+  display: inline-block;
+  width: 72px;
+  height: 1px;
+  margin: 0 18px 6px;
+  background: linear-gradient(90deg, transparent, rgb(73 218 255 / 54%));
+  content: '';
+}
+
+.vehicle-fleet__header h2::after {
+  background: linear-gradient(90deg, rgb(73 218 255 / 54%), transparent);
+}
+
+.vehicle-fleet__counter {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  min-width: 124px;
+  background:
+    linear-gradient(145deg, rgb(18 66 96 / 72%), rgb(7 26 46 / 88%)),
+    #091e33;
+  transform: translateY(-50%);
+}
+
+.vehicle-fleet__stage {
+  min-height: 520px;
+  margin-top: 8px;
+  padding: 24px 30px 34px;
+  background:
+    radial-gradient(ellipse at 50% 73%, rgb(38 200 244 / 18%), transparent 18%),
+    radial-gradient(ellipse at 50% 100%, rgb(15 118 183 / 19%), transparent 56%),
+    linear-gradient(180deg, rgb(4 22 40 / 42%), rgb(3 15 29 / 92%));
+}
+
+.vehicle-fleet__stage--triangle,
+.vehicle-fleet__stage--diamond {
+  min-height: 610px;
+}
+
+.vehicle-fleet__stage--convoy,
+.vehicle-fleet__stage--grid {
+  min-height: 660px;
+}
+
+.vehicle-fleet__stage::before {
+  opacity: 0.3;
+}
+
+.vehicle-fleet__scene,
+.vehicle-fleet__compute-field {
+  position: absolute;
+  pointer-events: none;
+}
+
+.vehicle-fleet__scene::before,
+.vehicle-fleet__scene::after {
+  position: absolute;
+  right: -8%;
+  bottom: 52px;
+  left: -8%;
+  height: 132px;
+  background:
+    linear-gradient(166deg, transparent 46%, rgb(36 138 193 / 18%) 47%, transparent 48%) 0 12px / 160px 70px repeat-x,
+    linear-gradient(194deg, transparent 46%, rgb(32 121 178 / 16%) 47%, transparent 48%) 60px 22px / 190px 82px repeat-x;
+  content: '';
+  mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
+  opacity: 0.55;
+}
+
+.vehicle-fleet__scene::after {
+  bottom: 28px;
+  height: 82px;
+  background: linear-gradient(90deg, transparent, rgb(53 195 237 / 16%), transparent);
+  filter: blur(16px);
+}
+
+.vehicle-fleet__grid {
+  bottom: -62%;
+  height: 140%;
+  background-size: 48px 48px;
+  opacity: 0.74;
+}
+
+.vehicle-fleet__hud {
+  border-color: rgb(72 219 255 / 24%);
+}
+
+.vehicle-fleet__hud--outer {
+  bottom: -210px;
+  width: min(900px, 78%);
+}
+
+.vehicle-fleet__hud--inner {
+  bottom: -92px;
+  width: min(520px, 48%);
+}
+
+.vehicle-fleet__tracks {
+  opacity: 0.58;
+  stroke: rgb(78 216 255 / 52%);
+  stroke-dasharray: 9 21;
+  animation: fleet-track-flow 12s linear infinite;
+}
+
+.vehicle-fleet__tracks .vehicle-fleet__track-spoke {
+  opacity: 0.55;
+  stroke-dasharray: 3 14;
+}
+
+.vehicle-fleet__compute-field {
+  bottom: 72px;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  width: 250px;
+  height: 118px;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  padding-bottom: 30px;
+  transform: translateX(-50%);
+}
+
+.vehicle-fleet__compute-field::before {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 52px;
+  background:
+    radial-gradient(ellipse, rgb(76 229 255 / 42%), rgb(29 157 219 / 15%) 45%, transparent 70%);
+  border: 1px solid rgb(86 222 255 / 29%);
+  border-radius: 50%;
+  box-shadow:
+    0 0 32px rgb(52 204 249 / 18%),
+    inset 0 0 24px rgb(64 218 255 / 12%);
+  content: '';
+  transform: rotateX(62deg);
+}
+
+.vehicle-fleet__compute-field::after {
+  position: absolute;
+  bottom: 17px;
+  left: 50%;
+  width: 150px;
+  height: 54px;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgb(112 237 255 / 55%), rgb(29 169 225 / 16%) 46%, transparent 72%);
+  clip-path: polygon(0 100%, 10% 82%, 24% 76%, 34% 48%, 45% 61%, 53% 20%, 63% 58%, 76% 67%, 88% 84%, 100% 100%);
+  content: '';
+  filter: drop-shadow(0 0 13px rgb(52 213 255 / 35%));
+  transform: translateX(-50%);
+}
+
+.vehicle-fleet__compute-field i {
+  position: relative;
+  z-index: 2;
+  width: 2px;
+  height: 62px;
+  background: linear-gradient(to top, rgb(91 228 255 / 6%), #78e9ff, transparent);
+  box-shadow: 0 0 7px rgb(91 225 255 / 44%);
+  opacity: 0.58;
+  transform-origin: bottom;
+  animation: fleet-column-pulse 4.8s ease-in-out infinite;
+}
+
+.vehicle-fleet__compute-field i:nth-child(2n) {
+  height: 38px;
+  animation-delay: -1.4s;
+}
+
+.vehicle-fleet__compute-field i:nth-child(3n) {
+  height: 78px;
+  animation-delay: -2.7s;
+}
+
+.vehicle-fleet__compute-field i:nth-child(5n) {
+  height: 52px;
+  animation-delay: -3.4s;
+}
+
+.vehicle-fleet__vehicles {
+  max-width: 1420px;
+  padding: 20px 44px 56px;
+}
+
+.vehicle-fleet__vehicles--single {
+  max-width: 650px;
+  grid-template-columns: minmax(360px, 520px);
+}
+
+.vehicle-fleet__vehicles--single .vehicle-node {
+  --vehicle-width: clamp(390px, 31vw, 520px);
+}
+
+.vehicle-fleet__vehicles--pair {
+  max-width: 1180px;
+  grid-template-columns: repeat(2, minmax(300px, 420px));
+  column-gap: clamp(100px, 12vw, 220px);
+}
+
+.vehicle-fleet__vehicles--pair .vehicle-node {
+  --vehicle-width: clamp(320px, 25vw, 420px);
+}
+
+.vehicle-fleet__vehicles--triangle {
+  max-width: 980px;
+  grid-template-columns: repeat(2, minmax(250px, 350px));
+  gap: 16px clamp(50px, 8vw, 140px);
+}
+
+.vehicle-fleet__vehicles--triangle .vehicle-node {
+  --vehicle-width: clamp(270px, 21vw, 350px);
+}
+
+.vehicle-fleet__vehicles--triangle .vehicle-node:first-child {
+  --formation-offset: 0px;
+  --formation-scale: 0.72;
+}
+
+.vehicle-fleet__vehicles--triangle .vehicle-node:nth-child(n + 2) {
+  --formation-offset: 0px;
+  --formation-scale: 1;
+}
+
+.vehicle-fleet__vehicles--diamond {
+  max-width: 1000px;
+  grid-template-columns: repeat(2, minmax(260px, 370px));
+  gap: 14px clamp(48px, 7vw, 118px);
+}
+
+.vehicle-fleet__vehicles--diamond .vehicle-node {
+  --vehicle-width: clamp(270px, 22vw, 370px);
+}
+
+.vehicle-fleet__vehicles--diamond .vehicle-node:nth-child(-n + 2) {
+  --formation-offset: 0px;
+  --formation-scale: 0.76;
+  z-index: 1;
+}
+
+.vehicle-fleet__vehicles--diamond .vehicle-node:nth-child(n + 3) {
+  --formation-offset: 0px;
+  --formation-scale: 1.03;
+  z-index: 2;
+}
+
+.vehicle-fleet__vehicles--convoy {
+  max-width: 1240px;
+  gap: 16px clamp(8px, 1.4vw, 22px);
+}
+
+.vehicle-fleet__vehicles--convoy .vehicle-node {
+  --vehicle-width: clamp(215px, 18vw, 285px);
+  flex-basis: 22%;
+}
+
+.vehicle-fleet__vehicles--convoy .vehicle-node:nth-child(-n + 4) {
+  --formation-offset: 0px;
+  --formation-scale: 0.8;
+}
+
+.vehicle-fleet__vehicles--convoy .vehicle-node:nth-child(n + 5) {
+  --formation-offset: 0px;
+  --formation-scale: 1;
+  z-index: 2;
+}
+
+.vehicle-fleet__vehicles--grid {
+  max-width: 1320px;
+  max-height: 620px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 2px 12px;
+}
+
+.vehicle-fleet__vehicles--grid .vehicle-node {
+  --vehicle-width: clamp(190px, 14vw, 245px);
+}
+
+.vehicle-node {
+  --vehicle-width: 285px;
+  padding: 4px 4px 0;
+}
+
+.vehicle-node::before,
+.vehicle-node::after {
+  display: none;
+}
+
+.vehicle-node__label {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  min-width: 104px;
+  max-width: 150px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 0 auto -7px;
+  padding: 7px 16px;
+  overflow: visible;
+  color: #eafaff;
+  background:
+    linear-gradient(180deg, rgb(20 102 143 / 88%), rgb(7 39 65 / 94%)),
+    #0a3150;
+  border: 1px solid rgb(75 218 255 / 54%);
+  border-radius: 4px;
+  box-shadow:
+    0 0 16px rgb(44 197 245 / 17%),
+    inset 0 1px 0 rgb(203 248 255 / 12%);
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 58% 100%, 50% calc(100% + 7px), 42% 100%, 8px 100%, 0 50%);
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  line-height: 1.2;
+  text-align: center;
+  text-shadow: 0 0 10px rgb(82 224 255 / 28%);
+  white-space: nowrap;
+}
+
+.vehicle-node__label i {
+  width: 5px;
+  height: 5px;
+  background: #79eaff;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #51dbff;
+}
+
+.vehicle-node__visual {
+  width: min(var(--vehicle-width), 100%);
+  padding: 0 0 17px;
+}
+
+.vehicle-node__visual::before,
+.vehicle-node__visual::after {
+  top: auto;
+  bottom: 0;
+  left: 50%;
+  width: 90%;
+  height: 36px;
+  aspect-ratio: auto;
+  border-color: rgb(74 221 255 / 42%);
+  border-style: solid;
+  box-shadow:
+    0 0 19px rgb(45 200 246 / 15%),
+    inset 0 0 15px rgb(64 216 255 / 12%);
+  transform: translateX(-50%) rotateX(66deg);
+}
+
+.vehicle-node__visual::after {
+  bottom: 4px;
+  width: 72%;
+  height: 26px;
+  border-style: dashed;
+  opacity: 0.66;
+}
+
+.vehicle-node__platform {
+  position: absolute;
+  right: 5%;
+  bottom: 4px;
+  left: 5%;
+  z-index: 0;
+  height: 42px;
+  background: radial-gradient(ellipse, rgb(65 222 255 / 42%), rgb(24 134 198 / 12%) 44%, transparent 72%);
+  border-radius: 50%;
+  filter: blur(1px);
+  transform: rotateX(62deg);
+}
+
+.vehicle-node__image {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  filter:
+    drop-shadow(0 16px 16px rgb(0 4 12 / 58%))
+    drop-shadow(0 0 8px rgb(55 201 246 / 18%));
+  transform-origin: center bottom;
+  transition:
+    filter 200ms ease,
+    transform 200ms ease;
+}
+
+.vehicle-node--mirror .vehicle-node__image {
+  transform: scaleX(-1);
+}
+
+.vehicle-node:hover .vehicle-node__visual,
+.vehicle-node:focus-visible .vehicle-node__visual {
+  filter: none;
+  transform: translateY(-2px) scale(1.025);
+}
+
+.vehicle-node:hover .vehicle-node__image,
+.vehicle-node:focus-visible .vehicle-node__image {
+  filter:
+    drop-shadow(0 20px 18px rgb(0 4 12 / 62%))
+    drop-shadow(0 0 13px rgb(72 218 255 / 31%));
+}
+
+.vehicle-node--mirror:hover .vehicle-node__image,
+.vehicle-node--mirror:focus-visible .vehicle-node__image {
+  transform: scaleX(-1);
+}
+
+.vehicle-node:focus-visible .vehicle-node__visual {
+  outline: none;
+}
+
+.vehicle-node:focus-visible .vehicle-node__label {
+  outline: 2px solid rgb(104 230 255 / 82%);
+  outline-offset: 4px;
+}
+
+.vehicle-fleet__note {
+  color: #6f89a5;
+  font-size: 11px;
+}
+
+.resource-pool-card {
+  min-height: 186px;
+  background:
+    radial-gradient(circle at 86% 17%, color-mix(in srgb, var(--resource-card-accent) 14%, transparent), transparent 25%),
+    linear-gradient(155deg, color-mix(in srgb, var(--resource-card-accent) 8%, transparent), transparent 45%),
+    rgb(6 24 42 / 84%);
+  border-color: color-mix(in srgb, var(--resource-card-accent) 24%, rgb(39 90 124 / 36%));
+}
+
+.resource-pool-card::after {
+  position: absolute;
+  right: 12%;
+  bottom: 0;
+  left: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--resource-card-accent), transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--resource-card-accent) 35%, transparent);
+  content: '';
+  opacity: 0.48;
+}
+
+.resource-pool-card__heading i {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  background: color-mix(in srgb, var(--resource-card-accent) 9%, rgb(7 28 47 / 92%));
+  border: 1px solid color-mix(in srgb, var(--resource-card-accent) 38%, transparent);
+  border-radius: 50%;
+  box-shadow:
+    0 0 16px color-mix(in srgb, var(--resource-card-accent) 12%, transparent),
+    inset 0 0 10px color-mix(in srgb, var(--resource-card-accent) 8%, transparent);
+}
+
+@keyframes fleet-track-flow {
+  to {
+    stroke-dashoffset: -120;
+  }
+}
+
+@keyframes fleet-column-pulse {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scaleY(0.72);
+  }
+
+  50% {
+    opacity: 0.78;
+    transform: scaleY(1);
+  }
+}
+
+@media (max-width: 1500px) {
+  .vehicle-fleet__vehicles--single .vehicle-node {
+    --vehicle-width: clamp(390px, 35vw, 480px);
+  }
+
+  .vehicle-fleet__vehicles--pair .vehicle-node {
+    --vehicle-width: clamp(300px, 27vw, 380px);
+  }
+
+  .vehicle-fleet__vehicles--triangle .vehicle-node,
+  .vehicle-fleet__vehicles--diamond .vehicle-node {
+    --vehicle-width: clamp(250px, 23vw, 330px);
+  }
+
+  .vehicle-fleet__vehicles--convoy .vehicle-node {
+    --vehicle-width: clamp(195px, 19vw, 255px);
+  }
+}
+
+@media (max-width: 1100px) {
+  .vehicle-fleet__header {
+    padding-inline: 120px;
+  }
+
+  .vehicle-fleet__header h2::before,
+  .vehicle-fleet__header h2::after {
+    width: 38px;
+    margin-inline: 10px;
+  }
+
+  .vehicle-fleet__vehicles--pair {
+    column-gap: 42px;
+  }
+
+  .vehicle-fleet__vehicles--convoy .vehicle-node {
+    --vehicle-width: clamp(178px, 22vw, 225px);
+    flex-basis: 29%;
+  }
+}
+
+@media (max-width: 720px) {
+  .vehicle-fleet__header {
+    min-height: 0;
+    align-items: flex-start;
+    padding-inline: 0;
+  }
+
+  .vehicle-fleet__header h2 {
+    font-size: 18px;
+    text-align: left;
+  }
+
+  .vehicle-fleet__header h2::before,
+  .vehicle-fleet__header h2::after {
+    display: none;
+  }
+
+  .vehicle-fleet__counter {
+    position: static;
+    transform: none;
+  }
+
+  .vehicle-fleet__stage {
+    min-height: 460px;
+  }
+
+  .vehicle-fleet__stage--triangle,
+  .vehicle-fleet__stage--diamond,
+  .vehicle-fleet__stage--convoy,
+  .vehicle-fleet__stage--grid {
+    min-height: 620px;
+  }
+
+  .vehicle-fleet__vehicles--single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vehicle-fleet__vehicles--single .vehicle-node {
+    --vehicle-width: min(82vw, 410px);
+  }
+
+  .vehicle-fleet__vehicles--pair .vehicle-node,
+  .vehicle-fleet__vehicles--triangle .vehicle-node,
+  .vehicle-fleet__vehicles--diamond .vehicle-node {
+    --vehicle-width: min(42vw, 230px);
+  }
+
+  .vehicle-fleet__vehicles--convoy .vehicle-node {
+    --vehicle-width: min(42vw, 215px);
+    flex-basis: 44%;
+  }
+
+  .vehicle-fleet__compute-field {
+    width: 170px;
+    opacity: 0.72;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vehicle-fleet__tracks,
+  .vehicle-fleet__compute-field i {
+    animation: none;
+  }
+
+  .vehicle-node__image {
+    transition: none;
+  }
+}

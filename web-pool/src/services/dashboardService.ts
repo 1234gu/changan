@@ -9,7 +9,12 @@ import type { ResourceCapacityMap, ResourceMap, ResourceSummary } from '../types
 import { getComputePoolSummary } from './computePoolService';
 import { getClusters } from './clusterService';
 import { getNodeDataMode, getNodeEvents, getNodes } from './nodeService';
-import { getPlatformSummary, type PlatformSummary } from './platformService';
+import {
+  getPlatformEvents,
+  getPlatformSummary,
+  type PlatformEvent,
+  type PlatformSummary,
+} from './platformService';
 
 const REFRESH_INTERVAL_MS = 5_000;
 
@@ -106,7 +111,7 @@ const createNodeStatus = (nodes: NodeSummary[]): NodeStatusSummary => ({
   schedulable: nodes.filter((node) => node.schedulable).length,
 });
 
-function toSystemEvent(event: NodeEvent): SystemEvent {
+function toNodeSystemEvent(event: NodeEvent): SystemEvent {
   let type: SystemEvent['type'] = 'unknown';
   if (event.type === 'node_discovered' || event.type === 'registration_completed') {
     type = 'node_joined';
@@ -131,7 +136,41 @@ function toSystemEvent(event: NodeEvent): SystemEvent {
     message: event.message,
     occurredAt: event.occurredAt,
     targetId: event.nodeId,
+    targetType: 'node',
   };
+}
+
+const taskEventTypes: Record<string, SystemEvent['type']> = {
+  TASK_CREATED: 'task_created',
+  TASK_SUCCEEDED: 'task_succeeded',
+  TASK_FAILED: 'task_failed',
+  TASK_CANCELED: 'task_canceled',
+  TASK_TIMED_OUT: 'task_timed_out',
+};
+
+function toTaskSystemEvent(event: PlatformEvent): SystemEvent {
+  const level = event.level.toLowerCase();
+  return {
+    id: event.id,
+    type: taskEventTypes[event.eventType.toUpperCase()] ?? 'unknown',
+    level: level === 'warning' || level === 'error' ? level : 'info',
+    message: event.message,
+    occurredAt: event.occurredAt,
+    ...(event.targetId ? { targetId: event.targetId } : {}),
+    targetType: 'task',
+  };
+}
+
+function recentEvents(events: SystemEvent[], now: dayjs.Dayjs) {
+  const start = now.subtract(30, 'minute').valueOf();
+  const end = now.valueOf();
+  return events
+    .filter((event) => {
+      const occurredAt = dayjs(event.occurredAt).valueOf();
+      return Number.isFinite(occurredAt) && occurredAt >= start && occurredAt <= end;
+    })
+    .sort((left, right) => dayjs(right.occurredAt).valueOf() - dayjs(left.occurredAt).valueOf())
+    .slice(0, 8);
 }
 
 async function loadSimulatorBaseline() {
@@ -141,16 +180,18 @@ async function loadSimulatorBaseline() {
 }
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {
-  const [nodeResult, computePool, clusterResult, nodeEvents, simulatorBaseline, platform] =
+  const [nodeResult, computePool, clusterResult, nodeEvents, taskEvents, simulatorBaseline, platform] =
     await Promise.all([
       getNodes(),
       getComputePoolSummary(),
       getClusters(),
       getNodeEvents(),
+      getPlatformEvents().catch(() => []),
       loadSimulatorBaseline(),
       getPlatformSummary().catch((): PlatformSummary | null => null),
     ]);
   const nodes = activeNodes(nodeResult.items);
+  const activeNodeIds = new Set(nodes.map((node) => node.id));
   const resources = toResourceMap(computePool.resources);
   const clusters = clusterResult.items.map<ClusterSummary>((cluster) => ({
     id: cluster.id,
@@ -162,6 +203,8 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
 
   return {
     nodes: createNodeStatus(nodes),
+    nodeItems: nodes,
+    nodeResources: computePool.sources.filter((source) => activeNodeIds.has(source.nodeId)),
     resourcePool: { resources },
     supportingResources: computePool.supportingResources,
     tasks: platform
@@ -174,7 +217,10 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
       : (simulatorBaseline?.tasks ?? { ...EMPTY_TASK_SUMMARY }),
     platform,
     clusters,
-    events: nodeEvents.slice(0, 8).map(toSystemEvent),
+    events: recentEvents(
+      [...nodeEvents.map(toNodeSystemEvent), ...taskEvents.map(toTaskSystemEvent)],
+      dayjs(computePool.updatedAt),
+    ),
     resourceTrend: mergeTrend(
       simulatorBaseline?.resourceTrend ?? [],
       resources,

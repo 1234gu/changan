@@ -96,6 +96,8 @@ export const createDashboardMock = (): DashboardSummary => {
 
   return {
     nodes: createNodeStatus(nodes),
+    nodeItems: nodes,
+    nodeResources: computePool.sources,
     resourcePool: {
       resources,
     },
