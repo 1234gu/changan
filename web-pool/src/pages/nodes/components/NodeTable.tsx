@@ -44,16 +44,12 @@ function formatResources(node: NodeSummary) {
   ].filter(Boolean);
   const withOtherAccelerators = (summary: string) => [summary, ...otherAccelerators].join(' · ');
   if (gpu && !gpu.supported) {
-    return withOtherAccelerators(`CPU ${cpuCores} Core · GPU 不支持 · VRAM 不支持`);
+    return withOtherAccelerators(`CPU ${cpuCores} Core · GPU 不支持 · 显存不支持`);
   }
 
   const gpuCount = gpu?.deviceCount ?? node.resources.gpu?.total ?? 0;
   if (gpu?.supported && !gpu.available) {
-    return withOtherAccelerators(`CPU ${cpuCores} Core · GPU ${gpuCount} · VRAM 采集不可用`);
-  }
-
-  if (gpu?.memoryArchitecture === 'unified') {
-    return withOtherAccelerators(`CPU ${cpuCores} Core · GPU ${gpuCount} · 统一内存`);
+    return withOtherAccelerators(`CPU ${cpuCores} Core · GPU ${gpuCount} · 显存采集不可用`);
   }
 
   const fallbackVramBytes =
@@ -61,9 +57,14 @@ function formatResources(node: NodeSummary) {
       (total, device) => total + (device.vramTotalBytes ?? (device.memoryTotalMB ?? 0) * 1024 ** 2),
       0,
     ) ?? 0;
-  const vramGb = (gpu?.totalVramBytes ?? fallbackVramBytes) / 1024 ** 3;
+  const totalVramBytes = gpu?.totalVramBytes ?? fallbackVramBytes;
+  if (gpu?.supported && totalVramBytes <= 0) {
+    return withOtherAccelerators(`CPU ${cpuCores} Core · GPU ${gpuCount} · 显存采集不可用`);
+  }
+
+  const vramGb = totalVramBytes / 1024 ** 3;
   const formattedVram = Number.isInteger(vramGb) ? String(vramGb) : vramGb.toFixed(1);
-  return withOtherAccelerators(`CPU ${cpuCores} Core · GPU ${gpuCount} · VRAM ${formattedVram} GB`);
+  return withOtherAccelerators(`CPU ${cpuCores} Core · GPU ${gpuCount} · 显存 ${formattedVram} GB`);
 }
 
 export function NodeTable({
@@ -118,7 +119,11 @@ export function NodeTable({
       title: '架构',
       dataIndex: 'architecture',
       width: 92,
-      render: (architecture: string) => <Tag bordered={false}>{architecture}</Tag>,
+      render: (architecture: string) => (
+        <Tag className="node-architecture-tag" bordered={false}>
+          {architecture}
+        </Tag>
+      ),
     },
     {
       title: '算力资源摘要',
@@ -131,7 +136,13 @@ export function NodeTable({
       dataIndex: 'cluster',
       width: 116,
       render: (cluster: NodeSummary['cluster']) =>
-        cluster ? <Link to={buildClusterDetailPath(cluster.id)}>{cluster.name}</Link> : '未加入',
+        cluster ? (
+          <Link className="node-cluster-link" to={buildClusterDetailPath(cluster.id)}>
+            {cluster.name}
+          </Link>
+        ) : (
+          '未加入'
+        ),
     },
     {
       title: '节点状态',
@@ -230,6 +241,7 @@ export function NodeTable({
               <span>详情</span>
             </Link>
             <Dropdown
+              overlayClassName="node-action-dropdown"
               trigger={['click']}
               menu={{
                 items: actionItems,

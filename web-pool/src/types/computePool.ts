@@ -33,7 +33,7 @@ export interface SupportingResourceSummary {
   memory: ResourceMetric;
   videoMemory?: ResourceMetric;
   storage: ResourceMetric;
-  /** GPU nodes sharing system memory (Jetson/Thor); their GPU memory is not counted as VRAM. */
+  /** GPU nodes whose normalized display-memory metric comes from shared system memory. */
   unifiedMemoryGpuNodes?: number;
 }
 

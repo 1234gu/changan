@@ -83,8 +83,6 @@ function formatOptionalMetric(value: number | undefined, unit: string) {
   return value === undefined ? '--' : `${value} ${unit}`;
 }
 
-const UNIFIED_MEMORY_TEXT = '统一内存（与系统内存共享）';
-
 function formatVramBytes(value: number | undefined) {
   if (value === undefined) return '--';
   const gb = value / 1024 ** 3;
@@ -323,23 +321,20 @@ export function NodeDetailPage() {
               <Descriptions.Item label="GPU 利用率">
                 {gpuUnavailableText ?? formatOptionalMetric(gpuUtilization, '%')}
               </Descriptions.Item>
-              <Descriptions.Item label="单卡显存">
+              <Descriptions.Item label="显存容量">
                 {gpuUnavailableText ??
                   (unifiedMemory
-                    ? UNIFIED_MEMORY_TEXT
+                    ? formatVramBytes(gpu?.totalVramBytes)
                     : gpu?.devices.map(formatDeviceVram).join('；') || '--')}
               </Descriptions.Item>
               <Descriptions.Item label="节点总显存">
-                {gpuUnavailableText ??
-                  (unifiedMemory ? UNIFIED_MEMORY_TEXT : formatVramBytes(gpu?.totalVramBytes))}
+                {gpuUnavailableText ?? formatVramBytes(gpu?.totalVramBytes)}
               </Descriptions.Item>
               <Descriptions.Item label="已使用显存">
-                {gpuUnavailableText ??
-                  (unifiedMemory ? UNIFIED_MEMORY_TEXT : formatVramBytes(gpu?.usedVramBytes))}
+                {gpuUnavailableText ?? formatVramBytes(gpu?.usedVramBytes)}
               </Descriptions.Item>
               <Descriptions.Item label="可用显存">
-                {gpuUnavailableText ??
-                  (unifiedMemory ? UNIFIED_MEMORY_TEXT : formatVramBytes(gpu?.availableVramBytes))}
+                {gpuUnavailableText ?? formatVramBytes(gpu?.availableVramBytes)}
               </Descriptions.Item>
               <Descriptions.Item label="NPU">
                 <Tag color={node.npuSupport?.supported ? 'success' : 'default'} bordered={false}>
@@ -414,19 +409,12 @@ export function NodeDetailPage() {
             </div>
             <div>
               <span className="capacity-list__label">显存</span>
-              {unifiedMemory ? (
-                <div className="capacity-list__unsupported">
-                  <Tag color="processing" bordered={false}>
-                    统一内存
-                  </Tag>
-                  <span>GPU 与系统内存共享，不单独计算显存</span>
-                </div>
-              ) : node.videoMemory ? (
+              {node.videoMemory ? (
                 <CapacityOverview metric={node.videoMemory} />
               ) : (
                 <div className="capacity-list__unsupported">
                   <Tag bordered={false}>不支持</Tag>
-                  <span>节点未上报独立显存</span>
+                  <span>节点未上报显存</span>
                 </div>
               )}
             </div>

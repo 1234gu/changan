@@ -64,13 +64,10 @@ export function NodeResourcePopover({ node, displayName, resource }: NodeResourc
         </div>
         <div>
           <dt>GPU 显存</dt>
-          <dd>
-            {formatCapacity(snapshot.gpuMemoryGb)}
-            {snapshot.gpuMemoryArchitecture === 'unified' ? '（统一内存）' : ''}
-          </dd>
+          <dd>{formatCapacity(snapshot.gpuMemoryGb)}</dd>
         </div>
         <div>
-          <dt>Memory</dt>
+          <dt>内存</dt>
           <dd>
             {formatCapacity(snapshot.memoryTotalGb)} · {formatPercent(snapshot.memoryUtilization)}
           </dd>

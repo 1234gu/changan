@@ -93,27 +93,38 @@ function reportVramBytes(
   );
 }
 
-function mapGpuReport(report: ApiGpuReport): NodeGpuDetails {
+function mapGpuReport(report: ApiGpuReport, memory?: ApiByteCapacity | null): NodeGpuDetails {
+  const unifiedMemory = report.memory_architecture === 'unified' ? memory : undefined;
+  const totalVramBytes = unifiedMemory
+    ? unifiedMemory.total_bytes
+    : reportVramBytes(report, 'total_vram_bytes', 'vram_total_bytes', 'memory_total_mb');
+  const usedVramBytes = unifiedMemory
+    ? unifiedMemory.used_bytes
+    : reportVramBytes(report, 'used_vram_bytes', 'vram_used_bytes', 'memory_used_mb');
+  const availableVramBytes = unifiedMemory
+    ? unifiedMemory.available_bytes
+    : reportVramBytes(
+        report,
+        'available_vram_bytes',
+        'vram_available_bytes',
+        'memory_available_mb',
+      );
+  const utilizationPercent = unifiedMemory
+    ? unifiedMemory.utilization_percent
+    : report.utilization_percent;
+  const memoryArchitecture =
+    report.memory_architecture ?? (totalVramBytes > 0 ? 'dedicated' : undefined);
+
   return {
     supported: report.supported,
     available: report.available,
     deviceCount: report.device_count,
-    ...(report.memory_architecture ? { memoryArchitecture: report.memory_architecture } : {}),
-    totalVramBytes: reportVramBytes(
-      report,
-      'total_vram_bytes',
-      'vram_total_bytes',
-      'memory_total_mb',
-    ),
-    usedVramBytes: reportVramBytes(report, 'used_vram_bytes', 'vram_used_bytes', 'memory_used_mb'),
-    availableVramBytes: reportVramBytes(
-      report,
-      'available_vram_bytes',
-      'vram_available_bytes',
-      'memory_available_mb',
-    ),
-    ...(report.utilization_percent !== null && report.utilization_percent !== undefined
-      ? { utilizationPercent: report.utilization_percent }
+    ...(memoryArchitecture ? { memoryArchitecture } : {}),
+    totalVramBytes,
+    usedVramBytes,
+    availableVramBytes,
+    ...(utilizationPercent !== null && utilizationPercent !== undefined
+      ? { utilizationPercent }
       : {}),
     devices: report.devices.map((device) => ({
       index: device.index,
@@ -210,7 +221,7 @@ function mapBaseNode(node: ApiNodeRecord): NodeSummary {
               ? { frequencyMHz: report.cpu.frequency_mhz }
               : {}),
           },
-          gpuDetails: mapGpuReport(report.gpu),
+          gpuDetails: mapGpuReport(report.gpu, report.memory),
           npuSupport: mapAccelerator(report.npu),
           dlaSupport: mapAccelerator(report.dla),
         }
@@ -234,7 +245,10 @@ function runtimeResource(
   };
 }
 
-function averageGpuUtilization(report: ApiGpuReport): number {
+function averageGpuUtilization(report: ApiGpuReport, memory?: ApiByteCapacity | null): number {
+  if (report.memory_architecture === 'unified' && memory) {
+    return memory.utilization_percent;
+  }
   if (report.utilization_percent !== null && report.utilization_percent !== undefined) {
     return report.utilization_percent;
   }
@@ -255,7 +269,7 @@ function mapResourceDetails(node: ApiNodeRecord): ResourceMap {
   if (report.gpu.device_count > 0) {
     resources.gpu = runtimeResource(
       report.gpu.device_count,
-      averageGpuUtilization(report.gpu),
+      averageGpuUtilization(report.gpu, report.memory),
       'GPU',
     );
   }
@@ -281,7 +295,13 @@ function toCapacityMetric(capacity?: ApiByteCapacity | null): CapacityMetric {
   };
 }
 
-function toVideoMemory(report: ApiGpuReport): CapacityMetric | undefined {
+function toVideoMemory(
+  report: ApiGpuReport,
+  memory?: ApiByteCapacity | null,
+): CapacityMetric | undefined {
+  if (report.memory_architecture === 'unified') {
+    return memory ? toCapacityMetric(memory) : undefined;
+  }
   const totalBytes = reportVramBytes(
     report,
     'total_vram_bytes',
@@ -326,6 +346,8 @@ export function mapApiNodeDetail(node: ApiNodeRecord): NodeDetail {
   const base = mapBaseNode(node);
   const report = node.resources;
   const network = report?.network;
+  const memory = toCapacityMetric(report?.memory);
+  const videoMemory = report?.gpu ? toVideoMemory(report.gpu, report.memory) : undefined;
   const linkStatus: NetworkLinkStatus =
     network?.link_status === 'UP' ? 'up' : network?.link_status === 'DOWN' ? 'down' : 'degraded';
 
@@ -334,8 +356,8 @@ export function mapApiNodeDetail(node: ApiNodeRecord): NodeDetail {
     agentVersion: node.identity.agent_version,
     ...(node.registered_at ? { registeredAt: node.registered_at } : {}),
     resources: mapResourceDetails(node),
-    memory: toCapacityMetric(report?.memory),
-    ...(report?.gpu ? { videoMemory: toVideoMemory(report.gpu) } : {}),
+    memory,
+    ...(videoMemory ? { videoMemory } : {}),
     storage: toCapacityMetric(report?.storage),
     network: {
       interfaceName: network?.network_interface ?? '未上报',

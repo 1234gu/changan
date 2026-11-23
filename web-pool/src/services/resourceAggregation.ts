@@ -10,6 +10,7 @@ import type {
 import type { CapacityMetric, NodeDetail } from '../types/node';
 import { RESOURCE_KINDS, RESOURCE_UNITS } from '../types/resource';
 import type { CanonicalResourceUnit, ResourceKind, ResourceSummary } from '../types/resource';
+import { resolveNodeVideoMemory } from './videoMemoryPolicy';
 
 interface MetricSource {
   total: number;
@@ -181,6 +182,7 @@ function createNodeContribution(node: NodeDetail): NodeResourceContribution {
   const online = isNodeOnline(node);
   const resources = createResourceMap(node, supplyEligible, online);
   const isAgent = node.nodeSource === 'agent';
+  const videoMemory = resolveNodeVideoMemory(node);
 
   return {
     nodeId: node.id,
@@ -205,9 +207,9 @@ function createNodeContribution(node: NodeDetail): NodeResourceContribution {
           : 'unavailable',
     resources,
     memory: toSupportingMetric(node.memory, supplyEligible, isAgent, online),
-    ...(node.videoMemory
+    ...(videoMemory
       ? {
-          videoMemory: toSupportingMetric(node.videoMemory, supplyEligible, isAgent, online, true),
+          videoMemory: toSupportingMetric(videoMemory, supplyEligible, isAgent, online, true),
         }
       : {}),
     storage: toSupportingMetric(node.storage, supplyEligible, isAgent, online),

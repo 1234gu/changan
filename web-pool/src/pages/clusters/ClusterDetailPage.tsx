@@ -1,11 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  ApartmentOutlined,
   ArrowLeftOutlined,
+  CloudServerOutlined,
+  ControlOutlined,
+  DatabaseOutlined,
   DeleteOutlined,
+  DeploymentUnitOutlined,
   EditOutlined,
+  HddOutlined,
   PlusOutlined,
   ReloadOutlined,
   SwapOutlined,
+  ThunderboltOutlined,
   UserDeleteOutlined,
 } from '@ant-design/icons';
 import {
@@ -13,19 +20,16 @@ import {
   App,
   Button,
   Card,
-  Descriptions,
-  Empty,
   Modal,
   Result,
   Select,
   Space,
-  Statistic,
   Table,
+  Tooltip,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom';
-import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import type { MainLayoutOutletContext } from '../../layouts/MainLayout';
 import { buildNodeDetailPath, ROUTES } from '../../routes/config';
@@ -43,8 +47,12 @@ import {
 import type { ClusterInput, ClusterRecord } from '../../types/cluster';
 import type { NodeDetail } from '../../types/node';
 import { ClusterFormModal } from './components/ClusterFormModal';
+import { ClusterMemberScene } from './components/ClusterMemberScene';
 import { ClusterNodeOption } from './components/ClusterNodeOption';
 import './ClusterPage.css';
+
+const formatNumber = (value: number) =>
+  Number.isInteger(value) ? String(value) : value.toFixed(1);
 
 export function ClusterDetailPage() {
   const { clusterId = '' } = useParams();
@@ -200,13 +208,21 @@ export function ClusterDetailPage() {
     {
       title: '节点名称',
       dataIndex: 'name',
-      render: (name, node) => <Link to={buildNodeDetailPath(node.id)}>{name}</Link>,
+      render: (name, node) => (
+        <Link className="cluster-detail__node-link" to={buildNodeDetailPath(node.id)}>
+          {name}
+        </Link>
+      ),
     },
     {
       title: 'Node ID',
       dataIndex: 'id',
       width: 250,
-      render: (value) => <code className="node-id">{value}</code>,
+      render: (value) => (
+        <Tooltip title={value}>
+          <code className="node-id cluster-detail__node-id">{value}</code>
+        </Tooltip>
+      ),
     },
     {
       title: 'IP',
@@ -220,7 +236,7 @@ export function ClusterDetailPage() {
     },
     { title: 'CPU', render: (_, node) => `${node.resources.cpu.total} Core` },
     { title: 'GPU', render: (_, node) => `${node.resources.gpu?.total ?? 0} Device` },
-    { title: 'VRAM', render: (_, node) => `${node.videoMemory?.total ?? 0} GB` },
+    { title: '显存', render: (_, node) => `${node.videoMemory?.total ?? 0} GB` },
     { title: 'NPU', render: (_, node) => `${node.resources.npu?.total ?? 0} TOPS` },
     {
       title: '最后上报时间',
@@ -236,6 +252,7 @@ export function ClusterDetailPage() {
           <Select
             size="small"
             className="cluster-detail__move-select"
+            popupClassName="cluster-detail-select-dropdown"
             placeholder="迁移到..."
             suffixIcon={<SwapOutlined />}
             options={clusters
@@ -280,91 +297,101 @@ export function ClusterDetailPage() {
 
   const summary = cluster.resourceSummary;
   const resourceCards = [
-    ['CPU 总量', summary.resources.cpu.total, 'Core'],
-    ['GPU 总量', summary.resources.gpu.total, 'Device'],
-    ['VRAM 总量', summary.videoMemory.total, 'GB'],
-    ['NPU 总量', summary.resources.npu.total, 'TOPS'],
-    ['DLA 总量', summary.resources.dla.total, 'Device'],
-    ['内存', summary.memory.total, 'GB'],
-    ['存储', summary.storage.total, 'GB'],
+    { key: 'cpu', title: 'CPU 总量', value: summary.resources.cpu.total, unit: 'Core', icon: <ThunderboltOutlined /> },
+    { key: 'gpu', title: 'GPU 总量', value: summary.resources.gpu.total, unit: 'Device', icon: <ControlOutlined /> },
+    { key: 'vram', title: '显存总量', value: summary.videoMemory.total, unit: 'GB', icon: <CloudServerOutlined /> },
+    { key: 'npu', title: 'NPU 总量', value: summary.resources.npu.total, unit: 'TOPS', icon: <DeploymentUnitOutlined /> },
+    { key: 'dla', title: 'DLA 总量', value: summary.resources.dla.total, unit: 'Device', icon: <ApartmentOutlined /> },
+    { key: 'memory', title: '内存', value: summary.memory.total, unit: 'GB', icon: <DatabaseOutlined /> },
+    { key: 'storage', title: '存储', value: summary.storage.total, unit: 'GB', icon: <HddOutlined /> },
   ] as const;
 
   return (
-    <main className="cluster-page">
-      <PageHeader
-        eyebrow="CLUSTER DETAIL"
-        title={cluster.name}
-        description="查看集群基础信息、实时资源汇总和正式节点归属。"
-        extra={
-          <Space className="cluster-page__header-actions" size={8} wrap>
-            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(ROUTES.clusters)}>
-              返回列表
-            </Button>
-            <Button icon={<EditOutlined />} onClick={() => setEditing(true)}>
-              编辑
-            </Button>
-            <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void load()}>
-              刷新
-            </Button>
-            <Button danger icon={<DeleteOutlined />} loading={deleting} onClick={confirmDelete}>
-              删除集群
-            </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setAssignOpen(true)}>
-              添加节点
-            </Button>
-          </Space>
-        }
-      />
-      {error && <Alert type="warning" showIcon message={error} />}
+    <main className="cluster-page cluster-detail-page">
+      <div className="cluster-detail-toolbar">
+        <div className="cluster-detail-toolbar__title">
+          <ArrowLeftOutlined aria-hidden="true" />
+          <strong>集群详情</strong>
+        </div>
+        <Space className="cluster-page__header-actions" size={8} wrap>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(ROUTES.clusters)}>
+            返回列表
+          </Button>
+          <Button icon={<EditOutlined />} onClick={() => setEditing(true)}>
+            编辑
+          </Button>
+          <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void load()}>
+            刷新
+          </Button>
+          <Button danger icon={<DeleteOutlined />} loading={deleting} onClick={confirmDelete}>
+            删除集群
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setAssignOpen(true)}>
+            添加节点
+          </Button>
+        </Space>
+      </div>
+      {error && <Alert className="cluster-detail-page__alert" type="warning" showIcon message={error} />}
 
-      <Card className="cluster-page__card" title="基础信息">
-        <Descriptions column={{ xs: 1, sm: 2, lg: 3 }}>
-          <Descriptions.Item label="Cluster ID">
-            <code>{cluster.id}</code>
-          </Descriptions.Item>
-          <Descriptions.Item label="名称">{cluster.name}</Descriptions.Item>
-          <Descriptions.Item label="状态">
-            <StatusBadge status={cluster.status} />
-          </Descriptions.Item>
-          <Descriptions.Item label="版本">{cluster.version}</Descriptions.Item>
-          <Descriptions.Item label="节点数量">{cluster.nodeCount} 个</Descriptions.Item>
-          <Descriptions.Item label="所属企业">{cluster.enterprise || '--'}</Descriptions.Item>
-          <Descriptions.Item label="所属项目">{cluster.project || '--'}</Descriptions.Item>
-          <Descriptions.Item label="管理端点">
-            {cluster.managementEndpoint || '--'}
-          </Descriptions.Item>
-        </Descriptions>
-      </Card>
+      <section className="cluster-detail-overview">
+        <article className="cluster-detail-panel cluster-basic-panel">
+          <header className="cluster-detail-panel__heading">
+            <span className="cluster-detail-panel__heading-icon" aria-hidden="true"><ApartmentOutlined /></span>
+            <strong>集群基础信息</strong>
+          </header>
+          <dl className="cluster-basic-grid">
+            <div><dt>集群名称</dt><dd>{cluster.name}</dd></div>
+            <div><dt>状态</dt><dd><StatusBadge status={cluster.status} /></dd></div>
+            <div><dt>Cluster ID</dt><dd><code title={cluster.id}>{cluster.id}</code></dd></div>
+            <div><dt>节点数量</dt><dd>{cluster.nodeCount} 个</dd></div>
+            <div><dt>版本</dt><dd>{cluster.version}</dd></div>
+            <div><dt>所属企业</dt><dd>{cluster.enterprise || '--'}</dd></div>
+            <div><dt>所属项目</dt><dd>{cluster.project || '--'}</dd></div>
+            <div><dt>管理端点</dt><dd title={cluster.managementEndpoint}>{cluster.managementEndpoint || '--'}</dd></div>
+          </dl>
+        </article>
 
-      <section className="cluster-resource-grid" aria-label="集群资源汇总">
-        {resourceCards.map(([title, value, unit]) => (
-          <Card key={title} className="cluster-resource-grid__card">
-            <Statistic
-              title={title}
-              value={value}
-              suffix={unit}
-              precision={unit === 'GB' ? 1 : 0}
-            />
-          </Card>
-        ))}
+        <section className="cluster-resource-grid" aria-label="集群资源汇总">
+          {resourceCards.map((item, index) => (
+            <article
+              key={item.key}
+              className={`cluster-resource-card cluster-resource-card--${item.key}${index < 3 ? ' cluster-resource-card--top' : ''}`}
+            >
+              <span className="cluster-resource-card__icon" aria-hidden="true">{item.icon}</span>
+              <div>
+                <span className="cluster-resource-card__title">{item.title}</span>
+                <strong>{item.unit === 'GB' ? item.value.toFixed(1) : formatNumber(item.value)}</strong>
+                <small>{item.unit}</small>
+              </div>
+            </article>
+          ))}
+        </section>
       </section>
 
-      <Card className="cluster-page__card" title="成员节点">
-        {members.length === 0 && !loading ? (
-          <Empty description="该集群尚未分配节点" />
-        ) : (
+      <ClusterMemberScene clusterId={cluster.id} members={members} loading={loading} />
+
+      <section className="cluster-detail-panel cluster-member-table-panel">
+        <header className="cluster-detail-panel__heading">
+          <span className="cluster-detail-panel__heading-icon" aria-hidden="true"><DeploymentUnitOutlined /></span>
+          <strong>成员节点</strong>
+          <em>{members.length}</em>
+        </header>
+        <div className="cluster-member-table-panel__body">
           <Table
+            className="cluster-member-table"
             rowKey="id"
             columns={columns}
             dataSource={members}
             loading={loading}
             scroll={{ x: 1600 }}
             pagination={false}
+            locale={{ emptyText: '该集群尚未分配节点' }}
           />
-        )}
-      </Card>
+        </div>
+      </section>
 
       <Modal
+        rootClassName="cluster-detail-modal"
         title="添加节点"
         open={assignOpen}
         width={720}
@@ -389,6 +416,7 @@ export function ClusterDetailPage() {
           showSearch
           virtual={false}
           className="cluster-detail__node-select"
+          popupClassName="cluster-node-select-dropdown"
           placeholder="选择节点"
           filterOption={(input, option) => {
             const node = candidateNodes.find((item) => item.id === option?.value);

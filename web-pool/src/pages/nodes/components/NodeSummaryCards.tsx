@@ -25,7 +25,8 @@ export function NodeSummaryCards({ summary }: NodeSummaryCardsProps) {
         unit="台"
         icon={<CloudServerOutlined />}
         hint="全部已纳管节点"
-        accentColor="#356df3"
+        accentColor="#28d8ff"
+        variant="hud"
         to={ROUTES.nodes}
       />
       <KpiCard
@@ -34,7 +35,8 @@ export function NodeSummaryCards({ summary }: NodeSummaryCardsProps) {
         unit="台"
         icon={<CheckCircleOutlined />}
         hint="当前心跳正常"
-        accentColor="#08a88a"
+        accentColor="#39e6c4"
+        variant="hud"
         to={`${ROUTES.nodes}?status=online`}
       />
       <KpiCard
@@ -43,7 +45,8 @@ export function NodeSummaryCards({ summary }: NodeSummaryCardsProps) {
         unit="台"
         icon={<ScheduleOutlined />}
         hint="已进入调度候选集"
-        accentColor="#12a4c7"
+        accentColor="#38d4ff"
+        variant="hud"
         to={`${ROUTES.nodes}?schedulable=true`}
       />
       <KpiCard
@@ -52,7 +55,8 @@ export function NodeSummaryCards({ summary }: NodeSummaryCardsProps) {
         unit="台"
         icon={<WarningOutlined />}
         hint="运行或资源采集异常"
-        accentColor="#e75555"
+        accentColor="#ff6575"
+        variant="hud"
         to={`${ROUTES.nodes}?status=abnormal`}
       />
     </section>

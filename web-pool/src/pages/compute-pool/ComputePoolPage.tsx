@@ -1,21 +1,14 @@
 import { useEffect } from 'react';
-import {
-  DatabaseOutlined,
-  InfoCircleOutlined,
-  ReloadOutlined,
-  ScheduleOutlined,
-} from '@ant-design/icons';
-import { Alert, Button, Card, Result, Skeleton, Space, Tag } from 'antd';
+import { DatabaseOutlined, ReloadOutlined, ScheduleOutlined } from '@ant-design/icons';
+import { Alert, Button, Card, Result, Skeleton, Tag } from 'antd';
 import dayjs from 'dayjs';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
-import { PageHeader } from '../../components/PageHeader';
 import type { MainLayoutOutletContext } from '../../layouts/MainLayout';
 import type { ComputePoolFilters } from '../../types/computePool';
 import { ClusterResourcePanel } from './components/ClusterResourcePanel';
 import { ResourceFilterBar } from './components/ResourceFilterBar';
 import { ResourcePoolCards } from './components/ResourcePoolCards';
 import { ResourceSourceTable } from './components/ResourceSourceTable';
-import { ResourceUsagePanel } from './components/ResourceUsagePanel';
 import { SupportingResourcePanel } from './components/SupportingResourcePanel';
 import { useComputePool } from './hooks/useComputePool';
 import './ComputePoolPage.css';
@@ -109,27 +102,27 @@ export function ComputePoolPage() {
   const selectedNodeName = nodeId
     ? (data.sources.find((source) => source.nodeId === nodeId)?.nodeName ?? nodeId)
     : undefined;
-  const updatedAt = dayjs(data.updatedAt).format('YYYY-MM-DD HH:mm:ss');
+  const updatedAt = dayjs(data.updatedAt).format('HH:mm:ss');
   const updateSearch = (nextFilters: ComputePoolFilters, nextNodeId?: string) =>
     setSearchParams(searchFromState(nextFilters, nextNodeId), { replace: true });
 
   return (
     <main className="compute-pool-page">
-      <PageHeader
-        eyebrow="COMPUTE POOL"
-        title="算力池"
-        description="统一查看车群异构计算资源的总量、分配情况和可调度供给"
-        extra={
-          <Space className="compute-pool-page__header-actions" size={12} wrap>
-            <span>
-              更新于 <time dateTime={data.updatedAt}>{updatedAt}</time>
-            </span>
-            <Button icon={<ReloadOutlined />} loading={loading} onClick={refresh}>
-              刷新
-            </Button>
-          </Space>
-        }
-      />
+      <div className="compute-pool-page__toolbar" aria-label="算力池刷新状态">
+        <span className="compute-pool-page__updated">
+          <i aria-hidden="true" />
+          <span>实时更新</span>
+          <time dateTime={data.updatedAt}>{updatedAt}</time>
+        </span>
+        <Button
+          className="compute-pool-page__refresh"
+          icon={<ReloadOutlined />}
+          loading={loading}
+          onClick={refresh}
+        >
+          刷新
+        </Button>
+      </div>
 
       {error && (
         <Alert
@@ -144,13 +137,9 @@ export function ComputePoolPage() {
       <ResourcePoolCards
         resources={data.resources}
         videoMemory={data.supportingResources.videoMemory}
-        unifiedGpuNodes={data.supportingResources.unifiedMemoryGpuNodes ?? 0}
       />
 
-      <div className="compute-pool-secondary-grid">
-        <ResourceUsagePanel resources={data.resources} />
-        <SupportingResourcePanel resources={data.supportingResources} />
-      </div>
+      <SupportingResourcePanel resources={data.supportingResources} />
 
       <Card
         className="compute-pool-panel compute-pool-source-panel"
@@ -164,21 +153,18 @@ export function ComputePoolPage() {
           </span>
         }
         extra={
-          <span className="compute-pool-source-panel__count">
-            {sources.length === totalSourceCount
-              ? `${totalSourceCount} 个节点`
-              : `${sources.length} / ${totalSourceCount} 个节点`}
-          </span>
+          <div className="compute-pool-source-panel__summary">
+            <span className="compute-pool-source-panel__count">
+              {sources.length === totalSourceCount
+                ? `${totalSourceCount} 个节点`
+                : `${sources.length} / ${totalSourceCount} 个节点`}
+            </span>
+            <Tag icon={<ScheduleOutlined />} bordered={false}>
+              全局候选 {data.schedulerCandidates.length} 个节点
+            </Tag>
+          </div>
         }
       >
-        <div className="compute-pool-boundary-note">
-          <InfoCircleOutlined />
-          <span>算力池负责回答“谁有资源”，最终选点由调度管理负责。</span>
-          <Tag icon={<ScheduleOutlined />} color="blue" bordered={false}>
-            全局候选 {data.schedulerCandidates.length} 个节点
-          </Tag>
-        </div>
-
         <ResourceFilterBar
           filters={filters}
           clusters={filterOptions.clusters}

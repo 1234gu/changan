@@ -111,6 +111,7 @@ export function NodeLabelsEditor({ labels, editable, loading, onSave }: NodeLabe
 
   return (
     <Popover
+      overlayClassName="node-label-editor-popover"
       open={open}
       trigger="click"
       placement="bottomLeft"

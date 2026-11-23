@@ -58,6 +58,7 @@ export function ResourceFilterBar({
 
       <div className="compute-pool-filter__selects">
         <Select
+          popupClassName="compute-pool-select-dropdown"
           aria-label="按集群筛选"
           value={filters.clusterId}
           options={[
@@ -67,12 +68,14 @@ export function ResourceFilterBar({
           onChange={(value) => update('clusterId', value)}
         />
         <Select
+          popupClassName="compute-pool-select-dropdown"
           aria-label="按资源状态筛选"
           value={filters.status}
           options={statusOptions}
           onChange={(value) => update('status', value)}
         />
         <Select
+          popupClassName="compute-pool-select-dropdown"
           aria-label="按架构筛选"
           value={filters.architecture}
           options={[

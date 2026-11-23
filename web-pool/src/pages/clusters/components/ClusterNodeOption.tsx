@@ -20,7 +20,7 @@ export function ClusterNodeOption({ node }: ClusterNodeOptionProps) {
       <div className="cluster-node-option__meta">
         <span>CPU {node.resources.cpu.total} Core</span>
         <span>GPU {node.resources.gpu?.total ?? 0}</span>
-        <span>VRAM {node.videoMemory?.total ?? 0} GB</span>
+        <span>显存 {node.videoMemory?.total ?? 0} GB</span>
         <span>NPU {node.resources.npu?.total ?? 0} TOPS</span>
         <span>{node.architecture}</span>
       </div>

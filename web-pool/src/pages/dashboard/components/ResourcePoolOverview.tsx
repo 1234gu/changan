@@ -7,18 +7,13 @@ import {
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { buildComputePoolPath, ROUTES } from '../../../routes/config';
-import type {
-  NodeResourceContribution,
-  SupportingResourceSummary,
-} from '../../../types/computePool';
-import type { NodeSummary } from '../../../types/node';
+import { describeVideoMemory } from '../../../services/videoMemoryPolicy';
+import type { SupportingResourceSummary } from '../../../types/computePool';
 import type { ResourceMap, ResourceSummary } from '../../../types/resource';
 
 interface ResourcePoolOverviewProps {
   resources: ResourceMap;
   supportingResources: SupportingResourceSummary;
-  nodes: NodeSummary[];
-  nodeResources: NodeResourceContribution[];
 }
 
 interface ResourceCard {
@@ -54,28 +49,13 @@ const clampPercent = (value: number) => Math.max(0, Math.min(100, value));
 export function ResourcePoolOverview({
   resources,
   supportingResources,
-  nodes,
-  nodeResources,
 }: ResourcePoolOverviewProps) {
   const cpu = resources.cpu ?? emptyResource('Core');
   const gpu = resources.gpu ?? emptyResource('GPU');
   const npu = resources.npu ?? emptyResource('TOPS');
   const dla = resources.dla ?? emptyResource('Device');
   const memory = supportingResources.memory;
-  const unifiedNodeIds = new Set(
-    nodes
-      .filter((node) => node.gpuDetails?.memoryArchitecture === 'unified')
-      .map((node) => node.id),
-  );
-  const unifiedMemoryGb = nodeResources
-    .filter((source) => unifiedNodeIds.has(source.nodeId))
-    .reduce((total, source) => total + source.memory.total, 0);
-  const dedicatedVideoMemoryGb = nodeResources.reduce(
-    (total, source) =>
-      unifiedNodeIds.has(source.nodeId) ? total : total + (source.videoMemory?.total ?? 0),
-    0,
-  );
-  const unifiedGpuNodes = supportingResources.unifiedMemoryGpuNodes ?? unifiedNodeIds.size;
+  const videoMemoryDetails = describeVideoMemory(supportingResources.videoMemory);
 
   const cards: ResourceCard[] = [
     {
@@ -98,19 +78,14 @@ export function ResourcePoolOverview({
       value: gpu.total,
       unit: gpu.unit,
       utilization: utilizationOf(gpu),
-      details: [
-        `独立显存 ${formatNumber(dedicatedVideoMemoryGb)} GB`,
-        ...(unifiedGpuNodes > 0
-          ? [`统一内存 ${formatNumber(unifiedMemoryGb)} GB / ${unifiedGpuNodes} 节点`]
-          : []),
-      ],
+      details: videoMemoryDetails,
       icon: <ThunderboltOutlined />,
       color: '#6888ff',
       to: buildComputePoolPath({ resourceType: 'gpu' }),
     },
     {
       key: 'memory',
-      title: 'Memory',
+      title: '内存',
       value: memory.total,
       unit: memory.unit,
       utilization: memory.runtimeUtilizationPercent ?? memory.utilizationPercent,
@@ -151,14 +126,7 @@ export function ResourcePoolOverview({
   ];
 
   return (
-    <section className="resource-pool-overview" aria-labelledby="resource-pool-overview-title">
-      <div className="dashboard-section-heading">
-        <div>
-          <span>COMPUTE RESOURCE POOL</span>
-          <h2 id="resource-pool-overview-title">资源池总览</h2>
-        </div>
-        <p>统一展示当前 Backend 聚合的真实资源容量与运行利用率</p>
-      </div>
+    <section className="resource-pool-overview" aria-label="资源池总览">
       <div className="resource-pool-overview__grid">
         {cards.map((card) => (
           <Link

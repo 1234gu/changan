@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
   ApartmentOutlined,
+  CarOutlined,
   CheckCircleOutlined,
-  CloudServerOutlined,
   DatabaseOutlined,
   LineChartOutlined,
   NotificationOutlined,
@@ -11,12 +11,10 @@ import {
   ReloadOutlined,
 } from '@ant-design/icons';
 import { Alert, Button, Card, Skeleton } from 'antd';
-import dayjs from 'dayjs';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { ClusterSummaryCard } from '../../components/ClusterSummaryCard';
 import { EventList } from '../../components/EventList';
 import { KpiCard } from '../../components/KpiCard';
-import { PageHeader } from '../../components/PageHeader';
 import { ResourceProgress } from '../../components/ResourceProgress';
 import { StatusBadge } from '../../components/StatusBadge';
 import { RESOURCE_ORDER, RESOURCE_PRESENTATION } from '../../components/resourcePresentation';
@@ -31,6 +29,7 @@ import { PlatformReliabilityStrip } from '../../components/platform/PlatformReli
 import { ExecutionBindingCard } from '../../components/platform/ExecutionBindingCard';
 import { apiClient } from '../../services/apiClient';
 import './DashboardPage.css';
+import './components/fleet/FleetScene.css';
 
 const TASK_STATUS_ITEMS = [
   { key: 'waiting', label: 'WAITING' },
@@ -42,10 +41,9 @@ const TASK_STATUS_ITEMS = [
 function DashboardSkeleton() {
   return (
     <div className="dashboard dashboard--loading" aria-label="正在加载总览数据">
-      <Skeleton active paragraph={{ rows: 1 }} />
       <div className="kpi-grid">
-        {Array.from({ length: 8 }, (_, index) => (
-          <Card key={index} className="kpi-card">
+        {Array.from({ length: 4 }, (_, index) => (
+          <Card key={index} className="kpi-card kpi-card--hud kpi-card--hud-skeleton">
             <Skeleton active title={false} paragraph={{ rows: 2 }} />
           </Card>
         ))}
@@ -131,25 +129,8 @@ export function DashboardPage() {
     };
     return { kind, resource, ...presentation };
   });
-  const updatedAt = dayjs(data.updatedAt).format('YYYY-MM-DD HH:mm:ss');
-
   return (
     <div className="dashboard">
-      <PageHeader
-        eyebrow="OVERVIEW"
-        title="车群算力总览"
-        description="面向车辆边缘节点的异构算力接入、资源聚合与任务运行态势"
-        extra={
-          <div className="dashboard-heading__live">
-            <span className="live-dot" aria-hidden="true" />
-            <div>
-              <span>节点资源实时更新</span>
-              <time dateTime={data.updatedAt}>{updatedAt}</time>
-            </div>
-          </div>
-        }
-      />
-
       <section aria-labelledby="core-kpi-title">
         <h2 id="core-kpi-title" className="visually-hidden">
           核心运行指标
@@ -159,9 +140,10 @@ export function DashboardPage() {
             title="算力节点"
             value={totalNodes}
             unit="台"
-            icon={<CloudServerOutlined />}
+            icon={<CarOutlined />}
             hint="查看全部节点"
-            accentColor="#356df3"
+            accentColor="#28d8ff"
+            variant="hud"
             to={ROUTES.nodes}
           />
           <KpiCard
@@ -170,7 +152,9 @@ export function DashboardPage() {
             unit="台"
             icon={<CheckCircleOutlined />}
             hint={`在线率 ${onlineRate}%`}
-            accentColor="#08a88a"
+            accentColor="#39e6c4"
+            variant="hud"
+            progress={onlineRate}
             to={`${ROUTES.nodes}?status=online`}
           />
           <KpiCard
@@ -179,7 +163,8 @@ export function DashboardPage() {
             unit="个"
             icon={<ApartmentOutlined />}
             hint="查看集群状态"
-            accentColor="#7c5ce7"
+            accentColor="#64b8ff"
+            variant="hud"
             to={ROUTES.clusters}
           />
           <KpiCard
@@ -188,7 +173,8 @@ export function DashboardPage() {
             unit="个"
             icon={<PlayCircleOutlined />}
             hint="查看运行中任务"
-            accentColor="#ee8c25"
+            accentColor="#38d4ff"
+            variant="hud"
             to={`${ROUTES.scheduling}?status=running`}
           />
         </div>
@@ -199,8 +185,6 @@ export function DashboardPage() {
       <ResourcePoolOverview
         resources={resources}
         supportingResources={data.supportingResources}
-        nodes={data.nodeItems}
-        nodeResources={data.nodeResources}
       />
 
       <PlatformReliabilityStrip platform={data.platform} />

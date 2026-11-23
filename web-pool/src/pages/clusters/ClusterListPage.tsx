@@ -10,7 +10,6 @@ import { Alert, App, Button, Card, Result, Space, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import type { MainLayoutOutletContext } from '../../layouts/MainLayout';
 import { buildClusterDetailPath } from '../../routes/config';
@@ -32,6 +31,7 @@ export function ClusterListPage() {
   const { setHeaderUpdatedAt } = useOutletContext<MainLayoutOutletContext>();
   const [clusters, setClusters] = useState<ClusterRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatedAt, setUpdatedAt] = useState<string>();
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<ClusterRecord | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -46,6 +46,7 @@ export function ClusterListPage() {
     try {
       const result = await getClusters();
       setClusters(result.items);
+      setUpdatedAt(result.updatedAt);
       setHeaderUpdatedAt(result.updatedAt);
     } catch {
       setError('无法加载集群列表，请检查 Backend 连接后重试。');
@@ -159,16 +160,12 @@ export function ClusterListPage() {
       render: (_, cluster) => `${cluster.resourceSummary.resources.cpu.total} Core`,
     },
     {
-      title: 'GPU',
-      render: (_, cluster) => `${cluster.resourceSummary.resources.gpu.total} Device`,
+      title: '显存',
+      render: (_, cluster) => `${cluster.resourceSummary.videoMemory.total} GB`,
     },
     {
       title: 'NPU',
       render: (_, cluster) => `${cluster.resourceSummary.resources.npu.total} TOPS`,
-    },
-    {
-      title: '显存',
-      render: (_, cluster) => `${cluster.resourceSummary.videoMemory.total} GB`,
     },
     { title: '所属企业', dataIndex: 'enterprise', render: (value) => value || '--' },
     { title: '所属项目', dataIndex: 'project', render: (value) => value || '--' },
@@ -214,24 +211,33 @@ export function ClusterListPage() {
   ];
 
   return (
-    <main className="cluster-page">
-      <PageHeader
-        eyebrow="CLUSTERS"
-        title="集群管理"
-        description="统一管理集群实体、节点归属和集群级资源汇总。"
-        extra={
-          <Space className="cluster-page__header-actions" size={8} wrap>
-            <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void load()}>
-              刷新
-            </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => void openCreate()}>
-              创建集群
-            </Button>
-          </Space>
+    <main className="cluster-page cluster-list-page">
+      <div className="cluster-list-page__toolbar" aria-label="集群列表操作">
+        <span className="cluster-list-page__updated">
+          <i aria-hidden="true" />
+          <span>实时更新</span>
+          <time dateTime={updatedAt}>
+            {updatedAt ? dayjs(updatedAt).format('HH:mm:ss') : '--:--:--'}
+          </time>
+        </span>
+        <Space className="cluster-list-page__actions" size={8} wrap>
+          <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void load()}>
+            刷新
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => void openCreate()}>
+            创建集群
+          </Button>
+        </Space>
+      </div>
+      {error && <Alert className="cluster-list-page__alert" type="error" showIcon message={error} />}
+      <Card
+        className="cluster-page__card cluster-list-page__panel"
+        title={
+          <span className="cluster-list-page__panel-title">
+            集群列表 <small>{clusters.length} 个集群</small>
+          </span>
         }
-      />
-      {error && <Alert type="error" showIcon message={error} />}
-      <Card className="cluster-page__card">
+      >
         {error && clusters.length === 0 ? (
           <Result
             status="error"
