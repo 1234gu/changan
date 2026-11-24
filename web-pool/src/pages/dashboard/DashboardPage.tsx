@@ -142,7 +142,7 @@ export function DashboardPage() {
             unit="台"
             icon={<CarOutlined />}
             hint="查看全部节点"
-            accentColor="#28d8ff"
+            accentColor="var(--dashboard-accent)"
             variant="hud"
             to={ROUTES.nodes}
           />
@@ -152,7 +152,7 @@ export function DashboardPage() {
             unit="台"
             icon={<CheckCircleOutlined />}
             hint={`在线率 ${onlineRate}%`}
-            accentColor="#39e6c4"
+            accentColor="var(--dashboard-accent)"
             variant="hud"
             progress={onlineRate}
             to={`${ROUTES.nodes}?status=online`}
@@ -163,7 +163,7 @@ export function DashboardPage() {
             unit="个"
             icon={<ApartmentOutlined />}
             hint="查看集群状态"
-            accentColor="#64b8ff"
+            accentColor="var(--dashboard-accent)"
             variant="hud"
             to={ROUTES.clusters}
           />
@@ -173,7 +173,7 @@ export function DashboardPage() {
             unit="个"
             icon={<PlayCircleOutlined />}
             hint="查看运行中任务"
-            accentColor="#38d4ff"
+            accentColor="var(--dashboard-accent)"
             variant="hud"
             to={`${ROUTES.scheduling}?status=running`}
           />
@@ -191,6 +191,7 @@ export function DashboardPage() {
 
       <div className="dashboard-grid">
         <DashboardCard
+          className="dashboard-card--events"
           icon={<NotificationOutlined />}
           title="最近事件"
           subtitle="节点、集群与任务的最新动态"
@@ -210,12 +211,12 @@ export function DashboardPage() {
           }
         >
           <div className="resource-progress-list">
-            {visibleResources.map(({ kind, resource, label, color }) => (
+            {visibleResources.map(({ kind, resource, label }) => (
               <ResourceProgress
                 key={kind}
                 name={label}
                 {...resource}
-                color={color}
+                color="var(--dashboard-pool-progress)"
                 to={buildComputePoolPath({ resourceType: kind })}
               />
             ))}

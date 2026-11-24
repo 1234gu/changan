@@ -69,7 +69,7 @@ export function ResourcePoolOverview({
         `已分配 ${formatNumber(cpu.allocated ?? 0)} ${cpu.unit}`,
       ],
       icon: <DashboardOutlined />,
-      color: '#35d6ff',
+      color: '#0d829e',
       to: buildComputePoolPath({ resourceType: 'cpu' }),
     },
     {
@@ -80,7 +80,7 @@ export function ResourcePoolOverview({
       utilization: utilizationOf(gpu),
       details: videoMemoryDetails,
       icon: <ThunderboltOutlined />,
-      color: '#6888ff',
+      color: '#396da6',
       to: buildComputePoolPath({ resourceType: 'gpu' }),
     },
     {
@@ -94,7 +94,7 @@ export function ResourcePoolOverview({
         `已分配 ${formatNumber(memory.allocated)} ${memory.unit}`,
       ],
       icon: <DatabaseOutlined />,
-      color: '#3de1bd',
+      color: '#187e76',
       to: ROUTES.computePool,
     },
     {
@@ -107,7 +107,7 @@ export function ResourcePoolOverview({
         npu.total > 0 ? `可用 ${formatNumber(npu.available)} ${npu.unit}` : '当前节点未上报 NPU',
       ],
       icon: <ApiOutlined />,
-      color: '#bd7cff',
+      color: '#6d5b9c',
       to: buildComputePoolPath({ resourceType: 'npu' }),
     },
     {
@@ -120,7 +120,7 @@ export function ResourcePoolOverview({
         dla.total > 0 ? `可用 ${formatNumber(dla.available)} ${dla.unit}` : '当前节点未上报 DLA',
       ],
       icon: <ApiOutlined />,
-      color: '#ffb85c',
+      color: '#985b26',
       to: buildComputePoolPath({ resourceType: 'dla' }),
     },
   ];

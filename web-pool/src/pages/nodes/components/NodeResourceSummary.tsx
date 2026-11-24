@@ -1,14 +1,21 @@
 import { Card, Progress, Tag } from 'antd';
 import { RESOURCE_ORDER, RESOURCE_PRESENTATION } from '../../../components/resourcePresentation';
 import type { ResourceMap } from '../../../types/resource';
-import type { NodeSource } from '../../../types/node';
+import type { CapacityMetric, NodeSource } from '../../../types/node';
 
 interface NodeResourceSummaryProps {
   resources: ResourceMap;
   nodeSource: NodeSource;
+  videoMemory?: CapacityMetric;
 }
 
-export function NodeResourceSummary({ resources, nodeSource }: NodeResourceSummaryProps) {
+const formatAmount = (value: number) => (Number.isInteger(value) ? value : value.toFixed(1));
+
+export function NodeResourceSummary({
+  resources,
+  nodeSource,
+  videoMemory,
+}: NodeResourceSummaryProps) {
   return (
     <div className="node-resource-grid">
       {RESOURCE_ORDER.map((kind) => {
@@ -57,6 +64,16 @@ export function NodeResourceSummary({ resources, nodeSource }: NodeResourceSumma
                     {resource.unit}
                   </span>
                 </div>
+                {kind === 'gpu' && (
+                  <div className="node-resource-card__memory">
+                    <span>显存</span>
+                    <strong>
+                      {videoMemory
+                        ? `${formatAmount(videoMemory.total)} ${videoMemory.unit}`
+                        : '--'}
+                    </strong>
+                  </div>
+                )}
               </>
             ) : (
               <p className="node-resource-card__empty">当前节点未上报该类异构能力</p>

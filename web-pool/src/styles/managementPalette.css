@@ -1,0 +1,143 @@
+/* Ice-blue palette for node, resource pool, and cluster management. */
+:is(
+  .nodes-page,
+  .compute-pool-page,
+  .cluster-list-page,
+  .cluster-detail-page,
+  .scheduling-page,
+  .node-filter-dropdown,
+  .node-action-dropdown,
+  .node-label-editor-popover,
+  .compute-pool-select-dropdown,
+  .cluster-detail-select-dropdown,
+  .cluster-detail-modal,
+  .scheduling-select-dropdown,
+  body:has(.cluster-list-page) .cluster-form-modal,
+  body:has(.cluster-list-page) .cluster-node-select-dropdown,
+  body:has(.cluster-detail-page) .cluster-form-modal,
+  body:has(.cluster-detail-page) .cluster-node-select-dropdown
+) {
+  --management-ink: #143247;
+  --management-heading: #29495c;
+  --management-muted: #516b7b;
+  --management-accent: #087b95;
+  --management-accent-hover: #055c72;
+  --management-cyan: #20bfe3;
+  --management-online: #2fd49b;
+  --management-online-ink: #117455;
+  --management-warning: #99521d;
+  --management-error: #b6323b;
+  --management-border: rgb(61 146 176 / 18%);
+  --management-focus: rgb(15 163 194 / 58%);
+  --management-focus-shadow: 0 0 0 2px rgb(25 198 232 / 16%);
+  --management-background: linear-gradient(135deg, #e8f2f6 0%, #dbeaf0 50%, #edf6f9 100%);
+  --management-glass: linear-gradient(135deg, #f6fbfd, #ecf5f8);
+  --management-kpi: linear-gradient(135deg, rgb(247 252 254 / 96%), rgb(224 241 247 / 90%));
+  --management-resource: linear-gradient(135deg, #f5fafc, #e9f3f7);
+  --management-paper: #f6fbfd;
+  --management-inset: #e5eff4;
+  --management-row: #f3f9fb;
+  --management-row-alt: #edf5f8;
+  --management-active: #d9f2f8;
+  --management-track: #d7e8ef;
+  --management-shadow: 0 8px 20px rgb(41 91 112 / 10%);
+}
+
+:is(.nodes-page, .compute-pool-page, .cluster-list-page, .cluster-detail-page, .scheduling-page)
+  .ant-badge-status-success {
+  background: var(--management-online);
+}
+
+:is(.nodes-page, .compute-pool-page, .cluster-list-page, .cluster-detail-page, .scheduling-page)
+  .ant-badge-status-text {
+  color: var(--management-heading);
+}
+
+.nodes-page__alert.ant-alert-error {
+  background: #faedef;
+  border-color: rgb(182 50 59 / 20%);
+}
+
+:is(.nodes-page__alert, .compute-pool-page__alert).ant-alert-warning {
+  background: #fcf3e7;
+  border-color: rgb(153 82 29 / 20%);
+}
+
+/* The cluster form is also used on the separate cluster detail page. */
+body:has(.cluster-list-page) .cluster-form-modal .ant-modal-content {
+  color: var(--management-ink);
+  background: var(--management-glass);
+  border-color: var(--management-border);
+  box-shadow: var(--management-shadow);
+}
+
+body:has(.cluster-list-page) .cluster-form-modal .ant-modal-header {
+  border-bottom-color: var(--management-border);
+}
+
+body:has(.cluster-list-page)
+  .cluster-form-modal
+  :is(.ant-modal-title, .ant-form-item-label > label, .ant-alert-message) {
+  color: var(--management-heading);
+}
+
+body:has(.cluster-list-page) .cluster-form-modal :is(.ant-form-item-extra, .ant-modal-close) {
+  color: var(--management-muted);
+}
+
+body:has(.cluster-list-page) .cluster-form-modal :is(.ant-input, .ant-select-selector) {
+  color: var(--management-ink) !important;
+  background: var(--management-paper) !important;
+  border-color: var(--management-border) !important;
+}
+
+body:has(.cluster-list-page) .cluster-form-modal .ant-input::placeholder,
+body:has(.cluster-list-page) .cluster-form-modal .ant-select-selection-placeholder {
+  color: var(--management-muted) !important;
+}
+
+body:has(.cluster-list-page)
+  .cluster-form-modal
+  :is(
+    .ant-input:hover,
+    .ant-input:focus,
+    .ant-select:hover .ant-select-selector,
+    .ant-select-focused .ant-select-selector
+  ) {
+  border-color: var(--management-focus) !important;
+  box-shadow: var(--management-focus-shadow) !important;
+}
+
+body:has(.cluster-list-page) .cluster-form-modal .ant-alert-info {
+  color: var(--management-heading);
+  background: var(--management-inset);
+  border-color: var(--management-border);
+}
+
+body:has(.cluster-list-page) .cluster-node-select-dropdown.ant-select-dropdown {
+  color: var(--management-ink);
+  background: var(--management-paper);
+  border-color: var(--management-border);
+  box-shadow: var(--management-shadow);
+}
+
+body:has(.cluster-list-page)
+  .cluster-node-select-dropdown
+  :is(.ant-select-item, .cluster-node-option__title strong) {
+  color: var(--management-heading);
+}
+
+body:has(.cluster-list-page)
+  .cluster-node-select-dropdown
+  :is(.cluster-node-option__meta, .cluster-node-option__title code) {
+  color: var(--management-muted);
+}
+
+body:has(.cluster-list-page)
+  .cluster-node-select-dropdown
+  :is(.ant-select-item-option-active, .ant-select-item-option-selected):not(
+    .ant-select-item-option-disabled
+  ) {
+  color: var(--management-accent);
+  background: var(--management-active);
+}

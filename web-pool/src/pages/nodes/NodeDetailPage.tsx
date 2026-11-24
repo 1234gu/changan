@@ -8,18 +8,32 @@ import {
   ProfileOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
-import { Alert, Button, Card, Descriptions, Progress, Result, Skeleton, Space, Tag } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Descriptions,
+  Progress,
+  Result,
+  Skeleton,
+  Space,
+  Tag,
+  Tooltip,
+} from 'antd';
 import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { PageHeader } from '../../components/PageHeader';
+import { NodeReliabilityCard } from '../../components/platform/NodeReliabilityCard';
 import { StatusBadge } from '../../components/StatusBadge';
 import type { MainLayoutOutletContext } from '../../layouts/MainLayout';
 import { buildClusterDetailPath, buildComputePoolPath, ROUTES } from '../../routes/config';
+import { getNodes } from '../../services/nodeService';
 import { getSchedulerExecutions } from '../../services/schedulerService';
-import type { CapacityMetric, NodeGpuDevice } from '../../types/node';
+import { resolveNodeVideoMemory } from '../../services/videoMemoryPolicy';
+import type { CapacityMetric, NodeSummary } from '../../types/node';
 import type { SchedulerExecution } from '../../types/scheduling';
+import { getFleetVehicleNodes } from '../dashboard/dashboardModel';
 import { ExecutionTable } from '../scheduling/components/ExecutionTable';
 import { NodeResourceSummary } from './components/NodeResourceSummary';
-import { NodeReliabilityCard } from '../../components/platform/NodeReliabilityCard';
 import { useNodeDetail } from './hooks/useNodes';
 import {
   ACCESS_STATUS_CONFIG,
@@ -32,6 +46,30 @@ import {
 } from './presentation';
 import './NodeDetailPage.css';
 
+const NODE_ID_COLLATOR = new Intl.Collator('zh-CN', { numeric: true, sensitivity: 'base' });
+
+function formatNodeOrdinal(index: number) {
+  return `节点${String(index + 1).padStart(2, '0')}`;
+}
+
+function getStableNodeDisplayName(nodes: NodeSummary[], nodeId: string) {
+  const fleetMatch = getFleetVehicleNodes(nodes).find(({ node }) => node.id === nodeId);
+  if (fleetMatch) return fleetMatch.displayName;
+
+  const sortedIndex = [...nodes]
+    .sort((left, right) => NODE_ID_COLLATOR.compare(left.id, right.id))
+    .findIndex((node) => node.id === nodeId);
+  return sortedIndex >= 0 ? formatNodeOrdinal(sortedIndex) : undefined;
+}
+
+function abbreviateId(value: string) {
+  return value.length <= 24 ? value : `${value.slice(0, 12)}…${value.slice(-8)}`;
+}
+
+function formatCapacity(value: number, unit: string) {
+  return `${Number.isInteger(value) ? value : value.toFixed(1)} ${unit}`;
+}
+
 function CapacityOverview({ metric }: { metric: CapacityMetric }) {
   return (
     <div className="capacity-overview">
@@ -43,8 +81,8 @@ function CapacityOverview({ metric }: { metric: CapacityMetric }) {
       </div>
       <Progress
         percent={metric.utilization}
-        strokeColor="#356df3"
-        trailColor="#edf1f7"
+        strokeColor="#20bfe3"
+        trailColor="#d7e8ef"
         size={['100%', 7]}
         format={(percent) => `${Number(percent).toFixed(1)}%`}
       />
@@ -83,36 +121,13 @@ function formatOptionalMetric(value: number | undefined, unit: string) {
   return value === undefined ? '--' : `${value} ${unit}`;
 }
 
-function formatVramBytes(value: number | undefined) {
-  if (value === undefined) return '--';
-  const gb = value / 1024 ** 3;
-  return `${Number.isInteger(gb) ? gb : gb.toFixed(1)} GB`;
-}
-
-function deviceVramBytes(
-  device: NodeGpuDevice,
-  bytesField: 'vramTotalBytes' | 'vramUsedBytes' | 'vramAvailableBytes',
-  legacyField: 'memoryTotalMB' | 'memoryUsedMB' | 'memoryAvailableMB',
-) {
-  const bytes = device[bytesField];
-  if (bytes !== undefined) return bytes;
-  const megabytes = device[legacyField];
-  return megabytes === undefined ? undefined : megabytes * 1024 ** 2;
-}
-
-function formatDeviceVram(device: NodeGpuDevice) {
-  const total = deviceVramBytes(device, 'vramTotalBytes', 'memoryTotalMB');
-  const used = deviceVramBytes(device, 'vramUsedBytes', 'memoryUsedMB');
-  const available = deviceVramBytes(device, 'vramAvailableBytes', 'memoryAvailableMB');
-  return `GPU ${device.index}：${formatVramBytes(total)}（已用 ${formatVramBytes(used)}，可用 ${formatVramBytes(available)}）`;
-}
-
 export function NodeDetailPage() {
   const { nodeId } = useParams<{ nodeId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const { setHeaderUpdatedAt } = useOutletContext<MainLayoutOutletContext>();
   const { node, loading, error, updatedAt, refresh } = useNodeDetail(nodeId);
+  const [nodeDisplay, setNodeDisplay] = useState<{ nodeId: string; name: string }>();
   const [executions, setExecutions] = useState<SchedulerExecution[]>([]);
   const [executionsLoading, setExecutionsLoading] = useState(true);
   const [executionsError, setExecutionsError] = useState<string>();
@@ -122,6 +137,28 @@ export function NodeDetailPage() {
   useEffect(() => {
     if (updatedAt) setHeaderUpdatedAt(updatedAt);
   }, [setHeaderUpdatedAt, updatedAt]);
+
+  useEffect(() => {
+    if (!node) return undefined;
+    let active = true;
+    const currentNode = node;
+    getNodes()
+      .then(({ items }) => {
+        if (active) {
+          const name =
+            getStableNodeDisplayName(items, currentNode.id) ??
+            getStableNodeDisplayName([currentNode], currentNode.id);
+          if (name) setNodeDisplay({ nodeId: currentNode.id, name });
+        }
+      })
+      .catch(() => {
+        const name = getStableNodeDisplayName([currentNode], currentNode.id);
+        if (active && name) setNodeDisplay({ nodeId: currentNode.id, name });
+      });
+    return () => {
+      active = false;
+    };
+  }, [node?.id]);
 
   useEffect(() => {
     if (!nodeId) return undefined;
@@ -190,12 +227,15 @@ export function NodeDetailPage() {
     );
   }
 
+  const displayName =
+    (nodeDisplay?.nodeId === node.id ? nodeDisplay.name : undefined) ??
+    getStableNodeDisplayName([node], node.id) ??
+    '节点--';
   const accessStatus = ACCESS_STATUS_CONFIG[node.accessStatus];
   const healthStatus = HEALTH_STATUS_CONFIG[node.healthStatus];
   const networkStatus = NETWORK_LINK_CONFIG[node.network.linkStatus];
   const gpu = node.gpuDetails;
   const gpuUnavailableText = !gpu?.supported ? '不支持' : !gpu.available ? '采集不可用' : undefined;
-  const unifiedMemory = gpu?.memoryArchitecture === 'unified';
   const gpuUtilization =
     gpu?.utilizationPercent ??
     (() => {
@@ -206,16 +246,22 @@ export function NodeDetailPage() {
         ? values.reduce((sum, value) => sum + value, 0) / values.length
         : undefined;
     })();
+  const videoMemory = resolveNodeVideoMemory(node);
+  const gpuModels =
+    gpu?.devices
+      .map((device) => device.model)
+      .filter(Boolean)
+      .join('、') || '--';
   const formatNetworkMetric = (value: number | undefined, unit: string) =>
     node.network.linkStatus === 'down' ? '--' : formatOptionalMetric(value, unit);
+
   return (
     <main className="node-detail-page">
       <PageHeader
-        eyebrow="NODE DETAIL"
-        title={`${node.name} · 节点详情`}
-        description={`${node.platform} · ${node.id}`}
+        title={`${displayName}详情`}
+        description={`${node.name} · ${node.platform} · ${node.architecture.toUpperCase()}`}
         extra={
-          <Space wrap>
+          <Space className="node-detail-actions" wrap size={8}>
             <Button
               icon={<DeploymentUnitOutlined />}
               onClick={() => navigate(buildComputePoolPath({ nodeId: node.id }))}
@@ -245,8 +291,19 @@ export function NodeDetailPage() {
       <Card className="node-detail-identity-card">
         <div className="node-detail-identity">
           <div className="node-detail-identity__main">
-            <span className="node-detail-identity__name">{node.name}</span>
-            <code>{node.id}</code>
+            <span className="node-detail-identity__ordinal">{displayName}</span>
+            <div className="node-detail-identity__copy">
+              <strong>{node.name}</strong>
+              <div>
+                <span>Node ID：</span>
+                <Tooltip title={node.id}>
+                  <code>{abbreviateId(node.id)}</code>
+                </Tooltip>
+              </div>
+              <small>
+                {node.platform} · {node.architecture.toUpperCase()}
+              </small>
+            </div>
           </div>
           <div className="node-detail-identity__statuses" aria-label="节点当前状态">
             <StatusBadge status={node.operationalStatus} />
@@ -272,103 +329,48 @@ export function NodeDetailPage() {
         <div className="node-detail-section__heading">
           <HeartOutlined />
           <div>
-            <h2 id="node-compute-title">计算资源</h2>
-            <p>异构能力与实时资源占用</p>
+            <h2 id="node-compute-title">核心计算资源</h2>
+            <p>真实异构能力、利用率与可分配容量</p>
           </div>
         </div>
-        <NodeResourceSummary resources={node.resources} nodeSource={node.nodeSource} />
+        <NodeResourceSummary
+          resources={node.resources}
+          nodeSource={node.nodeSource}
+          videoMemory={videoMemory}
+        />
       </section>
 
-      <div className="node-detail-grid">
-        {node.nodeSource === 'agent' && (
-          <Card
-            className="node-detail-card"
-            title={
-              <span className="node-detail-card__title">
-                <DeploymentUnitOutlined /> 节点硬件采集
-              </span>
-            }
-          >
-            <Descriptions column={1} size="small" colon={false}>
-              <Descriptions.Item label="物理核心">
-                {node.cpuDetails?.physicalCores ?? '--'} Core
-              </Descriptions.Item>
-              <Descriptions.Item label="逻辑核心">
-                {node.cpuDetails?.logicalCores ?? '--'} Core
-              </Descriptions.Item>
-              <Descriptions.Item label="CPU 利用率">
-                {formatOptionalMetric(node.cpuDetails?.utilizationPercent, '%')}
-              </Descriptions.Item>
-              <Descriptions.Item label="CPU 频率">
-                {formatOptionalMetric(node.cpuDetails?.frequencyMHz, 'MHz')}
-              </Descriptions.Item>
-              <Descriptions.Item label="GPU 设备数量">
-                {gpuUnavailableText ? (
-                  <Space size={6} wrap>
-                    <Tag color={gpu?.supported ? 'warning' : 'default'} bordered={false}>
-                      {gpuUnavailableText}
-                    </Tag>
-                    {gpu?.error && <span>{gpu.error}</span>}
-                  </Space>
-                ) : (
-                  `${gpu?.deviceCount ?? 0} GPU`
-                )}
-              </Descriptions.Item>
-              <Descriptions.Item label="GPU 型号">
-                {gpuUnavailableText ??
-                  (gpu?.devices.map((device) => device.model).join('、') || '--')}
-              </Descriptions.Item>
-              <Descriptions.Item label="GPU 利用率">
-                {gpuUnavailableText ?? formatOptionalMetric(gpuUtilization, '%')}
-              </Descriptions.Item>
-              <Descriptions.Item label="显存容量">
-                {gpuUnavailableText ??
-                  (unifiedMemory
-                    ? formatVramBytes(gpu?.totalVramBytes)
-                    : gpu?.devices.map(formatDeviceVram).join('；') || '--')}
-              </Descriptions.Item>
-              <Descriptions.Item label="节点总显存">
-                {gpuUnavailableText ?? formatVramBytes(gpu?.totalVramBytes)}
-              </Descriptions.Item>
-              <Descriptions.Item label="已使用显存">
-                {gpuUnavailableText ?? formatVramBytes(gpu?.usedVramBytes)}
-              </Descriptions.Item>
-              <Descriptions.Item label="可用显存">
-                {gpuUnavailableText ?? formatVramBytes(gpu?.availableVramBytes)}
-              </Descriptions.Item>
-              <Descriptions.Item label="NPU">
-                <Tag color={node.npuSupport?.supported ? 'success' : 'default'} bordered={false}>
-                  {node.npuSupport?.supported ? '支持' : '不支持'}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="DLA">
-                <Tag color={node.dlaSupport?.supported ? 'success' : 'default'} bordered={false}>
-                  {node.dlaSupport?.supported ? '支持' : '不支持'}
-                </Tag>
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-        )}
+      <div className="node-detail-grid node-detail-grid--information">
         <Card
           className="node-detail-card"
           title={
             <span className="node-detail-card__title">
-              <ProfileOutlined /> 基本信息
+              <ProfileOutlined /> 设备与平台信息
             </span>
           }
         >
-          <Descriptions column={1} size="small" colon={false}>
+          <Descriptions
+            className="node-detail-kv"
+            column={{ xs: 1, sm: 2 }}
+            size="small"
+            colon={false}
+          >
+            <Descriptions.Item label="节点名称">{node.name}</Descriptions.Item>
+            <Descriptions.Item label="Hostname">{node.hostname ?? '--'}</Descriptions.Item>
+            <Descriptions.Item label="Node ID" span={2}>
+              <Tooltip title={node.id}>
+                <code className="node-detail-inline-code">{abbreviateId(node.id)}</code>
+              </Tooltip>
+            </Descriptions.Item>
             <Descriptions.Item label="节点类型">
               {NODE_TYPE_LABELS[node.nodeType]}
             </Descriptions.Item>
-            <Descriptions.Item label="Hostname">{node.hostname ?? '--'}</Descriptions.Item>
+            <Descriptions.Item label="硬件平台">{node.platform}</Descriptions.Item>
             <Descriptions.Item label="操作系统">
               {[node.operatingSystem, node.osVersion].filter(Boolean).join(' ') || '--'}
             </Descriptions.Item>
+            <Descriptions.Item label="架构">{node.architecture.toUpperCase()}</Descriptions.Item>
             <Descriptions.Item label="节点 IP">{node.ipAddress ?? '--'}</Descriptions.Item>
-            <Descriptions.Item label="硬件平台">{node.platform}</Descriptions.Item>
-            <Descriptions.Item label="处理器架构">{node.architecture}</Descriptions.Item>
-            <Descriptions.Item label="序列号">{node.serialNumber ?? '--'}</Descriptions.Item>
             <Descriptions.Item label="所属集群">
               {node.cluster ? (
                 <Link to={buildClusterDetailPath(node.cluster.id)}>{node.cluster.name}</Link>
@@ -376,7 +378,7 @@ export function NodeDetailPage() {
                 '未加入'
               )}
             </Descriptions.Item>
-            <Descriptions.Item label="节点标签">
+            <Descriptions.Item label="节点标签" span={2}>
               <Space size={[4, 4]} wrap>
                 {node.labels.length > 0
                   ? node.labels.map((label) => (
@@ -387,6 +389,9 @@ export function NodeDetailPage() {
                   : '--'}
               </Space>
             </Descriptions.Item>
+            <Descriptions.Item label="序列号" span={2}>
+              {node.serialNumber ?? '--'}
+            </Descriptions.Item>
           </Descriptions>
         </Card>
 
@@ -394,31 +399,138 @@ export function NodeDetailPage() {
           className="node-detail-card"
           title={
             <span className="node-detail-card__title">
-              <DatabaseOutlined /> 存储与内存
+              <DeploymentUnitOutlined /> 硬件信息
             </span>
           }
         >
-          <div className="capacity-list">
-            <div>
-              <span className="capacity-list__label">系统内存</span>
-              <CapacityOverview metric={node.memory} />
-            </div>
-            <div>
-              <span className="capacity-list__label">本地存储</span>
-              <CapacityOverview metric={node.storage} />
-            </div>
-            <div>
-              <span className="capacity-list__label">显存</span>
-              {node.videoMemory ? (
-                <CapacityOverview metric={node.videoMemory} />
-              ) : (
-                <div className="capacity-list__unsupported">
-                  <Tag bordered={false}>不支持</Tag>
-                  <span>节点未上报显存</span>
-                </div>
-              )}
-            </div>
+          <Descriptions
+            className="node-detail-kv"
+            column={{ xs: 1, sm: 2 }}
+            size="small"
+            colon={false}
+          >
+            <Descriptions.Item label="物理核心">
+              {node.cpuDetails?.physicalCores ?? '--'} Core
+            </Descriptions.Item>
+            <Descriptions.Item label="逻辑核心">
+              {node.cpuDetails?.logicalCores ?? '--'} Core
+            </Descriptions.Item>
+            <Descriptions.Item label="CPU 利用率">
+              {formatOptionalMetric(node.cpuDetails?.utilizationPercent, '%')}
+            </Descriptions.Item>
+            <Descriptions.Item label="CPU 频率">
+              {formatOptionalMetric(node.cpuDetails?.frequencyMHz, 'MHz')}
+            </Descriptions.Item>
+            <Descriptions.Item label="GPU 设备数量">
+              {gpuUnavailableText ?? `${gpu?.deviceCount ?? 0} Device`}
+            </Descriptions.Item>
+            <Descriptions.Item label="GPU 利用率">
+              {gpuUnavailableText ?? formatOptionalMetric(gpuUtilization, '%')}
+            </Descriptions.Item>
+            <Descriptions.Item label="GPU 型号" span={2}>
+              {gpuUnavailableText ?? gpuModels}
+            </Descriptions.Item>
+            <Descriptions.Item label="显存总量">
+              {gpuUnavailableText ??
+                (videoMemory ? formatCapacity(videoMemory.total, videoMemory.unit) : '--')}
+            </Descriptions.Item>
+            <Descriptions.Item label="已用显存">
+              {gpuUnavailableText ??
+                (videoMemory ? formatCapacity(videoMemory.used, videoMemory.unit) : '--')}
+            </Descriptions.Item>
+            <Descriptions.Item label="可用显存">
+              {gpuUnavailableText ??
+                (videoMemory ? formatCapacity(videoMemory.available, videoMemory.unit) : '--')}
+            </Descriptions.Item>
+            <Descriptions.Item label="显存架构">
+              {gpuUnavailableText ??
+                (gpu?.memoryArchitecture === 'unified' ? '统一内存架构' : '独立显存架构')}
+            </Descriptions.Item>
+            <Descriptions.Item label="NPU">
+              <Tag color={node.npuSupport?.supported ? 'success' : 'default'} bordered={false}>
+                {node.npuSupport?.supported ? '支持' : '不支持'}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="DLA">
+              <Tag color={node.dlaSupport?.supported ? 'success' : 'default'} bordered={false}>
+                {node.dlaSupport?.supported ? '支持' : '不支持'}
+              </Tag>
+            </Descriptions.Item>
+          </Descriptions>
+        </Card>
+      </div>
+
+      <Card
+        className="node-detail-card node-detail-capacity-card"
+        title={
+          <span className="node-detail-card__title">
+            <DatabaseOutlined /> 内存与存储
+          </span>
+        }
+      >
+        <div className="capacity-list">
+          <div className="capacity-list__item">
+            <span className="capacity-list__label">内存</span>
+            <CapacityOverview metric={node.memory} />
           </div>
+          <div className="capacity-list__item">
+            <span className="capacity-list__label">本地存储</span>
+            <CapacityOverview metric={node.storage} />
+          </div>
+        </div>
+      </Card>
+
+      <div className="node-detail-grid node-detail-grid--runtime">
+        <Card
+          className="node-detail-card"
+          title={
+            <span className="node-detail-card__title">
+              <HeartOutlined /> 运行状态
+            </span>
+          }
+        >
+          <Descriptions
+            className="node-detail-kv"
+            column={{ xs: 1, sm: 2 }}
+            size="small"
+            colon={false}
+          >
+            <Descriptions.Item label="采集程序版本">{node.agentVersion}</Descriptions.Item>
+            <Descriptions.Item label="是否可调度">
+              <Tag color={node.schedulable ? 'success' : 'default'} bordered={false}>
+                {node.schedulable ? '是' : '否'}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="注册时间">
+              {node.registeredAt ? (
+                <time dateTime={node.registeredAt}>{formatDateTime(node.registeredAt)}</time>
+              ) : (
+                '--'
+              )}
+            </Descriptions.Item>
+            <Descriptions.Item label="资源采集时间">
+              {node.lastResourceAt ? (
+                <time dateTime={node.lastResourceAt}>{formatDateTime(node.lastResourceAt)}</time>
+              ) : (
+                '--'
+              )}
+            </Descriptions.Item>
+            <Descriptions.Item label="最后心跳" span={2}>
+              {formatHeartbeatAge(node.heartbeatAt)} 前 · {formatDateTime(node.heartbeatAt)}
+            </Descriptions.Item>
+            <Descriptions.Item label="CPU 温度">
+              <TemperatureValue value={node.temperature?.cpuCelsius} />
+            </Descriptions.Item>
+            <Descriptions.Item label="GPU 温度">
+              <TemperatureValue value={node.temperature?.gpuCelsius} />
+            </Descriptions.Item>
+            <Descriptions.Item label="NPU 温度">
+              <TemperatureValue value={node.temperature?.npuCelsius} />
+            </Descriptions.Item>
+            <Descriptions.Item label="板载温度">
+              <TemperatureValue value={node.temperature?.boardCelsius} />
+            </Descriptions.Item>
+          </Descriptions>
         </Card>
 
         <Card
@@ -436,15 +548,13 @@ export function NodeDetailPage() {
         >
           <Descriptions
             className="network-metrics"
-            column={{ xs: 1, sm: 2 }}
+            column={{ xs: 1, sm: 2, lg: 3, xl: 4 }}
             size="small"
             colon={false}
           >
             <Descriptions.Item label="网络接口">{node.network.interfaceName}</Descriptions.Item>
-            <Descriptions.Item label="IPv4 地址">{node.network.ipv4Address}</Descriptions.Item>
-            <Descriptions.Item label="MAC 地址">
-              {node.network.macAddress ?? '--'}
-            </Descriptions.Item>
+            <Descriptions.Item label="IPv4">{node.network.ipv4Address}</Descriptions.Item>
+            <Descriptions.Item label="MAC">{node.network.macAddress ?? '--'}</Descriptions.Item>
             <Descriptions.Item label="链路速率">
               {formatNetworkMetric(node.network.linkSpeedMbps, 'Mbps')}
             </Descriptions.Item>
@@ -463,12 +573,6 @@ export function NodeDetailPage() {
             <Descriptions.Item label="发送速率">
               {formatNetworkMetric(node.network.txMbps, 'Mbps')}
             </Descriptions.Item>
-            <Descriptions.Item label="累计接收">
-              {formatBytes(node.network.bytesReceived)}
-            </Descriptions.Item>
-            <Descriptions.Item label="累计发送">
-              {formatBytes(node.network.bytesSent)}
-            </Descriptions.Item>
             <Descriptions.Item label="实时 RX">
               {node.network.rxBytesPerSecond === undefined
                 ? '--'
@@ -479,56 +583,13 @@ export function NodeDetailPage() {
                 ? '--'
                 : `${formatBytes(node.network.txBytesPerSecond)}/s`}
             </Descriptions.Item>
+            <Descriptions.Item label="累计接收">
+              {formatBytes(node.network.bytesReceived)}
+            </Descriptions.Item>
+            <Descriptions.Item label="累计发送">
+              {formatBytes(node.network.bytesSent)}
+            </Descriptions.Item>
             <Descriptions.Item label="链路状态">{networkStatus.label}</Descriptions.Item>
-          </Descriptions>
-        </Card>
-
-        <Card
-          className="node-detail-card"
-          title={
-            <span className="node-detail-card__title">
-              <HeartOutlined /> 运行状态
-            </span>
-          }
-        >
-          <Descriptions column={1} size="small" colon={false}>
-            <Descriptions.Item label="节点侧采集程序版本">{node.agentVersion}</Descriptions.Item>
-            <Descriptions.Item label="注册时间">
-              {node.registeredAt ? (
-                <time dateTime={node.registeredAt}>{formatDateTime(node.registeredAt)}</time>
-              ) : (
-                '--'
-              )}
-            </Descriptions.Item>
-            <Descriptions.Item label="资源采集时间">
-              {node.lastResourceAt ? (
-                <time dateTime={node.lastResourceAt}>{formatDateTime(node.lastResourceAt)}</time>
-              ) : (
-                '--'
-              )}
-            </Descriptions.Item>
-            <Descriptions.Item label="最后心跳">
-              <span>
-                {formatHeartbeatAge(node.heartbeatAt)} 前 · {formatDateTime(node.heartbeatAt)}
-              </span>
-            </Descriptions.Item>
-            <Descriptions.Item label="是否可调度">
-              <Tag color={node.schedulable ? 'success' : 'default'} bordered={false}>
-                {node.schedulable ? '是' : '否'}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="CPU 温度">
-              <TemperatureValue value={node.temperature?.cpuCelsius} />
-            </Descriptions.Item>
-            <Descriptions.Item label="GPU 温度">
-              <TemperatureValue value={node.temperature?.gpuCelsius} />
-            </Descriptions.Item>
-            <Descriptions.Item label="NPU 温度">
-              <TemperatureValue value={node.temperature?.npuCelsius} />
-            </Descriptions.Item>
-            <Descriptions.Item label="板载温度">
-              <TemperatureValue value={node.temperature?.boardCelsius} />
-            </Descriptions.Item>
           </Descriptions>
         </Card>
       </div>
@@ -537,7 +598,7 @@ export function NodeDetailPage() {
         className="node-detail-card node-detail-tasks"
         title={
           <span className="node-detail-card__title">
-            <ProfileOutlined /> 当前执行
+            <ProfileOutlined /> 当前任务与执行
           </span>
         }
         extra={<span className="node-detail-card__count">{executions.length} 条执行记录</span>}
@@ -551,11 +612,13 @@ export function NodeDetailPage() {
             description={executionsError}
           />
         )}
-        <ExecutionTable
-          items={executions}
-          loading={executionsLoading}
-          emptyDescription="当前物理节点没有执行中的任务会话或分片"
-        />
+        <div className="node-detail-table-scroll">
+          <ExecutionTable
+            items={executions}
+            loading={executionsLoading}
+            emptyDescription="当前节点暂无正在执行的任务或分片"
+          />
+        </div>
       </Card>
 
       <NodeReliabilityCard nodeId={node.id} />

@@ -41,11 +41,12 @@ class ComputeResourceMetricMap(ApiModel):
 class ComputePoolSummary(ApiModel):
     resources: ComputeResourceMetricMap
     video_memory: ResourceMetric
+    memory: ResourceMetric
+    storage: ResourceMetric
     # Number of GPU nodes whose normalized display-memory metric uses system memory.
     unified_memory_gpu_nodes: int = Field(default=0, ge=0)
     updated_at: datetime
 
 
 class ClusterResourceSummary(ComputePoolSummary):
-    memory: ResourceMetric
-    storage: ResourceMetric
+    pass

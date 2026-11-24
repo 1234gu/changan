@@ -1,9 +1,10 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { NodeResourceContribution } from '../../../../types/computePool';
 import type { FleetLayout, FleetVehicleNode } from '../../dashboardModel';
-import { ComputeFxCanvas } from './ComputeFxCanvas';
-import { createFleetSceneGeometry, fleetSceneMinimumHeight } from './fleetSceneGeometry';
-import { SceneBackground } from './SceneBackground';
+import { ParkingNodeInfoCard } from './ParkingNodeInfoCard';
+import { ParkingSceneBackground } from './ParkingSceneBackground';
+import { createParkingSceneGeometry, parkingSceneMinimumHeight } from './parkingSceneGeometry';
+import { ParkingSlotLayer } from './ParkingSlotLayer';
 import { VehicleLayer } from './VehicleLayer';
 
 interface FleetSceneProps {
@@ -14,14 +15,38 @@ interface FleetSceneProps {
 
 export function FleetScene({ layout, nodes, resourceByNode }: FleetSceneProps) {
   const sceneRef = useRef<HTMLDivElement>(null);
+  const hideTimerRef = useRef<number | undefined>(undefined);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
   const geometry = useMemo(
     () => size.width > 0 && size.height > 0
-      ? createFleetSceneGeometry(size.width, size.height, nodes.map(({ node }) => node.id))
+      ? createParkingSceneGeometry(size.width, size.height, nodes.map(({ node }) => node.id))
       : null,
     [size.width, size.height, nodes],
   );
+  const activeVehicle = useMemo(
+    () => nodes.find(({ node }) => node.id === activeNodeId),
+    [activeNodeId, nodes],
+  );
+
+  const handleActiveNodeChange = useCallback((nodeId: string | null) => {
+    if (hideTimerRef.current !== undefined) {
+      globalThis.clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = undefined;
+    }
+    if (nodeId) {
+      setActiveNodeId(nodeId);
+      return;
+    }
+    hideTimerRef.current = globalThis.setTimeout(() => {
+      setActiveNodeId(null);
+      hideTimerRef.current = undefined;
+    }, 140);
+  }, []);
+
+  useEffect(() => () => {
+    if (hideTimerRef.current !== undefined) globalThis.clearTimeout(hideTimerRef.current);
+  }, []);
 
   useLayoutEffect(() => {
     const scene = sceneRef.current;
@@ -43,20 +68,30 @@ export function FleetScene({ layout, nodes, resourceByNode }: FleetSceneProps) {
   return (
     <div
       ref={sceneRef}
-      className="fleet-scene"
+      className="fleet-scene fleet-scene--parking"
       data-fleet-layout={layout}
-      style={{ minHeight: fleetSceneMinimumHeight(size.width, nodes.length) }}
+      style={{ minHeight: parkingSceneMinimumHeight(size.width) }}
     >
-      <SceneBackground />
+      <ParkingSceneBackground />
       {geometry && (
         <>
-          <ComputeFxCanvas geometry={geometry} activeNodeId={activeNodeId} />
+          <ParkingSlotLayer geometry={geometry} activeNodeId={activeNodeId} />
           <VehicleLayer
             geometry={geometry}
             nodes={nodes}
             resourceByNode={resourceByNode}
-            onActiveNodeChange={setActiveNodeId}
+            onActiveNodeChange={handleActiveNodeChange}
+            useScenePopover
           />
+          {activeVehicle ? (
+            <ParkingNodeInfoCard
+              geometry={geometry}
+              vehicle={activeVehicle}
+              resource={resourceByNode.get(activeVehicle.node.id)}
+              onMouseEnter={() => handleActiveNodeChange(activeVehicle.node.id)}
+              onMouseLeave={() => handleActiveNodeChange(null)}
+            />
+          ) : null}
         </>
       )}
     </div>

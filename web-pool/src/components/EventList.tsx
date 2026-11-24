@@ -37,7 +37,7 @@ export function EventList({ events }: EventListProps) {
       className="event-list"
       dataSource={events}
       renderItem={(event) => (
-        <List.Item key={event.id} className="event-list__item">
+        <List.Item key={event.id} className="event-list__item" data-event-type={event.type}>
           <div className="event-list__content">
             {eventIcon[event.level]}
             <div className="event-list__body">

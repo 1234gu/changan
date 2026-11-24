@@ -8,9 +8,16 @@ import { CanvasRenderer } from 'echarts/renderers';
 import ReactEChartsCore from 'echarts-for-react/esm/core';
 import { RESOURCE_ORDER, RESOURCE_PRESENTATION } from '../../../components/resourcePresentation';
 import type { ResourceTrendPoint } from '../../../types/dashboard';
-import type { ResourceMap } from '../../../types/resource';
+import type { ResourceKind, ResourceMap } from '../../../types/resource';
 
 echarts.use([LineChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer]);
+
+const trendColors: Record<ResourceKind, string> = {
+  cpu: '#0e8ca5',
+  gpu: '#4277a9',
+  npu: '#7869a0',
+  dla: '#a46f3b',
+};
 
 interface ResourceTrendChartProps {
   points: ResourceTrendPoint[];
@@ -27,9 +34,12 @@ export function ResourceTrendChart({ points, resources }: ResourceTrendChartProp
     () => ({
       animation: true,
       animationDuration: 500,
-      color: resourceKinds.map((kind) => RESOURCE_PRESENTATION[kind].color),
+      color: resourceKinds.map((kind) => trendColors[kind]),
       tooltip: {
         trigger: 'axis',
+        backgroundColor: '#f5fafc',
+        borderColor: '#b9d5e0',
+        textStyle: { color: '#143247' },
         valueFormatter: (value) => `${value}%`,
       },
       legend: {
@@ -37,7 +47,7 @@ export function ResourceTrendChart({ points, resources }: ResourceTrendChartProp
         right: 0,
         itemWidth: 18,
         itemHeight: 3,
-        textStyle: { color: '#8299b4' },
+        textStyle: { color: '#516b7b' },
       },
       grid: {
         top: 44,
@@ -50,17 +60,17 @@ export function ResourceTrendChart({ points, resources }: ResourceTrendChartProp
         type: 'category',
         boundaryGap: false,
         data: points.map((point) => dayjs(point.timestamp).format('HH:mm')),
-        axisLine: { lineStyle: { color: '#29445d' } },
+        axisLine: { lineStyle: { color: '#b9d5e0' } },
         axisTick: { show: false },
-        axisLabel: { color: '#7189a4', fontSize: 11 },
+        axisLabel: { color: '#516b7b', fontSize: 11 },
       },
       yAxis: {
         type: 'value',
         min: 0,
         max: 100,
         interval: 25,
-        axisLabel: { color: '#7189a4', formatter: '{value}%' },
-        splitLine: { lineStyle: { color: '#1c344b', type: 'dashed' } },
+        axisLabel: { color: '#516b7b', formatter: '{value}%' },
+        splitLine: { lineStyle: { color: '#c7dce5', type: 'dashed' } },
       },
       series: resourceKinds.map((kind) => ({
         name: RESOURCE_PRESENTATION[kind].label,

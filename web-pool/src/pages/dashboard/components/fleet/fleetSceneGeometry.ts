@@ -3,8 +3,16 @@ export interface FleetScenePoint {
   y: number;
 }
 
+export interface ParkingFrame {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface FleetVehiclePoint extends FleetScenePoint {
   nodeId: string;
+  slotId?: string;
   depth: number;
   carWidth: number;
   baseWidth: number;
@@ -12,6 +20,23 @@ export interface FleetVehiclePoint extends FleetScenePoint {
   labelScale: number;
   glowStrength: number;
   zIndex: number;
+  imageRatio?: number;
+  tireInset?: number;
+  roofInset?: number;
+  /** Normalized point inside the vehicle sprite that is pinned to x/y. */
+  anchorX?: number;
+  anchorY?: number;
+  parkingFrame?: ParkingFrame;
+  parkingAlignment?: {
+    bounds: { left: number; right: number; top: number; bottom: number };
+    groundFootprint: readonly FleetScenePoint[];
+    scale: number;
+    visualWidth: number;
+    groundLength: number;
+  };
+  labelOffsetX?: number;
+  labelOffsetY?: number;
+  popoverSide?: 'left' | 'right';
 }
 
 export interface FleetSceneGeometry {
@@ -37,8 +62,7 @@ export const VEHICLE_ROOF_INSET = 125 / 1672;
 const clamp = (value: number, minimum: number, maximum: number) =>
   Math.min(maximum, Math.max(minimum, value));
 
-const vehicleBaseWidthFactor = (count: number) =>
-  count <= 4 ? 1.4 : count <= 6 ? 1.25 : 1.16;
+const vehicleBaseWidthFactor = (count: number) => (count <= 4 ? 1.4 : count <= 6 ? 1.25 : 1.16);
 
 function row(laterals: number[], depth: number): GroundSlot[] {
   return laterals.map((lateral) => ({ lateral, depth }));
@@ -63,7 +87,7 @@ function distributedFormation(count: number, columns: number): GroundSlot[] {
   for (let index = 0; index < rows; index += 1) {
     const entries = Math.min(columns, count - index * columns);
     const laterals = Array.from({ length: entries }, (_, column) =>
-      entries === 1 ? 0 : ((column / (entries - 1)) - 0.5) * (entries === 2 ? 0.59 : 0.8),
+      entries === 1 ? 0 : (column / (entries - 1) - 0.5) * (entries === 2 ? 0.59 : 0.8),
     );
     slots.push(...row(laterals, rows === 1 ? 0.82 : 0.09 + (index / (rows - 1)) * 0.92));
   }
@@ -112,11 +136,12 @@ function chooseVehicleWidth(
     for (const other of points.slice(index + 1)) {
       // Either separate horizontally or, for aligned rows, leave clear space above
       // the front label and below the rear base. Always use the roomier axis.
-      const horizontal = (Math.abs(point.x - other.x) - 12) /
-        (Math.max(point.scale, other.scale) * baseWidthFactor);
+      const horizontal =
+        (Math.abs(point.x - other.x) - 12) / (Math.max(point.scale, other.scale) * baseWidthFactor);
       const rear = point.y <= other.y ? point : other;
       const front = rear === point ? other : point;
-      const vertical = (front.y - rear.y - 39) /
+      const vertical =
+        (front.y - rear.y - 39) /
         (front.scale * (VEHICLE_IMAGE_RATIO - VEHICLE_TIRE_INSET) + rear.scale * 0.091);
       size = Math.min(size, Math.max(horizontal, vertical));
     }
@@ -132,9 +157,10 @@ export function createFleetSceneGeometry(
   options: { centerSingleNode?: boolean } = {},
 ): FleetSceneGeometry {
   const count = nodeIds.length;
-  let slots = width < 650 && count > 2
-    ? distributedFormation(count, 2)
-    : (DESKTOP_FORMATIONS[count] ?? distributedFormation(count, 4));
+  let slots =
+    width < 650 && count > 2
+      ? distributedFormation(count, 2)
+      : (DESKTOP_FORMATIONS[count] ?? distributedFormation(count, 4));
   if (count === 1 && options.centerSingleNode) {
     slots = row([0], 0.9);
   }
