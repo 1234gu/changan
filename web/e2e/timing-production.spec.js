@@ -14,6 +14,7 @@ test('production GPU video with four reusable sessions and preserved historical 
  const panel=page.getByRole('region',{name:'启动与推理分段计时'});
  await expect(panel).toContainText('GPU / CUDA');
  await expect(panel.locator('.timing-startup-row')).toHaveCount(4);
+ await panel.getByRole('button',{name:'展开全部 6 个分片'}).click();
  await expect(panel.locator('.timing-segments details')).toHaveCount(6);
  await panel.getByText('启动阶段明细与设备',{exact:true}).click();
  await expect(panel).toContainText('NVIDIA GeForce RTX 5090');

@@ -36,6 +36,8 @@ test('shows actual startup, cached image and per-frame timings',async({page})=>{
  await expect(panel).toContainText('镜像已缓存（未重新拉取）');
  await panel.getByText('启动阶段明细与设备',{exact:true}).click();
  await expect(panel).toContainText('GPU-fixture');
+ await expect(panel.locator('.timing-segments details')).toHaveCount(0);
+ await panel.getByRole('button',{name:'展开全部 1 个分片'}).click();
  await panel.locator('.timing-segments summary').first().click();
  await expect(panel.locator('.timing-segments .timing-forward')).toHaveCount(2);
  await expect(panel).toContainText('解码累计');
@@ -61,6 +63,7 @@ test('refreshes incoming real evidence',async({page})=>{
 });
 test('mobile timing content fits, tables scroll',async({page})=>{
  await page.setViewportSize({width:390,height:844});const t=fixture(),errors=await open(page,()=>t);
+ await page.getByRole('button',{name:'展开全部 1 个分片'}).click();
  await page.locator('.timing-segments summary').first().click();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
  await expect(page.locator('.execution-timing')).toContainText('200.000 ms');

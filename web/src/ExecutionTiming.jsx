@@ -2,8 +2,6 @@ import React, {useId, useState} from 'react';
 import {backendName,finite,seconds,sessionPhases,segmentPhases,taskTiming} from './executionTiming';
 import './executionTiming.css';
 
-const SEGMENT_PREVIEW_COUNT = 3;
-
 function Track({phases,origin,end}) {
   const span=Math.max(.001,end-origin);
   return <div className="timing-track">{phases.map((p,i)=><span key={i} className={'timing-bar timing-'+p.kind}
@@ -43,11 +41,11 @@ export default function ExecutionTiming({task}) {
       </div>)}</details>
     </>}
     <h3>分片处理时间轴</h3>
-    {attempts.length > SEGMENT_PREVIEW_COUNT && <button type="button" aria-controls={listId}
+    {attempts.length > 0 && <button type="button" aria-controls={listId}
       aria-expanded={expanded} onClick={() => setExpandedTask(expanded ? null : task.id)}>
-      {expanded ? '收起分片列表' : `展开其余 ${attempts.length - SEGMENT_PREVIEW_COUNT} 个分片`}
+      {expanded ? '收起分片列表' : `展开全部 ${attempts.length} 个分片`}
     </button>}
-    {!attempts.length?<p>尚无已完成的分片分段计时。缺失值显示“未采集”。</p>:<div id={listId} className="timing-segments">{(expanded ? attempts : attempts.slice(0, SEGMENT_PREVIEW_COUNT)).map(a=>{
+    {!attempts.length?<p>尚无已完成的分片分段计时。缺失值显示“未采集”。</p>:<div id={listId} className="timing-segments" hidden={!expanded}>{expanded && attempts.map(a=>{
       const r=a.result,t=r.segment_timing,phases=segmentPhases(a),at=r.analysis_timing||{};
       const analysis=phases.find(p=>p.kind==='analyze');
       const forwards=(r.frames||[]).filter(f=>finite(f.timing?.inference_offset_seconds)&&finite(f.timing?.inference_seconds)).map(f=>({
