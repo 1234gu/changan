@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import type { NodeResourceContribution } from '../../../../types/computePool';
 import type { FleetVehicleNode } from '../../dashboardModel';
 import { NodeResourcePopover } from '../NodeResourcePopover';
@@ -23,31 +23,55 @@ export function ParkingNodeInfoCard({
   onMouseLeave,
 }: ParkingNodeInfoCardProps) {
   const point = geometry.points.find((item) => item.nodeId === vehicle.node.id);
-  if (!point?.parkingAlignment) return null;
-  const { bounds } = point.parkingAlignment;
+  const panelRef = useRef<HTMLElement>(null);
+  const bounds = point?.parkingAlignment?.bounds;
+  const anchorY = bounds && (bounds.top + bounds.bottom) / 2;
+  const anchorTop = bounds?.top;
+  const inset = 14;
 
-  const panelWidth = clamp(geometry.width * 0.29, 318, 382);
-  const panelHeight = 414;
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    const scene = panel?.parentElement;
+    if (!panel || !scene || anchorY === undefined || anchorTop === undefined) return;
+    const header = document.querySelector('.app-header');
+    const position = () => {
+      const origin = scene.getBoundingClientRect().top + scene.clientTop;
+      const visibleTop = Math.max(0, (header?.getBoundingClientRect().bottom ?? 0) - origin) + inset;
+      const visibleBottom = Math.min(scene.clientHeight, window.innerHeight - origin) - inset;
+      panel.style.maxHeight = `${Math.max(0, visibleBottom - visibleTop)}px`;
+      const height = panel.offsetHeight;
+      const top = clamp(anchorTop - height / 2, visibleTop, Math.max(visibleTop, visibleBottom - height));
+      panel.style.top = `${top}px`;
+      panel.style.setProperty('--parking-card-anchor-y', `${clamp(anchorY - top, 0, height)}px`);
+    };
+    position();
+    const observer = new ResizeObserver(position);
+    observer.observe(panel);
+    observer.observe(scene);
+    window.addEventListener('scroll', position, { passive: true });
+    window.addEventListener('resize', position);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', position);
+      window.removeEventListener('resize', position);
+    };
+  }, [anchorTop, anchorY]);
+  if (!point || !bounds) return null;
+
+  const panelWidth = Math.min(clamp(geometry.width * 0.29, 318, 382), geometry.width - 2 * inset);
   const gap = 18;
   const prefersRight = point.popoverSide
     ? point.popoverSide === 'right'
     : point.x <= geometry.width / 2;
   const proposedLeft = prefersRight ? bounds.right + gap : bounds.left - panelWidth - gap;
-  const left = clamp(proposedLeft, 14, geometry.width - panelWidth - 14);
-  const top = clamp(bounds.top - gap, 14, Math.max(14, geometry.height - panelHeight - 14));
+  const left = clamp(proposedLeft, inset, geometry.width - panelWidth - inset);
   const side = left >= point.x ? 'right' : 'left';
-  const anchorY = (bounds.top + bounds.bottom) / 2;
-  const style = {
-    left,
-    top,
-    width: panelWidth,
-    '--parking-card-anchor-y': `${clamp(anchorY - top, 42, panelHeight - 42)}px`,
-  } as CSSProperties;
 
   return (
     <aside
       className={`parking-node-info parking-node-info--${side}`}
-      style={style}
+      ref={panelRef}
+      style={{ left, width: panelWidth }}
       aria-live="polite"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}

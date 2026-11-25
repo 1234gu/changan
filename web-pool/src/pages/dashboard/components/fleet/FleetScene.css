@@ -476,7 +476,9 @@
 
 .parking-node-info .node-resource-popover {
   width: 100%;
-  overflow: hidden;
+  max-height: inherit;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   color: #c0d2df;
   background: linear-gradient(145deg, rgb(7 29 47 / 95%), rgb(5 20 35 / 97%));
   border: 1px solid rgb(109 204 236 / 58%);

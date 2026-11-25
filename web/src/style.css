@@ -64,3 +64,7 @@
 .overview-pagination{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;padding-top:16px;font-size:13px}
 .overview-pagination button:disabled{opacity:.45;cursor:default}
 .task-table td:last-child button{white-space:nowrap}
+.content > :first-child,
+.content > .mapping-detail:first-child > .page-title:first-child {
+  margin-top: 0;
+}
