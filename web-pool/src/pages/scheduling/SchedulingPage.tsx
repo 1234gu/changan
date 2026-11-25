@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import {
   CheckCircleOutlined,
@@ -101,6 +102,7 @@ const RESOURCE_LABEL: Record<string, string> = {
 };
 
 export function SchedulingPage() {
+  const navigate = useNavigate();
   const [form] = Form.useForm<RequirementFormValues>();
   const [messageApi, contextHolder] = message.useMessage();
   const [clusters, setClusters] = useState<ClusterRecord[]>([]);
@@ -379,7 +381,7 @@ export function SchedulingPage() {
       messageApi.success(
         `任务 ${created.id} 已提交，执行节点：${created.executionNodeIds.join('、')}`,
       );
-      window.setTimeout(() => window.location.assign(taskDetailUrl(created.id)), 800);
+      navigate(taskDetailUrl(created.id));
     } catch (error) {
       messageApi.error(errorMessage(error));
     } finally {

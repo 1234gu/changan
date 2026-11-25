@@ -1,5 +1,6 @@
 export const ROUTES = {
   dashboard: '/',
+  console: '/console',
   nodes: '/nodes',
   nodeDetail: '/nodes/:nodeId',
   computePool: '/compute-pool',
@@ -32,18 +33,36 @@ export const buildComputePoolPath = (options: ComputePoolRouteOptions = {}) => {
 };
 
 export const NAVIGATION_ITEMS = [
-  { id: 'dashboard', path: ROUTES.dashboard, label: '总览' },
+  { id: 'dashboard', path: ROUTES.dashboard, label: '资源池总览' },
   { id: 'nodes', path: ROUTES.nodes, label: '节点管理' },
   { id: 'computePool', path: ROUTES.computePool, label: '算力池' },
   { id: 'clusters', path: ROUTES.clusters, label: '集群管理' },
   { id: 'scheduling', path: ROUTES.scheduling, label: '资源筛选与提交' },
 ] as const;
 
-/** Pages of the task/execution console served at the site root (same origin). */
-export const TASK_CONSOLE_LINKS = [
-  { key: 'console:tasks', href: '/?page=tasks', label: '任务中心' },
-  { key: 'console:overview', href: '/?page=overview', label: '运行总览' },
-  { key: 'console:incidents', href: '/?page=incidents', label: '失联与任务核对' },
+export const TASK_PAGES = [
+  { id: 'overview', label: '运行总览' },
+  { id: 'tasks', label: '任务中心' },
+  { id: 'alerts', label: '站内告警' },
+  { id: 'nodes', label: '执行节点' },
+  { id: 'candidates', label: '候选节点筛选' },
+  { id: 'incidents', label: '失联与任务核对' },
+  { id: 'workflow', label: '工作流与能力' },
+  { id: 'strategies', label: '触发策略' },
+  { id: 'compare', label: '历史与对比' },
 ] as const;
+
+export function consolePath(page: string, task?: string) {
+  const search = new URLSearchParams({ page });
+  if (task) search.set('task', task);
+  return `/console?${search}`;
+}
+
+export function consolePage(search: string) {
+  const params = new URLSearchParams(search);
+  const page = params.get('page');
+  if (page === 'detail') return params.get('task') ? 'detail' : 'tasks';
+  return TASK_PAGES.find(item => item.id === page)?.id ?? 'overview';
+}
 
 export type NavigationItemId = (typeof NAVIGATION_ITEMS)[number]['id'];

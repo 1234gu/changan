@@ -1,24 +1,18 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
+import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import {
-  ApartmentOutlined,
-  AppstoreOutlined,
-  CloudServerOutlined,
-  DashboardOutlined,
-  DeploymentUnitOutlined,
-  GlobalOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  MonitorOutlined,
-  ScheduleOutlined,
-} from '@ant-design/icons';
+  Activity, AlertCircle, Bell, ChartNoAxesCombined, Clock3, Cpu,
+  Database, Layers, LayoutDashboard, ListFilter, Network, Search, Server, Workflow,
+} from 'lucide-react';
 import { Badge, Button, Layout, Menu, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import changanLogo from '../assets/branding/changan-logo.png';
 import sidebarVehicle from '../assets/sidebar-suv-front-v2.png';
-import { NAVIGATION_ITEMS, ROUTES, TASK_CONSOLE_LINKS } from '../routes/config';
+import { consolePage, consolePath, NAVIGATION_ITEMS, ROUTES, TASK_PAGES } from '../routes/config';
 import type { NavigationItemId } from '../routes/config';
+import { apiClient } from '../services/apiClient';
 import { getNodeDataMode } from '../services/nodeService';
 
 const { Header, Sider, Content } = Layout;
@@ -30,11 +24,11 @@ const dataModeMeta = {
 } as const;
 
 const navigationIcons: Record<NavigationItemId, ReactNode> = {
-  dashboard: <DashboardOutlined />,
-  nodes: <CloudServerOutlined />,
-  computePool: <DeploymentUnitOutlined />,
-  clusters: <ApartmentOutlined />,
-  scheduling: <ScheduleOutlined />,
+  dashboard: <Activity size={18} />,
+  nodes: <Database size={18} />,
+  computePool: <Cpu size={18} />,
+  clusters: <Network size={18} />,
+  scheduling: <ListFilter size={18} />,
 };
 
 const navigationItems = NAVIGATION_ITEMS.map(({ id, path, label }) => ({
@@ -43,23 +37,17 @@ const navigationItems = NAVIGATION_ITEMS.map(({ id, path, label }) => ({
   icon: navigationIcons[id],
 }));
 
-const consoleIcons: Record<string, ReactNode> = {
-  'console:tasks': <AppstoreOutlined />,
-  'console:overview': <MonitorOutlined />,
-  'console:incidents': <GlobalOutlined />,
+const consoleIcons: Record<(typeof TASK_PAGES)[number]['id'], ReactNode> = {
+  overview: <LayoutDashboard size={18} />, tasks: <Workflow size={18} />, alerts: <Bell size={18} />,
+  nodes: <Server size={18} />, candidates: <Search size={18} />, incidents: <AlertCircle size={18} />,
+  workflow: <Layers size={18} />, strategies: <Clock3 size={18} />, compare: <ChartNoAxesCombined size={18} />,
 };
 
-const menuItems = [
-  ...navigationItems,
-  {
-    type: 'group' as const,
-    key: 'console',
-    label: '任务编排与执行',
-    children: TASK_CONSOLE_LINKS.map(({ key, label }) => ({ key, label, icon: consoleIcons[key] })),
-  },
-];
-
-function getSelectedMenuKey(pathname: string) {
+function getSelectedMenuKey(pathname: string, search: string) {
+  if (pathname === ROUTES.console) {
+    const page = consolePage(search);
+    return consolePath(page === 'detail' ? 'tasks' : page);
+  }
   if (pathname === ROUTES.dashboard) return ROUTES.dashboard;
   return (
     navigationItems.find(
@@ -76,22 +64,43 @@ export function MainLayout() {
   const [updatedAt, setUpdatedAt] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
-  const selectedKey = useMemo(() => getSelectedMenuKey(location.pathname), [location.pathname]);
+  const selectedKey = useMemo(() => getSelectedMenuKey(location.pathname, location.search), [location.pathname, location.search]);
   const dataMode = dataModeMeta[getNodeDataMode()];
 
+  const [counts, setCounts] = useState<{tasks: number; alerts: number}>();
+  const updateCounts = useCallback((tasks: number, alerts: number) => {
+    setCounts(previous => previous?.tasks === tasks && previous?.alerts === alerts ? previous : {tasks, alerts});
+  }, []);
+  const inConsole = location.pathname === ROUTES.console;
+  useEffect(() => {
+    if (inConsole) return;
+    const controller = new AbortController();
+    const options = { signal: controller.signal };
+    Promise.all([
+      apiClient.get('/api/v1/platform/summary', options),
+      apiClient.get('/api/alerts?unread=true&limit=1', options),
+    ]).then(([summary, alerts]) => {
+      if (!controller.signal.aborted) updateCounts(summary.data.tasks.total, alerts.data.summary.unread);
+    }).catch(() => { /* Counts are optional when a data source is unavailable. */ });
+    return () => controller.abort();
+  }, [inConsole, updateCounts]);
+  useEffect(() => { window.scrollTo(0, 0); }, [selectedKey, location.pathname]);
+  const menuItems = [
+    {type: 'group' as const, key: 'pool', label: '算力池管理', children: navigationItems},
+    {type: 'group' as const, key: 'console', label: '任务编排与执行', children: TASK_PAGES.map(({id, label}) => {
+      const count = id === 'tasks' ? counts?.tasks : id === 'alerts' ? counts?.alerts : undefined;
+      return {key: consolePath(id), icon: consoleIcons[id], title: label,
+        label: <span className="console-menu-label">{label}{!!count && <small>{count}</small>}</span>};
+    })},
+  ];
   const outletContext = useMemo<MainLayoutOutletContext>(
-    () => ({ setHeaderUpdatedAt: setUpdatedAt }),
-    [],
+    () => ({ setHeaderUpdatedAt: setUpdatedAt, updateCounts }),
+    [updateCounts],
   );
   const updatedTime = updatedAt ? dayjs(updatedAt).format('HH:mm:ss') : '--:--:--';
   const updatedAtIso = updatedAt ? dayjs(updatedAt).toISOString() : undefined;
 
   const handleNavigate = (path: string) => {
-    const external = TASK_CONSOLE_LINKS.find((link) => link.key === path);
-    if (external) {
-      window.location.assign(external.href);
-      return;
-    }
     navigate(path);
     if (isNarrow) setCollapsed(true);
   };
@@ -227,10 +236,10 @@ export function MainLayout() {
           <div className="app-header__status">
             <Badge status={dataMode.status} text={dataMode.liveLabel} />
             <span className="app-header__divider" aria-hidden="true" />
-            <div className="app-header__updated">
+            {!inConsole && <div className="app-header__updated">
               <span>更新时间</span>
               <time dateTime={updatedAtIso}>{updatedTime}</time>
-            </div>
+            </div>}
           </div>
         </Header>
 
@@ -243,5 +252,6 @@ export function MainLayout() {
 }
 
 export interface MainLayoutOutletContext {
+  updateCounts: (tasks: number, alerts: number) => void;
   setHeaderUpdatedAt: Dispatch<SetStateAction<string>>;
 }

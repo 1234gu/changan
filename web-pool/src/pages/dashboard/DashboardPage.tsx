@@ -19,7 +19,7 @@ import { ResourceProgress } from '../../components/ResourceProgress';
 import { StatusBadge } from '../../components/StatusBadge';
 import { RESOURCE_ORDER, RESOURCE_PRESENTATION } from '../../components/resourcePresentation';
 import type { MainLayoutOutletContext } from '../../layouts/MainLayout';
-import { buildClusterDetailPath, buildComputePoolPath, ROUTES } from '../../routes/config';
+import { consolePath, buildClusterDetailPath, buildComputePoolPath, ROUTES } from '../../routes/config';
 import { DashboardCard } from './components/DashboardCard';
 import { ResourcePoolOverview } from './components/ResourcePoolOverview';
 import { ResourceTrendChart } from './components/ResourceTrendChart';
@@ -249,7 +249,7 @@ export function DashboardPage() {
           title="任务状态"
           subtitle="车群调度任务执行概况"
           extra={
-            <Button type="link" size="small" href="/?page=tasks">
+            <Button type="link" size="small" onClick={() => navigate(consolePath('tasks'))}>
               任务中心
             </Button>
           }

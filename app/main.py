@@ -2,7 +2,7 @@ import asyncio, time, json, os, secrets, csv, io, hashlib, math, hmac
 from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request, Header, UploadFile, File, Depends
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse, Response
+from fastapi.responses import FileResponse, RedirectResponse, JSONResponse, StreamingResponse, Response
 from fastapi.staticfiles import StaticFiles
 from .config import DATA, ROOT, TOKEN, API_KEY, TERMINAL
 from . import db
@@ -290,6 +290,12 @@ def delivery(name:str):
     return FileResponse(path,filename=name)
 pool_web=Path(os.getenv('CHANGAN_POOL_WEB_DIR',str(ROOT/'web-pool/dist')))
 if pool and pool_web.exists():
+    @app.get('/',include_in_schema=False)
+    @app.get('/index.html',include_in_schema=False)
+    def task_console_entry(request: Request):
+        query = request.url.query or 'page=overview'
+        return RedirectResponse('/pool/console?' + query, status_code=307)
+
     if (pool_web/'assets').exists():app.mount('/pool/assets',StaticFiles(directory=pool_web/'assets'),name='pool-assets')
     @app.get('/pool',include_in_schema=False)
     @app.get('/pool/{rest:path}',include_in_schema=False)

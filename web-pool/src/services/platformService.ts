@@ -1,3 +1,4 @@
+import { consolePath } from '../routes/config';
 import { apiClient } from './apiClient';
 
 /** Task-level statistics owned by the scheduling platform (same process, task database). */
@@ -176,7 +177,7 @@ export async function getNodeReliability(poolNodeId: string): Promise<NodeReliab
 
 /** Link back to the task console served at the site root. */
 export const TASK_CONSOLE_URL = '/';
-export const taskDetailUrl = (taskId: string) => `/?page=detail&task=${encodeURIComponent(taskId)}`;
+export const taskDetailUrl = (taskId: string) => consolePath('detail', taskId);
 
 export interface PoolTaskSubmission {
   name: string;

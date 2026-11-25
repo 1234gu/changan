@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { CheckCircleFilled, CloseCircleFilled, ExclamationCircleFilled } from '@ant-design/icons';
 import { Empty, List } from 'antd';
 import dayjs from 'dayjs';
@@ -42,9 +43,9 @@ export function EventList({ events }: EventListProps) {
             {eventIcon[event.level]}
             <div className="event-list__body">
               {event.targetType === 'task' && event.targetId ? (
-                <a className="event-list__message" href={taskDetailUrl(event.targetId)}>
+                <Link className="event-list__message" to={taskDetailUrl(event.targetId)}>
                   {event.message}
-                </a>
+                </Link>
               ) : (
                 <span className="event-list__message">{event.message}</span>
               )}

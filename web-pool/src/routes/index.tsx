@@ -14,6 +14,7 @@ export const router = createBrowserRouter(
       path: ROUTES.dashboard,
       element: <MainLayout />,
       children: [
+        { path: ROUTES.console, lazy: async () => ({ Component: (await import('../pages/TaskConsolePage')).default }) },
         { index: true, element: <DashboardPage /> },
         { path: ROUTES.nodes, element: <NodeListPage /> },
         {
