@@ -4,7 +4,7 @@ test('real K3s video, node mapping, image provenance and durable previews',async
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/');
  await expect(page.getByRole('heading',{name:'协同任务运行总览'})).toBeVisible();
- await expect(page.locator('.environment')).toContainText('K3s 容器任务');
+ await expect(page.getByText('任务执行环境',{exact:true})).toHaveCount(0);
  await page.getByRole('button',{name:'执行节点',exact:true}).click();
  await expect(page.locator('.node-card')).toHaveCount(4);
  await expect(page.getByRole('button',{name:'注入一次失败'})).toHaveCount(0);
