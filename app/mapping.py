@@ -93,7 +93,7 @@ async def upload_dataset(file:UploadFile=File(...)):
         if not db.query('SELECT id FROM datasets WHERE id=?',(did,),one=True):path.unlink(missing_ok=True)
 
 
-def create(engine,body,key=None):
+def create(engine,body,key=None,trigger='service',strategy=None):
     if engine.backend!='k3s':raise ValueError('建图模板仅支持K3s容器执行')
     d=dataset(body.source);params=body.model_dump();app=application();now=time.time();tid=db.uid('task')
     if body.execution_mode=='collaborative':
@@ -116,12 +116,12 @@ def create(engine,body,key=None):
             if old:
                 if MappingInput(**db.loads(old['params'])).model_dump()!=params:raise ValueError('幂等键对应参数不一致')
                 return old['id']
-        c.execute('INSERT INTO tasks(id,name,source,status,created,updated,params,metadata,total,idempotency_key,started) VALUES(?,?,?,?,?,?,?,?,?,?,?)',(tid,body.name,body.source,'RUNNING',now,now,db.dumps(params),db.dumps(meta),1,key,now))
+        c.execute('INSERT INTO tasks(id,name,source,status,created,updated,params,metadata,total,idempotency_key,started,trigger_type,strategy_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',(tid,body.name,body.source,'RUNNING',now,now,db.dumps(params),db.dumps(meta),1,key,now,trigger,strategy))
         if body.execution_mode=='collaborative':
             from .mapping_pipeline import add
             add(c,tid,0,d['path'],'prepare')
         else:c.execute('INSERT INTO segments(id,task_id,ordinal,start,end,path,kind) VALUES(?,?,0,0,0,?,?)',(db.uid('unit'),tid,d['path'],'photo_reconstruction'))
-        db.event(tid,'created',{'stage':'validate','state':'SUCCEEDED','application_id':ID,'image_count':d['image_count']},conn=c)
+        db.event(tid,'created',{'stage':'validate','state':'SUCCEEDED','application_id':ID,'image_count':d['image_count'],'trigger_type':trigger,'strategy_id':strategy},conn=c)
     return tid
 
 

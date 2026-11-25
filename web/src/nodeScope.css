@@ -1,0 +1,29 @@
+.modal:has(.node-scope){width:860px}
+.node-scope{border:1px solid #e3eaf4;border-radius:8px;padding:16px 18px;margin:20px 0;background:#fbfcfe}
+.node-scope-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.node-scope-head strong{font-size:13px;color:#3d5677}
+.node-scope-head small{display:block;font-size:10px;color:#93a2b7;margin-top:4px}
+.segmented{display:inline-flex;border:1px solid #d9e2ee;border-radius:7px;overflow:hidden}
+.segmented button{border:0;border-radius:0;padding:7px 14px;font-size:12px;background:#fff;color:#62748e}
+.segmented button+button{border-left:1px solid #d9e2ee}
+.segmented button.on{background:var(--blue);color:#fff}
+.node-scope-constraints{grid-template-columns:repeat(4,minmax(0,1fr));margin:14px 0}
+.node-scope-table td,.node-scope-table th{padding:10px 12px}
+.node-scope-table td:first-child input{width:auto;margin:0}
+.node-scope-link{display:block;font-size:10px;color:#5d7eb7;margin-top:3px;text-decoration:none}
+.scope-ok{color:#279a75;font-size:11px;white-space:nowrap}
+.scope-no{color:#b07a52;font-size:11px;white-space:nowrap}
+.scope-reasons{display:flex;flex-wrap:wrap;gap:5px}
+.scope-reasons span{font-size:10px;border-radius:4px;padding:2px 6px;background:#f2f4f8;color:#6f7f95}
+.scope-reasons span.pool{background:#eef4ff;color:#4c6fb3}
+.scope-reasons span.exec{background:#fff5ea;color:#a26a36}
+.scope-observe{display:block;color:#a0adbe;font-size:10px;margin-top:4px}
+.node-scope .note{margin:10px 0 0}
+.sub-tabs{margin-bottom:20px}
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:18px}
+.stat-cards>div{border:1px solid #e8eef6;border-radius:7px;padding:14px 16px;background:#fbfcfe;font-size:11px;color:#7f8fa6}
+.stat-cards strong{display:block;font-size:20px;color:#3d5a81;font-weight:600;margin:6px 0 2px}
+.policy-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;align-items:end}
+.policy-form .wide{grid-column:1/-1}
+@media(max-width:900px){.node-scope-constraints,.policy-form{grid-template-columns:1fr 1fr}}
+.page-tabs{margin-top:24px}

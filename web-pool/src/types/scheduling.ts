@@ -145,11 +145,3 @@ export interface SchedulerExecutionList {
   total: number;
   updatedAt: string;
 }
-
-export interface SchedulerSubmission {
-  task_id: string;
-  execution_mode: ExecutionMode;
-  resource_snapshot_id: string;
-  candidate_node_ids: string[];
-  allowed_node_ids: string[];
-}

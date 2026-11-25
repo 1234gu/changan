@@ -1,12 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  CheckCircleOutlined,
-  CopyOutlined,
-  DownloadOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+import { CheckCircleOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import {
   Alert,
   Button,
@@ -28,11 +22,7 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { getClusters } from '../../services/clusterService';
-import {
-  buildSchedulerSubmission,
-  getSchedulerExecutions,
-  queryResourceCandidates,
-} from '../../services/schedulerService';
+import { queryResourceCandidates } from '../../services/schedulerService';
 import type { ClusterRecord } from '../../types/cluster';
 import type {
   CandidateNode,
@@ -40,11 +30,9 @@ import type {
   ClusterAggregateCapacity,
   ExecutionMode,
   ResourceAvailabilityState,
-  SchedulerExecution,
-  SchedulerSubmission,
 } from '../../types/scheduling';
-import { ExecutionTable } from './components/ExecutionTable';
-import { submitPoolTask, taskDetailUrl } from '../../services/platformService';
+import { getExecutionBindings } from '../../services/platformService';
+import { newTaskPath } from '../../routes/config';
 import './SchedulingPage.css';
 
 interface RequirementFormValues {
@@ -111,37 +99,13 @@ export function SchedulingPage() {
   const [queryError, setQueryError] = useState<string>();
   const [selectionMode, setSelectionMode] = useState<'automatic' | 'manual'>('automatic');
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
-  const [submission, setSubmission] = useState<SchedulerSubmission>();
-  const [executions, setExecutions] = useState<SchedulerExecution[]>([]);
-  const [executionLoading, setExecutionLoading] = useState(true);
-  const [executionError, setExecutionError] = useState<string>();
-
-  const refreshExecutions = async (showLoading = true) => {
-    if (showLoading) setExecutionLoading(true);
-    try {
-      const result = await getSchedulerExecutions();
-      setExecutions(result.items);
-      setExecutionError(undefined);
-    } catch (error) {
-      setExecutionError(errorMessage(error));
-    } finally {
-      if (showLoading) setExecutionLoading(false);
-    }
-  };
+  const [template, setTemplate] = useState<'video-analysis' | 'aerial-mapping-odx'>('video-analysis');
+  const [handingOff, setHandingOff] = useState(false);
 
   useEffect(() => {
     void getClusters()
       .then((result) => setClusters(result.items))
       .catch((error) => setQueryError(`集群列表加载失败：${errorMessage(error)}`));
-    void getSchedulerExecutions()
-      .then((result) => {
-        setExecutions(result.items);
-        setExecutionError(undefined);
-      })
-      .catch((error) => setExecutionError(errorMessage(error)))
-      .finally(() => setExecutionLoading(false));
-    const timer = window.setInterval(() => void refreshExecutions(false), 5_000);
-    return () => window.clearInterval(timer);
   }, []);
 
   const rows = useMemo<CandidateRow[]>(
@@ -311,7 +275,6 @@ export function SchedulingPage() {
   const runCandidateQuery = async (values: RequirementFormValues) => {
     setQuerying(true);
     setQueryError(undefined);
-    setSubmission(undefined);
     try {
       const result = await queryResourceCandidates({
         requestId: `candidate-${Date.now()}`,
@@ -343,16 +306,6 @@ export function SchedulingPage() {
     }
   };
 
-  const generateSubmission = () => {
-    if (!queryResult) return;
-    const allowed =
-      selectionMode === 'automatic'
-        ? queryResult.candidates.map((item) => item.nodeId)
-        : selectedNodeIds;
-    setSubmission(buildSchedulerSubmission(queryResult, allowed));
-  };
-
-  const [dispatching, setDispatching] = useState(false);
   const allowedNodeIds = () =>
     !queryResult
       ? []
@@ -360,71 +313,45 @@ export function SchedulingPage() {
         ? queryResult.candidates.map((item) => item.nodeId)
         : selectedNodeIds;
 
-  const dispatchTask = async () => {
-    if (!queryResult) return;
-    const values = form.getFieldsValue();
-    setDispatching(true);
+  /**
+   * Hand the pool-side answer to task creation: pool node UUIDs are mapped to their bound
+   * K3s execution nodes and become the task's node scope. The task form re-checks both
+   * admission stages before submission, so this page never creates tasks itself.
+   */
+  const openTaskCreation = async () => {
+    setHandingOff(true);
     try {
-      const created = await submitPoolTask({
-        name: values.taskId?.trim() || '资源池任务',
-        algorithm: 'resource_aware',
-        poolNodeIds: allowedNodeIds(),
-        poolClusterId: values.clusterId,
-        poolLabels: (values.labels ?? '')
-          .split(/[，,\n]/)
-          .map((label) => label.trim())
-          .filter(Boolean),
-        minCpuCores: values.cpuCores,
-        minMemoryGb: values.memoryGb,
-        architecture: values.architecture?.trim() || undefined,
-      });
-      messageApi.success(
-        `任务 ${created.id} 已提交，执行节点：${created.executionNodeIds.join('、')}`,
-      );
-      navigate(taskDetailUrl(created.id));
+      const allowed = allowedNodeIds();
+      const { items } = await getExecutionBindings();
+      const executionNodeIds = items
+        .filter((item) => item.bindingState === 'BOUND' && item.poolNodeId && allowed.includes(item.poolNodeId))
+        .map((item) => item.executionNodeId);
+      if (executionNodeIds.length === 0) {
+        messageApi.error('所选资源节点均未绑定 K3s 执行节点，无法作为执行范围');
+        return;
+      }
+      if (executionNodeIds.length < allowed.length) {
+        messageApi.warning(`${allowed.length - executionNodeIds.length} 个资源节点未绑定执行节点，已从执行范围中略去`);
+      }
+      navigate(newTaskPath(template, executionNodeIds));
     } catch (error) {
       messageApi.error(errorMessage(error));
     } finally {
-      setDispatching(false);
+      setHandingOff(false);
     }
-  };
-
-  const submissionJson = submission ? JSON.stringify(submission, null, 2) : '';
-
-  const copySubmission = async () => {
-    await navigator.clipboard.writeText(submissionJson);
-    messageApi.success('调度请求 JSON 已复制');
-  };
-
-  const downloadSubmission = () => {
-    const blob = new Blob([submissionJson], { type: 'application/json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `${submission?.task_id ?? 'scheduler-request'}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
   };
 
   return (
     <main className="scheduling-page">
       {contextHolder}
-      <div className="scheduling-page__toolbar" aria-label="调度执行状态操作">
-        <span className="scheduling-page__live-status">
-          <i aria-hidden="true" />
-          执行状态每 5 秒自动刷新
-        </span>
-        <Button
-          className="scheduling-page__refresh"
-          icon={<ReloadOutlined />}
-          loading={executionLoading}
-          onClick={() => void refreshExecutions()}
-        >
-          刷新执行状态
-        </Button>
-      </div>
-
-      <Card className="scheduling-card" title="1. 任务资源需求">
+      <Alert
+        className="scheduling-inline-alert"
+        type="info"
+        showIcon
+        message="资源需求查询只回答“资源池里哪些节点满足这组硬件与管理条件”（第一阶段准入），不创建任务。"
+        description="任务的创建、选点、下发与执行在「任务中心」完成；可在第 3 步把查询出的节点作为执行范围带入新建任务，任务侧会再核对一次准入与运行可行性。"
+      />
+      <Card className="scheduling-card" title="1. 资源需求">
         <Form<RequirementFormValues>
           form={form}
           layout="vertical"
@@ -439,7 +366,7 @@ export function SchedulingPage() {
             <Col xs={24} md={8} lg={6}>
               <Form.Item
                 name="taskId"
-                label="任务 ID"
+                label="查询标识"
                 rules={[{ required: true, whitespace: true }]}
               >
                 <Input placeholder="Task-001" />
@@ -612,7 +539,7 @@ export function SchedulingPage() {
         />
       </Card>
 
-      <Card className="scheduling-card" title="3. 参与节点与调度请求">
+      <Card className="scheduling-card" title="3. 带入任务创建">
         <div className="scheduling-selection">
           <Radio.Group
             value={selectionMode}
@@ -624,69 +551,41 @@ export function SchedulingPage() {
               }
             }}
           >
-            <Radio.Button value="automatic">自动：全部候选</Radio.Button>
-            <Radio.Button value="manual">手动：仅勾选节点</Radio.Button>
+            <Radio.Button value="automatic">全部候选</Radio.Button>
+            <Radio.Button value="manual">仅勾选节点</Radio.Button>
           </Radio.Group>
+          <Select
+            aria-label="任务模板"
+            popupClassName="scheduling-select-dropdown"
+            value={template}
+            onChange={setTemplate}
+            style={{ width: 160 }}
+            options={[
+              { value: 'video-analysis', label: '视频分析' },
+              { value: 'aerial-mapping-odx', label: '航拍建图' },
+            ]}
+          />
           <Typography.Text type="secondary">
-            当前允许{' '}
+            执行范围{' '}
             {selectionMode === 'automatic'
               ? (queryResult?.candidates.length ?? 0)
               : selectedNodeIds.length}{' '}
             个节点
           </Typography.Text>
           <Button
-            disabled={
-              !queryResult ||
-              !queryResult.requirementSatisfied ||
-              (selectionMode === 'manual' && selectedNodeIds.length === 0)
-            }
-            onClick={generateSubmission}
-          >
-            生成调度请求
-          </Button>
-          <Button
             type="primary"
-            loading={dispatching}
+            icon={<PlusOutlined />}
+            loading={handingOff}
             disabled={
               !queryResult ||
               !queryResult.requirementSatisfied ||
-              (selectionMode === 'manual' && selectedNodeIds.length === 0)
+              allowedNodeIds().length === 0
             }
-            onClick={() => void dispatchTask()}
+            onClick={() => void openTaskCreation()}
           >
-            提交执行（示例视频）
+            以此范围新建任务
           </Button>
         </div>
-
-        {submission && (
-          <div className="scheduling-json">
-            <Space wrap>
-              <Button icon={<CopyOutlined />} onClick={() => void copySubmission()}>
-                复制 JSON
-              </Button>
-              <Button icon={<DownloadOutlined />} onClick={downloadSubmission}>
-                导出 JSON
-              </Button>
-            </Space>
-            <Input.TextArea
-              value={submissionJson}
-              readOnly
-              autoSize={{ minRows: 7, maxRows: 14 }}
-            />
-          </div>
-        )}
-      </Card>
-
-      <Card className="scheduling-card" title="4. 执行状态">
-        {executionError && (
-          <Alert
-            className="scheduling-inline-alert"
-            type="error"
-            showIcon
-            message={executionError}
-          />
-        )}
-        <ExecutionTable items={executions} loading={executionLoading} />
       </Card>
     </main>
   );

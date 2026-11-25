@@ -9,7 +9,7 @@ from . import db
 from .engine import Engine
 from .alerts import router as alerts_router
 from .mapping import MappingInput, router as mapping_router
-from .schemas import TaskInput,NodeInput,StrategyInput,CandidateInput
+from .schemas import TaskInput,NodeInput,StrategyInput,CandidateInput,template_params
 from .capabilities import run_capabilities, connector_call, redact
 from .pool_bridge import PoolBridge
 from .pool_routes import router as pool_platform_router
@@ -107,6 +107,28 @@ def overview():
     by_workflow=db.query("SELECT json_extract(params,'$.workflow_id') workflow_id,count(*) total,sum(status='SUCCEEDED') succeeded FROM tasks GROUP BY workflow_id")
     attempts=db.query('SELECT count(*) n,AVG(finished-created) average_seconds FROM attempts WHERE finished IS NOT NULL',one=True)
     return {'totals':{r['status']:r['n'] for r in totals},'daily':daily,'by_workflow':by_workflow,'nodes':engine.nodes(),'attempts':attempts,**execution_environment(),'metric_note':'业务完成率按父任务完整聚合计算；不是甲方尚待确认口径的99%调度成功率'}
+@app.get('/api/overview/statistics')
+def call_statistics(days: int = Query(14, ge=1, le=90)):
+    """Scheduling call statistics by day (Asia/Shanghai) and workflow template, from the task table."""
+    rows=db.query("""SELECT date(created,'unixepoch','+8 hours') day,
+        COALESCE(json_extract(params,'$.workflow_id'),'video-analysis') workflow_id,
+        count(*) total,sum(status='SUCCEEDED') succeeded,sum(status='FAILED') failed,
+        sum(status='TIMED_OUT') timed_out,sum(status='CANCELED') canceled,
+        sum(status NOT IN ('SUCCEEDED','FAILED','TIMED_OUT','CANCELED')) active,
+        sum(trigger_type='periodic') periodic
+        FROM tasks WHERE created>=CAST(strftime('%s','now','+8 hours','start of day','-8 hours',?) AS REAL)
+        GROUP BY day,workflow_id ORDER BY day DESC,workflow_id""",(f'-{days-1} days',))
+    def rate(r):
+        judged=(r['succeeded'] or 0)+(r['failed'] or 0)+(r['timed_out'] or 0)
+        return round(r['succeeded']/judged,4) if judged else None
+    for r in rows:r['success_rate']=rate(r)
+    workflows={}
+    for r in rows:
+        w=workflows.setdefault(r['workflow_id'],{'workflow_id':r['workflow_id'],'total':0,'succeeded':0,'failed':0,'timed_out':0,'canceled':0,'active':0,'periodic':0})
+        for k in ('total','succeeded','failed','timed_out','canceled','active','periodic'):w[k]+=r[k] or 0
+    for w in workflows.values():w['success_rate']=rate(w)
+    return {'days':days,'timezone':'Asia/Shanghai','rows':rows,'by_workflow':list(workflows.values()),
+            'definition':'成功率=成功/(成功+失败+超时)，用户取消与在途任务不计入分母；数据来自任务库'}
 @app.get('/api/nodes')
 def nodes(): return engine.nodes()
 @app.post('/api/scheduling/candidates')
@@ -114,8 +136,13 @@ def candidates(body:CandidateInput):
     from .scheduler import choose
     row=db.query("SELECT body FROM configs WHERE category='algorithm' AND id=?",(body.params.algorithm,),one=True)
     if not row: raise HTTPException(422,'调度算法不存在')
-    result=choose(engine.nodes(),body.params.model_dump(),body.duration_seconds,body.input_bytes,db.loads(row['body']))
-    result['requirements']=body.params.model_dump()
+    params=body.params.model_dump()
+    if params.get('workflow_id')=='aerial-mapping-odx':
+        from .mapping import candidate_params
+        params=candidate_params(params)
+    result=choose(engine.nodes(),params,body.duration_seconds,body.input_bytes,db.loads(row['body']))
+    result['requirements']=params
+    result['workflow_id']=params.get('workflow_id')
     result['resource_source']='external_pool' if engine.resource_provider.enabled else ('kubernetes' if engine.containers else 'worker_adapter')
     result['snapshot_policy_seconds']=8
     return result
@@ -263,7 +290,8 @@ def trigger(id:str):
     s=db.query('SELECT * FROM strategies WHERE id=?',(id,),one=True)
     if not s:raise HTTPException(404)
     if not s['enabled']:raise HTTPException(409,'策略已停用')
-    return {'id':engine.create(TaskInput(**db.loads(s['params'])),'service',id)}
+    try:return {'id':engine.create(template_params(db.loads(s['params'])),'service',id)}
+    except ValueError as e:raise HTTPException(422,str(e))
 @app.get('/api/configs/{category}')
 def configs(category:str):
     rows=db.query('SELECT * FROM configs WHERE category=? ORDER BY created',(category,))

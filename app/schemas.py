@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Literal
+from .mapping import MappingInput
 class TaskInput(BaseModel):
     model_config=ConfigDict(extra='forbid')
     name: str=Field(default='协同视频分析',max_length=120,min_length=1)
@@ -33,10 +34,17 @@ class StrategyInput(BaseModel):
     kind: Literal['service','periodic']='periodic'
     interval_seconds: int=Field(default=300,ge=15,le=86400)
     enabled: bool=True
-    params: TaskInput=Field(default_factory=TaskInput)
+    # A strategy binds one of the two template workflows plus its default parameters.
+    params: MappingInput|TaskInput=Field(default_factory=TaskInput)
 
 class CandidateInput(BaseModel):
     model_config=ConfigDict(extra='forbid')
-    params: TaskInput=Field(default_factory=TaskInput)
+    # Same body as the task-creation form, so the preview checks exactly what will be submitted.
+    params: MappingInput|TaskInput=Field(default_factory=TaskInput)
     duration_seconds: float=Field(default=4,gt=0,le=600)
     input_bytes: int=Field(default=0,ge=0,le=536870912)
+
+
+def template_params(data: dict) -> 'MappingInput|TaskInput':
+    """Parse stored task/strategy parameters into the template's own input model."""
+    return MappingInput(**data) if data.get('workflow_id')=='aerial-mapping-odx' else TaskInput(**data)

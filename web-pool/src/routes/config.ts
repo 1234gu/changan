@@ -37,20 +37,26 @@ export const NAVIGATION_ITEMS = [
   { id: 'nodes', path: ROUTES.nodes, label: '节点管理' },
   { id: 'computePool', path: ROUTES.computePool, label: '算力池' },
   { id: 'clusters', path: ROUTES.clusters, label: '集群管理' },
-  { id: 'scheduling', path: ROUTES.scheduling, label: '资源筛选与提交' },
+  { id: 'scheduling', path: ROUTES.scheduling, label: '资源需求查询' },
 ] as const;
 
+// Task-side pages (scheduler ownership). Node administration stays in the pool menu above.
 export const TASK_PAGES = [
   { id: 'overview', label: '运行总览' },
   { id: 'tasks', label: '任务中心' },
-  { id: 'alerts', label: '站内告警' },
-  { id: 'nodes', label: '执行节点' },
-  { id: 'candidates', label: '候选节点筛选' },
-  { id: 'incidents', label: '失联与任务核对' },
-  { id: 'workflow', label: '工作流与能力' },
-  { id: 'strategies', label: '触发策略' },
-  { id: 'compare', label: '历史与对比' },
+  { id: 'policies', label: '调度策略' },
+  { id: 'alerts', label: '告警与恢复' },
 ] as const;
+
+/** Page ids removed on 2026-11-25, kept routable so old links and evidence still open. */
+export const LEGACY_TASK_PAGES: Record<string, string> = {
+  candidates: 'tasks',
+  compare: 'tasks',
+  workflow: 'policies',
+  strategies: 'policies',
+  incidents: 'alerts',
+  nodes: 'nodes',
+};
 
 export function consolePath(page: string, task?: string) {
   const search = new URLSearchParams({ page });
@@ -62,7 +68,15 @@ export function consolePage(search: string) {
   const params = new URLSearchParams(search);
   const page = params.get('page');
   if (page === 'detail') return params.get('task') ? 'detail' : 'tasks';
-  return TASK_PAGES.find(item => item.id === page)?.id ?? 'overview';
+  const current = page && LEGACY_TASK_PAGES[page] ? LEGACY_TASK_PAGES[page] : page;
+  return TASK_PAGES.find(item => item.id === current)?.id ?? (current === 'nodes' ? 'nodes' : 'overview');
 }
 
 export type NavigationItemId = (typeof NAVIGATION_ITEMS)[number]['id'];
+
+/** Open the task-creation form with a resource-pool selected execution-node scope. */
+export function newTaskPath(template: 'video-analysis' | 'aerial-mapping-odx', executionNodeIds: string[]) {
+  const search = new URLSearchParams({ page: 'tasks', new: template });
+  if (executionNodeIds.length) search.set('nodes', executionNodeIds.join(','));
+  return `/console?${search}`;
+}

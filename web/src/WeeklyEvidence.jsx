@@ -3,15 +3,6 @@ import './weekly-evidence.css';
 const date=v=>v?new Date(v*1000).toLocaleString('zh-CN',{hour12:false}):'等待观测';
 const short=v=>v||'—';
 const status={DISPATCHING:'正在下发',ACCEPTED:'已接收',RUNNING:'执行中',UNKNOWN:'待核对',SUCCEEDED:'已完成',FAILED:'失败',TIMED_OUT:'超时'};
-export function CandidateView({request}){
- const [tags,setTags]=useState('cpu,onnx'),[memory,setMemory]=useState(256),[arch,setArch]=useState(''),[data,setData]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
- async function run(){setBusy(true);try{setData(await request('/api/scheduling/candidates',{method:'POST',body:JSON.stringify({params:{required_tags:tags.split(',').map(s=>s.trim()).filter(Boolean),min_memory_mb:Number(memory),architecture:arch||null},duration_seconds:4,input_bytes:1048576})}));setError('')}catch(e){setError(e.message)}finally{setBusy(false)}}
- useEffect(()=>{run()},[]);
- return <div className="weekly"><h1>候选节点筛选</h1><p className="weekly-intro">将任务需求与当前资源快照逐项核对，返回可行节点和排除原因。</p>
- <section className="panel"><h2>任务需求</h2><form className="weekly-form" onSubmit={e=>{e.preventDefault();run()}}><label>必要标签<input aria-label="必要标签" value={tags} onChange={e=>setTags(e.target.value)}/></label><label>最低内存（MiB）<input aria-label="最低内存" type="number" min="64" step="1" required value={memory} onChange={e=>setMemory(e.target.value)}/></label><label>处理器架构<input aria-label="处理器架构" placeholder="不限" value={arch} onChange={e=>setArch(e.target.value)}/></label><button type="submit" className="primary" disabled={busy}>{busy?'正在读取':'筛选候选节点'}</button></form><p>模型：YOLOX Tiny　片段：4 秒　输入量：1 MiB　资源快照有效期：8 秒</p></section>
- {error&&<p className="error">{error}</p>}
- {data&&<section className="panel"><div className="weekly-heading"><h2>筛选结果</h2><span>{data.candidates.filter(n=>n.eligible).length} / {data.candidates.length} 个节点满足要求</span></div><p>数据来源：{data.resource_source==='external_pool'?'外部资源池接口':data.resource_source==='kubernetes'?'Kubernetes 节点与 Pod 观测':'执行器资源适配接口'}　查询时间：{date(data.at)}</p><table><thead><tr><th>节点</th><th>状态 / 架构</th><th>标签</th><th>可调度内存</th><th>执行槽占用</th><th>筛选结论</th></tr></thead><tbody>{data.candidates.map(n=><tr key={n.node_id}><td><strong>{n.node_id}</strong></td><td>{n.snapshot.healthy?'健康':'不可用'}<small>{n.snapshot.architecture}</small></td><td>{n.snapshot.tags?.join(', ')}</td><td>{n.snapshot.available_memory_mb?.toLocaleString()} MiB</td><td>{n.snapshot.active} / {n.snapshot.capacity}</td><td className={n.eligible?'weekly-pass':'weekly-fail'}>{n.eligible?'满足约束':n.reasons.join('；')}</td></tr>)}</tbody></table><p className="note">标签、模型、架构、内存、槽位、输入可达性和快照时效共同决定候选集合。</p></section>}</div>
-}
 export function IncidentView({request,taskId}){
  const [rows,setRows]=useState([]),[error,setError]=useState('');
  useEffect(()=>{let live=true;const get=()=>request('/api/node-incidents'+(taskId?'?task_id='+encodeURIComponent(taskId):'')).then(r=>{if(live){setRows(r);setError('')}}).catch(e=>{if(live)setError(e.message)});get();const h=setInterval(get,2000);return()=>{live=false;clearInterval(h)}},[taskId]);

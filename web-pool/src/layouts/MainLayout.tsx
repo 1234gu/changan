@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import {
-  Activity, AlertCircle, Bell, ChartNoAxesCombined, Clock3, Cpu,
-  Database, Layers, LayoutDashboard, ListFilter, Network, Search, Server, Workflow,
+  Activity, Bell, Clock3, Cpu, Database, LayoutDashboard, ListFilter, Network, Workflow,
 } from 'lucide-react';
 import { Badge, Button, Layout, Menu, Tooltip } from 'antd';
 import dayjs from 'dayjs';
@@ -38,9 +37,8 @@ const navigationItems = NAVIGATION_ITEMS.map(({ id, path, label }) => ({
 }));
 
 const consoleIcons: Record<(typeof TASK_PAGES)[number]['id'], ReactNode> = {
-  overview: <LayoutDashboard size={18} />, tasks: <Workflow size={18} />, alerts: <Bell size={18} />,
-  nodes: <Server size={18} />, candidates: <Search size={18} />, incidents: <AlertCircle size={18} />,
-  workflow: <Layers size={18} />, strategies: <Clock3 size={18} />, compare: <ChartNoAxesCombined size={18} />,
+  overview: <LayoutDashboard size={18} />, tasks: <Workflow size={18} />,
+  policies: <Clock3 size={18} />, alerts: <Bell size={18} />,
 };
 
 function getSelectedMenuKey(pathname: string, search: string) {

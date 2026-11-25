@@ -5,7 +5,6 @@ import type {
   ExcludedCandidateNode,
   SchedulerExecution,
   SchedulerExecutionList,
-  SchedulerSubmission,
 } from '../types/scheduling';
 import { apiClient } from './apiClient';
 import { API_ENDPOINTS } from './endpoints';
@@ -268,27 +267,4 @@ export async function getSchedulerExecutions(options?: {
     total: response.data.total,
     updatedAt: response.data.updated_at,
   };
-}
-
-export function buildSchedulerSubmission(
-  result: CandidateQueryResult,
-  allowedNodeIds: string[],
-): SchedulerSubmission {
-  return {
-    task_id: result.taskId,
-    execution_mode: result.executionMode,
-    resource_snapshot_id: result.snapshotId,
-    candidate_node_ids: result.candidates.map((candidate) => candidate.nodeId),
-    allowed_node_ids: allowedNodeIds,
-  };
-}
-
-export const schedulerAdapterConfiguration = {
-  baseUrl: import.meta.env.VITE_SCHEDULER_BASE_URL?.trim() || null,
-  submissionContractConfigured: false,
-} as const;
-
-export async function submitToScheduler(_request: SchedulerSubmission): Promise<never> {
-  void _request;
-  throw new Error('Scheduler 提交服务未配置。');
 }

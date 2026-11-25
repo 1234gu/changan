@@ -35,6 +35,7 @@ async function openFixture(page, getTask) {
         let body;
         if (path === '/api/overview') body = {totals: {[task.status]: 1}, nodes: []};
         else if (path === '/api/overview/tasks') body = {totals: {[task.status]: 1}, items: [task], total: 1, page: 1, pages: 1};
+        else if (path === '/api/overview/statistics') body = {days: 14, timezone: 'Asia/Shanghai', rows: [], by_workflow: [], definition: ''};
         else if (path === '/api/tasks') body = [task];
         else if (path === '/api/tasks/' + task.id) body = task;
         else if (path === '/api/alerts') body = {summary: {unread: 0, open: 0, acknowledged: 0}, items: [], total: 0};

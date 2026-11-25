@@ -34,7 +34,7 @@ class Engine:
     def create(self,body,trigger='service',strategy=None,key=None):
         if body.workflow_id=='aerial-mapping-odx':
             from .mapping import create,MappingInput
-            return create(self,body if isinstance(body,MappingInput) else MappingInput(**body.model_dump(exclude_unset=True)),key)
+            return create(self,body if isinstance(body,MappingInput) else MappingInput(**body.model_dump(exclude_unset=True)),key,trigger,strategy)
         params=body.model_dump()
         self.source_path(params['source'])
         algorithm=db.query("SELECT body FROM configs WHERE category='algorithm' AND id=?",(params['algorithm'],),one=True)
@@ -285,11 +285,11 @@ class Engine:
             changed=c.execute("UPDATE tasks SET status='SUCCEEDED',result=?,completed=total,finished=?,updated=? WHERE id=? AND status='RUNNING'",(db.dumps(result),time.time(),time.time(),task['id'])).rowcount
             if changed: db.event(task['id'],'stage',{'stage':'aggregate','state':'SUCCEEDED','sampled_frames':len(frames),'coverage':1},conn=c)
     async def schedules(self):
-        from .schemas import TaskInput
+        from .schemas import template_params
         now=time.time()
         for s in db.query("SELECT * FROM strategies WHERE enabled=1 AND kind='periodic' AND next_run<=?",(now,)):
             key=f"schedule:{s['id']}:{s['next_run']}"
-            try: self.create(TaskInput(**db.loads(s['params'])),'periodic',s['id'],key)
+            try: self.create(template_params(db.loads(s['params'])),'periodic',s['id'],key)
             except Exception as e: log.exception('Schedule failed: %s',e)
             db.execute('UPDATE strategies SET last_run=?,next_run=? WHERE id=?',(now,now+s['interval_seconds'],s['id']))
     async def maintain(self,force=False):
