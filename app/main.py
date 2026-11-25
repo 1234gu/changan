@@ -1,7 +1,7 @@
 import asyncio, time, json, os, secrets, csv, io, hashlib, math, hmac
 from pathlib import Path
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Request, Header, UploadFile, File, Depends
+from fastapi import FastAPI, HTTPException, Request, Header, UploadFile, File, Depends, Query
 from fastapi.responses import FileResponse, RedirectResponse, JSONResponse, StreamingResponse, Response
 from fastapi.staticfiles import StaticFiles
 from .config import DATA, ROOT, TOKEN, API_KEY, TERMINAL
@@ -71,13 +71,42 @@ def internal(x_internal_token:str=Header(default='')):
     if not secrets.compare_digest(x_internal_token,TOKEN): raise HTTPException(401,'内部认证失败')
 @app.get('/health')
 def health(): return {'status':'ok','service':'changan-orchestrator','version':'0.9.0','time':time.time()}
+def execution_environment():
+    return {'mode':engine.backend,'cluster_id':os.getenv('CHANGAN_CLUSTER_ID','changan-dev'),'environment_note':os.getenv('CHANGAN_ENVIRONMENT_NOTE','开发服务器逻辑节点；未完成 THOR 实机验证')}
+
+@app.get('/api/overview/tasks')
+def task_overview(page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100)):
+    terminal_states = sorted(TERMINAL)
+    placeholders = ','.join('?' for _ in terminal_states)
+    with db.connect() as conn:
+        conn.execute('BEGIN')
+        totals = dict(conn.execute('SELECT status, COUNT(*) FROM tasks GROUP BY status'))
+        count = sum(totals.values())
+        pages = max(1, (count + page_size - 1) // page_size)
+        page = min(page, pages)
+        rows = conn.execute(f"""
+            SELECT id, name, status, created, finished, completed, total, trigger_type,
+                   json_extract(params, '$.workflow_id') AS workflow_id,
+                   json_extract(params, '$.algorithm') AS algorithm
+            FROM tasks
+            ORDER BY (status IN ({placeholders})), created DESC, id DESC
+            LIMIT ? OFFSET ?
+        """, (*terminal_states, page_size, (page - 1) * page_size))
+        items = []
+        for row in rows:
+            item = dict(row)
+            item['params'] = {key: item.pop(key) for key in ('workflow_id', 'algorithm')}
+            items.append(item)
+    return {**execution_environment(), 'totals': totals, 'items': items,
+            'page': page, 'page_size': page_size, 'pages': pages, 'total': count}
+
 @app.get('/api/overview')
 def overview():
     totals=db.query('SELECT status,count(*) n FROM tasks GROUP BY status')
     daily=db.query("SELECT date(created,'unixepoch','+8 hours') day,count(*) total,sum(status='SUCCEEDED') succeeded,sum(status='FAILED') failed,sum(status='CANCELED') canceled,sum(status='TIMED_OUT') timed_out FROM tasks GROUP BY day ORDER BY day DESC LIMIT 30")
     by_workflow=db.query("SELECT json_extract(params,'$.workflow_id') workflow_id,count(*) total,sum(status='SUCCEEDED') succeeded FROM tasks GROUP BY workflow_id")
     attempts=db.query('SELECT count(*) n,AVG(finished-created) average_seconds FROM attempts WHERE finished IS NOT NULL',one=True)
-    return {'totals':{r['status']:r['n'] for r in totals},'daily':daily,'by_workflow':by_workflow,'nodes':engine.nodes(),'attempts':attempts,'mode':engine.backend,'cluster_id':os.getenv('CHANGAN_CLUSTER_ID','changan-dev'),'environment_note':os.getenv('CHANGAN_ENVIRONMENT_NOTE','开发服务器逻辑节点；未完成 THOR 实机验证'),'metric_note':'业务完成率按父任务完整聚合计算；不是甲方尚待确认口径的99%调度成功率'}
+    return {'totals':{r['status']:r['n'] for r in totals},'daily':daily,'by_workflow':by_workflow,'nodes':engine.nodes(),'attempts':attempts,**execution_environment(),'metric_note':'业务完成率按父任务完整聚合计算；不是甲方尚待确认口径的99%调度成功率'}
 @app.get('/api/nodes')
 def nodes(): return engine.nodes()
 @app.post('/api/scheduling/candidates')

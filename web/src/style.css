@@ -60,3 +60,7 @@
 }
 .mini-nodes small { overflow-wrap: anywhere; }
 .mini-nodes .node-status { flex-shrink: 0; }
+
+.overview-pagination{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;padding-top:16px;font-size:13px}
+.overview-pagination button:disabled{opacity:.45;cursor:default}
+.task-table td:last-child button{white-space:nowrap}

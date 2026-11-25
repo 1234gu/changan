@@ -1,5 +1,5 @@
 import {MappingForm,MappingDetail,TypeSelect} from './MappingTask';
-import React,{useState,useEffect,useCallback} from 'react';
+import React,{useState,useEffect,useCallback,useRef} from 'react';
 import{LayoutDashboard,Workflow,Server,Clock3,ChartNoAxesCombined,Plus,ArrowUpRight,Check,ChevronRight,Play,Pause,RefreshCw,Download,Upload,Radio,Activity,Layers,Box,Search,CheckCircle2,AlertCircle,Bell,X,Settings2,FileJson,Network,Terminal,Link2}from'lucide-react';
 import './style.css';
 import AlertCenter, {AlertBanner} from './AlertCenter';
@@ -26,8 +26,33 @@ export default function TaskConsole({route, navigatePage, onCounts} = {}){
  const page=route ? route.page : localPage;
  const selected=route ? route.task : localSelected;
  const setPage=next=>navigatePage ? navigatePage(next) : setLocalPage(next);
- const refresh=useCallback(async()=>{try{const[o,t,s,a]=await Promise.all([api('/api/overview'),api('/api/tasks'),api('/api/strategies'),api('/api/alerts?unread=true&limit=1')]);setAlerts(a);setOverview(o);setTasks(t);setStrategies(s);setError('');if(selected){const[d,e]=await Promise.all([api('/api/tasks/'+selected),taskEvents(selected)]);setDetail(d);setEvents(e)}}catch(e){setError(e.message)}},[selected]);
- useEffect(()=>{refresh();const h=setInterval(refresh,2000);return()=>clearInterval(h)},[refresh,tick]);
+ const [overviewPage,setOverviewPage]=useState(1);
+ const requestId=useRef(0);
+ const refresh=useCallback(async()=>{
+   const id=++requestId.current;
+   try{
+     const isOverview=page==='overview';
+     const [o,a,t,s,details]=await Promise.all([
+       api(isOverview?`/api/overview/tasks?page=${overviewPage}`:'/api/overview'),
+       api('/api/alerts?unread=true&limit=1'),
+       ['tasks','compare'].includes(page)?api('/api/tasks'):null,
+       page==='strategies'?api('/api/strategies'):null,
+       page==='detail'&&selected?Promise.all([api('/api/tasks/'+selected),taskEvents(selected)]):null,
+     ]);
+     if(id!==requestId.current)return;
+     setOverview(o);setAlerts(a);setError('');
+     if(t)setTasks(t);
+     if(s)setStrategies(s);
+     if(details){setDetail(details[0]);setEvents(details[1])}
+     if(isOverview && o.page!==overviewPage)setOverviewPage(o.page);
+   }catch(e){if(id===requestId.current)setError(e.message)}
+ },[page,selected,overviewPage]);
+ useEffect(()=>{
+   let stopped=false,timer;
+   async function poll(){await refresh();if(!stopped)timer=setTimeout(poll,2000)}
+   poll();
+   return()=>{stopped=true;clearTimeout(timer);requestId.current++};
+ },[refresh,tick]);
  useEffect(()=>{if(page==='workflow'){Promise.all([api('/api/configs/workflow'),api('/api/capabilities')]).then(([w,c])=>{setConfigs(w);setCap(c)}).catch(e=>setError(e.message))}},[page,tick]);
  useEffect(()=>{if(toast){const h=setTimeout(()=>setToast(''),4000);return()=>clearTimeout(h)}},[toast]);
  const action=async(fn,message)=>{setBusy(true);try{const result=await fn();setToast(message||'操作完成');await refresh();setTick(t=>t+1);return result}catch(e){setError(e.message)}finally{setBusy(false)}};
@@ -44,21 +69,35 @@ export default function TaskConsole({route, navigatePage, onCounts} = {}){
  {page==='candidates'&&<CandidateView request={api}/>}
  {page==='incidents'&&<IncidentView request={api}/>}
  {page==='alerts'&&<AlertCenter request={api} openTask={open} onChanged={refresh}/>}
- {page==='overview'&&<><Title eyebrow="OPERATIONS" title="协同任务运行总览" subtitle="查看视频分析和航拍建图的运行状态、执行节点与产物。" action={<button className="primary" onClick={()=>setModal(true)}><Plus size={17}/>新建任务</button>}/><div className="metrics"><Metric name="累计任务" value={total} caption="已持久化的业务运行" icon={<Workflow/>}/><Metric name="正在处理" value={Object.entries(overview?.totals||{}).filter(([s])=>!terminal(s)).reduce((a,[,n])=>a+n,0)} caption="含排队、准备与执行" icon={<Activity/>}/><Metric name="已成功任务" value={succeeded} caption={total?`业务完成率 ${fmt(succeeded/total*100)}%`:'等待第一条业务记录'} icon={<CheckCircle2/>}/><Metric name="可连接执行器" value={`${nodes.filter(n=>n.online&&n.snapshot?.healthy&&n.enabled).length} / ${nodes.filter(n=>n.enabled).length}`} caption={overview?.environment_note||"开发验证节点"} icon={<Server/>}/></div>
- <section className="panel"><PanelTitle title="执行节点" extra={<button className="link" onClick={()=>setPage('nodes')}>查看全部 <ArrowUpRight size={14}/></button>}/><div className="mini-nodes">{nodes.map(n=><div key={n.id}><span className={'node-symbol '+(n.online?'':'off')}><Server size={17}/></span><div><strong>{n.id}</strong><small>{n.snapshot?.runtime||'等待连接'}</small></div><span className={'node-status '+(n.snapshot?.active?'occupied':'')}>{!n.enabled?'已停用':!n.online?'失联':n.snapshot?.active?'执行中':'空闲'}</span></div>)}</div></section>
- <TaskTable tasks={tasks.slice(0,6)} open={open} title="最近任务" more={()=>setPage('tasks')}/><p className="footnote">统计来自后台任务记录。调度成功率验收口径及真实车端性能仍待联合确认。</p></>}
+ {page==='overview'&&<>
+   <Title eyebrow="OPERATIONS" title="协同任务运行总览" subtitle="查看已下发任务的执行进度和历史结果。"/>
+   <div className="metrics">
+     <Metric name="累计任务" value={overview?.items?total:'—'} caption="全部执行记录" icon={<Workflow/>}/>
+     <Metric name="在途任务" value={overview?.items?Object.entries(overview.totals).filter(([s])=>!terminal(s)).reduce((a,[,n])=>a+n,0):'—'} caption="含排队、准备与执行" icon={<Activity/>}/>
+     <Metric name="已完成" value={overview?.items?succeeded:'—'} caption="执行成功" icon={<CheckCircle2/>}/>
+     <Metric name="其他已结束" value={overview?.items?['FAILED','TIMED_OUT','CANCELED'].reduce((n,s)=>n+(overview.totals[s]||0),0):'—'} caption="失败、超时或已取消" icon={<Clock3/>}/>
+   </div>
+   {overview?.items && overview.page===overviewPage?
+     <TaskTable tasks={overview.items} open={open} extra={`共 ${overview.total} 条 · 在途任务优先`} footer={overview.pages>1 &&
+       <div className="overview-pagination" aria-label="任务列表分页">
+         <button disabled={overviewPage===1} onClick={()=>setOverviewPage(p=>p-1)}>上一页</button>
+         <span>第 {overviewPage} / {overview.pages} 页</span>
+         <button disabled={overviewPage===overview.pages} onClick={()=>setOverviewPage(p=>p+1)}>下一页</button>
+       </div>}/>:
+     <section className="panel" aria-busy="true"><PanelTitle title="任务列表"/><p>正在读取任务…</p></section>}
+ </>}
  {page==='tasks'&&<><Title eyebrow="TASKS" title="任务中心" subtitle="选择视频分析或航拍建图，查看执行节点与成果。" action={<button className="primary" onClick={()=>setModal(true)}><Plus size={17}/>新建任务</button>}/><TaskCenter tasks={tasks} nodes={nodes} open={open}/></>}
  {page==='nodes'&&<><Title eyebrow="EXECUTION POOL" title="执行节点" subtitle="展示节点健康、容器运行时和业务槽位；资源池接口可补充资源与网络观测。"/><div className="node-grid">{nodes.map(n=><section className="panel node-card" key={n.id}><div className="node-head"><span className="node-symbol"><Server size={22}/></span><div><h3>{n.id}</h3><small>{n.cluster_id}</small></div><Badge s={!n.enabled?'已停用':n.online?'在线':'UNKNOWN'}/></div><div className="node-kind">{n.kind==='vehicle'?'车端节点 · Kubernetes资源快照':n.kind==='server_process'?'历史服务器进程':'K3s 容器节点'}<span>{n.snapshot?.architecture||'—'}</span></div><dl><div><dt>运行时</dt><dd>{n.snapshot?.runtime||'—'}</dd></div><div><dt>执行槽占用</dt><dd>{n.snapshot?.active??'—'} / {n.snapshot?.capacity??'—'}</dd></div><div><dt>已预留执行槽</dt><dd>{n.reserved}</dd></div><div><dt>实测处理吞吐</dt><dd>{fmt(n.snapshot?.measured_fps)} 帧/s</dd></div><div><dt>Kubernetes 节点</dt><dd>{n.snapshot?.kube_node||"—"}</dd></div><div><dt>最近资源快照</dt><dd>{date(n.observed)}</dd></div></dl><p className="note">{n.kind==='vehicle'?'内存为节点标签配置的调度预算；吞吐来自历史任务，请结合任务的实际CPU/CUDA后端解读。':'逻辑节点资源可能来自共享服务器，不能作为独立车端资源相加。'}</p><div className="button-row"><button disabled={busy} onClick={()=>action(()=>api(`/api/nodes/${n.id}/control/${n.enabled?'disable':'enable'}`,{method:'POST'}),'节点状态已更新')}>{n.enabled?<Pause size={14}/>:<Play size={14}/>} {n.enabled?'停止新任务分配':'恢复分配'}</button>{n.kind==='server_process'&&<button disabled={busy} className="warning-button" onClick={()=>action(()=>api(`/api/nodes/${n.id}/control/fail-once`,{method:'POST'}),'已设置下一次执行故障，界面将如实记录')}>注入一次失败</button>}</div></section>)}</div></>}
  {page==='detail'&&(detail?.id===selected&&detail?.params.workflow_id==='aerial-mapping-odx'?<MappingDetail key={detail.id} task={detail} events={events} action={action} busy={busy} open={open} request={api}/>:detail?.id===selected&&detail?<TaskDetail task={detail} events={events} action={action} busy={busy} open={open}/>:<Empty text="正在读取任务记录…"/>)}
  {page==='strategies'&&<><Title eyebrow="TRIGGERS" title="服务与周期触发" subtitle="策略绑定固定视频工作流，每次触发创建独立、可追踪的运行实例。"/><Strategies list={strategies} action={action} open={open} busy={busy}/></>}
  {page==='workflow'&&<><Title eyebrow="WORKFLOWS" title="工作流与基础能力" subtitle="中期采用固定模板，展示实际调用和参数传递。"/><div className="grid-two">{configs.map(c=><section className="panel" key={c.id}><PanelTitle title={c.name} extra={`v${c.body.version}`}/><div className="template-nodes">{c.body.nodes.map(n=><span key={n}>{n}</span>)}</div><p className="note">{c.id==='video-analysis'?'覆盖视频提交、资源快照、算法选点、实际执行及聚合。':'实际调用API、Redis、Python/Shell脚本、算法和执行平台健康接口。'}</p><button className="primary" disabled={busy} onClick={()=>c.id==='video-analysis'?setModal(true):action(async()=>{const r=await api('/api/capabilities/run',{method:'POST'});setCap([r,...cap]);return r},'能力验证完成，请查看逐节点结果')}>{busy?'正在验证…':c.id==='video-analysis'?'创建视频任务':'运行五类能力验证'}<Play size={14}/></button></section>)}</div><section className="panel"><PanelTitle title="能力验证记录" extra="每一步均实际执行"/>{cap.length?cap.map(c=><div className="cap-run" key={c.id}><div><strong>{date(c.created)}</strong><Badge s={c.status}/></div><div className="cap-grid">{c.nodes.map(n=><div key={n.kind}><strong>{n.kind}</strong><Badge s={n.status}/><small>{fmt(n.seconds,3)} s</small><details><summary>输入输出</summary><pre>{JSON.stringify(n.output||n.error,null,2)}</pre></details></div>)}</div></div>):<Empty text="尚未运行能力验证"/>}</section><ConfigEditor action={action}/><p className="footnote">图形拖拽、任意代码脚本、多模式Redis及Kafka在后续完整平台范围；当前页面不将这些能力标为已完成。</p></>}
- {page==='compare'&&<><Title eyebrow="EVIDENCE" title="历史记录与基线对比" subtitle="固定输入和推理参数后比较实测结果，不预设加速结论。"/><Compare tasks={tasks} open={open}/><section className="panel"><PanelTitle title="按日统计" extra="Asia/Shanghai"/><table><thead><tr><th>日期</th><th>调用次数</th><th>完整成功</th><th>失败</th><th>超时</th><th>取消</th></tr></thead><tbody>{overview?.daily.map(d=><tr key={d.day}><td>{d.day}</td><td>{d.total}</td><td>{d.succeeded}</td><td>{d.failed}</td><td>{d.timed_out}</td><td>{d.canceled}</td></tr>)}</tbody></table></section></>}
+ {page==='compare'&&<><Title eyebrow="EVIDENCE" title="历史记录与基线对比" subtitle="固定输入和推理参数后比较实测结果，不预设加速结论。"/><Compare tasks={tasks} open={open}/><section className="panel"><PanelTitle title="按日统计" extra="Asia/Shanghai"/><table><thead><tr><th>日期</th><th>调用次数</th><th>完整成功</th><th>失败</th><th>超时</th><th>取消</th></tr></thead><tbody>{overview?.daily?.map(d=><tr key={d.day}><td>{d.day}</td><td>{d.total}</td><td>{d.succeeded}</td><td>{d.failed}</td><td>{d.timed_out}</td><td>{d.canceled}</td></tr>)}</tbody></table></section></>}
  </div></main>{modal&&<NewTask nodes={nodes} onClose={()=>setModal(false)} onCreate={async p=>{const r=await api('/api/tasks',{method:'POST',body:JSON.stringify(p)});setModal(false);open(r.id);refresh()}}/>}{toast&&<div className="toast"><CheckCircle2 size={17}/>{toast}</div>}</div>
 }
 function Title({eyebrow,title,subtitle,action}){return <div className="page-title"><div><span className="eyebrow">{eyebrow}</span><h1>{title}</h1><p>{subtitle}</p></div>{action}</div>}
 function PanelTitle({title,extra}){return <div className="panel-title"><h2>{title}</h2><span>{extra}</span></div>}
 function Metric({name,value,caption,icon}){return <div className="metric"><div><span>{name}</span>{icon}</div><strong>{value}</strong><small>{caption}</small></div>}
-function TaskTable({tasks,open,title='任务列表',more}){return <section className="panel task-table"><PanelTitle title={title} extra={more?<button className="link" onClick={more}>查看全部<ArrowUpRight size={14}/></button>:`${tasks.length} 条记录`}/>{tasks.length?<div className="table-scroll"><table><thead><tr><th>任务 / 创建时间</th><th>调度策略</th><th>运行状态</th><th>工作单元</th><th>触发方式</th><th>耗时</th><th/></tr></thead><tbody>{tasks.map(t=><tr key={t.id} onClick={()=>open(t.id)}><td><strong>{t.name}</strong><small>{t.params.workflow_id==='aerial-mapping-odx'?'航拍建图':'视频分析'} · {date(t.created)}</small></td><td>{alg[t.params.algorithm]||t.params.algorithm}</td><td><Badge s={t.status}/></td><td><div className="table-progress"><span>{t.completed} / {t.total||'—'}</span><div><i style={{width:`${t.total?t.completed/t.total*100:0}%`}}/></div></div></td><td>{t.trigger_type==='periodic'?'周期触发':'服务触发'}</td><td>{t.finished?fmt(t.finished-t.created)+' s':'—'}</td><td><ChevronRight size={17}/></td></tr>)}</tbody></table></div>:<Empty text="还没有任务"><p>选择视频或航拍照片集，创建第一个任务。</p></Empty>}</section>}
+function TaskTable({tasks,open,title='任务列表',extra,footer}){return <section className="panel task-table"><PanelTitle title={title} extra={extra??`${tasks.length} 条记录`}/>{tasks.length?<div className="table-scroll"><table><thead><tr><th>任务 / 创建时间</th><th>调度策略</th><th>运行状态</th><th>工作单元</th><th>触发方式</th><th>耗时</th><th/></tr></thead><tbody>{tasks.map(t=><tr key={t.id} onClick={()=>open(t.id)}><td><strong>{t.name}</strong><small>{t.params.workflow_id==='aerial-mapping-odx'?'航拍建图':'视频分析'} · {date(t.created)}</small></td><td>{alg[t.params.algorithm]||t.params.algorithm}</td><td><Badge s={t.status}/></td><td><div className="table-progress"><span>{t.completed} / {t.total||'—'}</span><div><i style={{width:`${t.total?t.completed/t.total*100:0}%`}}/></div></div></td><td>{t.trigger_type==='periodic'?'周期触发':'服务触发'}</td><td>{t.finished?fmt(t.finished-t.created)+' s':'—'}</td><td><button className="link" aria-label={`查看详情：${t.name}`} onClick={e=>{e.stopPropagation();open(t.id)}}>详情<ChevronRight size={14}/></button></td></tr>)}</tbody></table></div>:<Empty text="暂无任务记录"/>}{footer}</section>}
 function TaskCenter({tasks,nodes=[],open}){
  const[q,setQ]=useState(''),[status,setStatus]=useState(''),[node,setNode]=useState(''),[from,setFrom]=useState(''),[to,setTo]=useState(''),[rows,setRows]=useState(null),[error,setError]=useState('');
  useEffect(()=>{if(!node&&!from&&!to){setRows(null);return}let current=true;const query=new URLSearchParams();if(node)query.set('node_id',node);if(from)query.set('after',String(new Date(from).getTime()/1000));if(to)query.set('before',String(new Date(to).getTime()/1000));api('/api/tasks?'+query).then(r=>{if(current){setRows(r);setError('')}}).catch(e=>setError(e.message));return()=>{current=false}},[node,from,to,tasks]);
