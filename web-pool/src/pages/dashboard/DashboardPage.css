@@ -546,7 +546,13 @@
   }
 }
 
+.dashboard .vehicle-fleet {
+  container-type: inline-size;
+}
+
 .dashboard .fleet-scene--parking {
+  /* Keep the upper facade in frame on ultrawide layouts. */
+  min-height: 37cqw;
   background: var(--dashboard-inset);
   border-color: rgb(44 175 210 / 30%);
   box-shadow: var(--dashboard-shadow);
@@ -558,6 +564,35 @@
 
 .dashboard .fleet-scene--parking .parking-scene__background-shade {
   background: none;
+}
+
+.dashboard .fleet-scene--parking .parking-scene__background {
+  container-type: size;
+}
+
+.dashboard .fleet-scene--parking .parking-scene__building-brand {
+  /* The wall anchor (1090, 196) follows the 1672 × 941 photo's cover crop at 50% 54%. */
+  --parking-photo-pixel: max(calc(100cqw / 1672), calc(100cqh / 941));
+  left: calc(50cqw + (1090 - 1672 * 0.5) * var(--parking-photo-pixel));
+  top: calc(54cqh + (196 - 941 * 0.54) * var(--parking-photo-pixel));
+  gap: 0.48em;
+  font-size: calc(13 * var(--parking-photo-pixel));
+  white-space: nowrap;
+  transform: translate(-50%, -50%) skewY(-3.6deg);
+  transform-origin: center;
+}
+
+.dashboard .fleet-scene--parking .parking-scene__building-brand > img {
+  width: 2em;
+}
+
+.dashboard .fleet-scene--parking .parking-scene__building-brand strong {
+  font-size: 1em;
+}
+
+.dashboard .fleet-scene--parking .parking-scene__building-brand small {
+  margin-top: 0.35em;
+  font-size: 0.52em;
 }
 
 .resource-pool-overview {
