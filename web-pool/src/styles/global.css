@@ -332,13 +332,6 @@ button {
   stroke-width: 1.8;
   stroke-dasharray: 5 10;
   opacity: 0.68;
-  animation: sidebar-track-flow 9s linear infinite;
-}
-
-@keyframes sidebar-track-flow {
-  to {
-    stroke-dashoffset: -100;
-  }
 }
 
 .app-sider.ant-layout-sider-collapsed .brand {
