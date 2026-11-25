@@ -23,7 +23,8 @@ def test_candidate_preview_accepts_both_templates():
     assert body['workflow_id'] == 'video-analysis'
     assert all('不在指定节点范围' in c['reasons'] for c in body['candidates'] if c['node_id'] != 'lab-1')
     did = dataset(client)
-    mapped = client.post('/api/scheduling/candidates', json={'params': {'workflow_id': mapping.ID, 'source': did, 'concurrency': 6}})
+    # Photo bundles can exceed 512 MiB (upload cap is 2 GiB); the preview must accept their size.
+    mapped = client.post('/api/scheduling/candidates', json={'params': {'workflow_id': mapping.ID, 'source': did, 'concurrency': 6}, 'input_bytes': 543543983})
     assert mapped.status_code == 200, mapped.text
     req = mapped.json()['requirements']
     assert req['application_id'] == mapping.ID and req['min_cpu_cores'] == 6 and req['min_gpu_count'] == 0

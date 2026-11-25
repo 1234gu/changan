@@ -79,7 +79,7 @@ test('新建任务时自动或手动选定节点，并显示两阶段排除原�
   await expect(scope.getByRole('row', {name: /thor2/})).toContainText('当前首选');
   await expect(scope.getByRole('row', {name: /thor3/})).toContainText('资源池 · 管理员已暂停调度');
   await expect(scope.getByRole('row', {name: /thor3/})).toContainText('执行侧 · 执行槽已占用或预留');
-  await expect(scope.getByRole('link', {name: 'Thor-2'})).toHaveAttribute('href', '/pool/nodes/p-2');
+  await expect(scope.getByRole('row', {name: /thor2/}).getByRole('link', {name: '资源池节点详情'})).toHaveAttribute('href', '/pool/nodes/p-2');
   await scope.getByRole('radio', {name: '手动指定'}).click();
   const submit = page.getByRole('button', {name: /创建并运行/});
   await expect(submit).toBeDisabled();

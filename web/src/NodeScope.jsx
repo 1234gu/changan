@@ -51,7 +51,7 @@ export default function NodeScope({request,params,setField,duration=4,inputBytes
   <div className="table-scroll"><table className="node-scope-table"><thead><tr>{mode==='manual'&&<th aria-label="选择"/>}<th>节点</th><th>结论</th><th>排除原因 / 依据</th><th>评分</th></tr></thead><tbody>
    {rows.map(r=>{const pool=r.pool||{};const checked=chosen.includes(r.node_id);return <tr key={r.node_id} className={(mode==='auto'&&data.target_node===r.node_id)||checked?'highlight':''}>
     {mode==='manual'&&<td><input type={single?'radio':'checkbox'} name="node-scope" aria-label={`指定 ${r.node_id}`} checked={checked} onChange={e=>pick(r.node_id,e.target.checked)}/></td>}
-    <td><strong>{r.node_id}</strong>{pool.pool_node_id&&poolLinks?<a className="node-scope-link" href={`/pool/nodes/${pool.pool_node_id}`}>{pool.node_name||'资源池节点'}</a>:<small>{pool.state==='BOUND'?pool.node_name:pool.state?'资源池未绑定':''}</small>}</td>
+    <td><strong>{r.node_id}</strong>{pool.pool_node_id&&poolLinks?<a className="node-scope-link" href={`/pool/nodes/${pool.pool_node_id}`}>资源池节点详情</a>:<small>{pool.state==='BOUND'?pool.node_name:pool.state?'资源池未绑定':''}</small>}</td>
     <td>{r.eligible?<span className="scope-ok">满足{mode==='auto'&&data.target_node===r.node_id&&'·当前首选'}</span>:<span className="scope-no">不参与</span>}</td>
     <td>{r.reasons.length?<div className="scope-reasons">{r.reasons.map(x=><span key={x} className={poolReason(x)?'pool':'exec'}>{poolReason(x)?'资源池':'执行侧'} · {x.replace(/^资源池：/,'')}</span>)}</div>:<small>{r.estimate_source}</small>}{pool.mode&&pool.mode!=='enforce'&&pool.reasons?.length>0&&<small className="scope-observe">资源池 {pool.mode} 模式：{pool.reasons.join('；')}（仅观察）</small>}</td>
     <td>{r.eligible?r.score:'—'}</td>

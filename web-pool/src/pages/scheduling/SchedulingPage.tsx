@@ -358,7 +358,6 @@ export function SchedulingPage() {
           initialValues={{
             taskId: 'Task-001',
             executionMode: 'SINGLE_NODE',
-            vramGb: 8,
           }}
           onFinish={(values) => void runCandidateQuery(values)}
         >

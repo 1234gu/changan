@@ -42,7 +42,7 @@ class CandidateInput(BaseModel):
     # Same body as the task-creation form, so the preview checks exactly what will be submitted.
     params: MappingInput|TaskInput=Field(default_factory=TaskInput)
     duration_seconds: float=Field(default=4,gt=0,le=600)
-    input_bytes: int=Field(default=0,ge=0,le=536870912)
+    input_bytes: int=Field(default=0,ge=0,le=8*1024**3)  # photo bundles may reach the 2 GiB upload cap
 
 
 def template_params(data: dict) -> 'MappingInput|TaskInput':
