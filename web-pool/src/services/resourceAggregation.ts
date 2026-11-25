@@ -125,12 +125,23 @@ function toSupportingMetric(
   );
 }
 
-function isSupplyEligible(node: NodeDetail) {
+function isPoolMember(node: NodeDetail) {
   return (
     node.registrationStatus === 'registered' &&
-    node.poolMembership === 'in_pool' &&
+    node.everApproved &&
+    node.authorizationStatus === 'approved' &&
+    node.poolMembership === 'in_pool'
+  );
+}
+
+function contributesToCurrentCapacity(node: NodeDetail) {
+  return isPoolMember(node) && node.operationalStatus === 'online';
+}
+
+function isSupplyEligible(node: NodeDetail) {
+  return (
+    contributesToCurrentCapacity(node) &&
     node.schedulable &&
-    node.operationalStatus === 'online' &&
     node.healthStatus === 'healthy' &&
     node.network.linkStatus !== 'down'
   );
@@ -179,8 +190,27 @@ const hasSchedulableResource = (resources: ComputeResourceMetricMap) =>
 function createNodeContribution(node: NodeDetail): NodeResourceContribution {
   const supplyEligible = isSupplyEligible(node);
   const online = isNodeOnline(node);
-  const resources = createResourceMap(node, supplyEligible, online);
+  const currentContributor = contributesToCurrentCapacity(node);
+  const resources = currentContributor
+    ? createResourceMap(node, supplyEligible, online)
+    : (Object.fromEntries(
+        RESOURCE_KINDS.map((kind) => [kind, createZeroResourceMetric(kind)]),
+      ) as ComputeResourceMetricMap);
   const isAgent = node.nodeSource === 'agent';
+  const videoMemory = node.gpuDetails?.memoryArchitecture === 'unified' ? undefined : node.videoMemory;
+  const zeroSupportingMetric = (): ResourceMetric =>
+    toMetric(
+      {
+        total: 0,
+        used: 0,
+        allocated: 0,
+        available: 0,
+        schedulableCapacity: 0,
+        runtimeUtilizationPercent: 0,
+        unit: 'GB',
+      },
+      false,
+    );
 
   return {
     nodeId: node.id,
@@ -204,13 +234,19 @@ function createNodeContribution(node: NodeDetail): NodeResourceContribution {
           ? 'allocated'
           : 'unavailable',
     resources,
-    memory: toSupportingMetric(node.memory, supplyEligible, isAgent, online),
-    ...(node.videoMemory
+    memory: currentContributor
+      ? toSupportingMetric(node.memory, supplyEligible, isAgent, online)
+      : zeroSupportingMetric(),
+    ...(videoMemory
       ? {
-          videoMemory: toSupportingMetric(node.videoMemory, supplyEligible, isAgent, online, true),
+          videoMemory: currentContributor
+            ? toSupportingMetric(videoMemory, supplyEligible, isAgent, online, true)
+            : zeroSupportingMetric(),
         }
       : {}),
-    storage: toSupportingMetric(node.storage, supplyEligible, isAgent, online),
+    storage: currentContributor
+      ? toSupportingMetric(node.storage, supplyEligible, isAgent, online)
+      : zeroSupportingMetric(),
     labels: node.labels,
   };
 }
@@ -322,9 +358,7 @@ export function aggregateComputePool(
   nodes: NodeDetail[],
   updatedAt = new Date().toISOString(),
 ): ComputePoolSummary {
-  const sources = nodes
-    .filter((node) => node.registrationStatus === 'registered' && node.poolMembership === 'in_pool')
-    .map(createNodeContribution);
+  const sources = nodes.filter(isPoolMember).map(createNodeContribution);
 
   return {
     resources: aggregateResources(sources),

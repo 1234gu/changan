@@ -18,6 +18,7 @@ from ..models.node import (
     NodeRecord,
     PoolMembership,
     RegistrationStatus,
+    RuntimeStatus,
 )
 from ..models.scheduler_execution import (
     ACTIVE_ALLOCATION_STATUSES,
@@ -145,7 +146,7 @@ def _video_memory(node: NodeRecord) -> _Contribution:
     report = node.resources
     if report is None or report.gpu.error:
         return _Contribution(0, 0, 0, valid=False)
-    if not report.gpu.supported:
+    if not report.gpu.supported or report.gpu.memory_architecture == "unified":
         return _Contribution(0, 0, 0)
     if not report.gpu.available:
         return _Contribution(0, 0, 0, valid=False)
@@ -203,15 +204,32 @@ def _accelerator(
     )
 
 
-def _pool_members(nodes: list[NodeRecord]) -> list[NodeRecord]:
+def _is_pool_member(node: NodeRecord) -> bool:
+    return (
+        node.registration_status == RegistrationStatus.REGISTERED
+        and node.ever_approved
+        and node.authorization_status == AuthorizationStatus.APPROVED
+        and node.pool_membership == PoolMembership.IN_POOL
+    )
+
+
+def _current_resource_contributors(nodes: list[NodeRecord]) -> list[NodeRecord]:
+    """Return nodes that contribute to the current physical resource pool.
+
+    Resource snapshots intentionally survive disconnects for diagnostics.  They
+    are historical evidence, not current capacity, so every current aggregate
+    must use this stricter set.  Scheduling pause is deliberately not checked:
+    an online paused node still owns physical capacity while contributing zero
+    schedulable capacity through the per-resource helpers.
+    """
+
     return [
         node
         for node in nodes
         if (
-            node.registration_status == RegistrationStatus.REGISTERED
-            and node.ever_approved
-            and node.authorization_status == AuthorizationStatus.APPROVED
-            and node.pool_membership == PoolMembership.IN_POOL
+            _is_pool_member(node)
+            and node.runtime_status == RuntimeStatus.ONLINE
+            and node.operational_status == NodeOperationalStatus.ONLINE
         )
     ]
 
@@ -257,22 +275,22 @@ def aggregate_compute_pool(
     updated_at: datetime | None = None,
     allocations: SchedulerAllocationTotals | None = None,
 ) -> ComputePoolSummary:
-    members = _pool_members(nodes)
+    contributors = _current_resource_contributors(nodes)
     active_allocations = allocations or SchedulerAllocationTotals()
     return ComputePoolSummary(
         unified_memory_gpu_nodes=sum(
             1
-            for node in members
+            for node in contributors
             if node.resources is not None and node.resources.gpu.memory_architecture == "unified"
         ),
         resources=ComputeResourceMetricMap(
             cpu=_metric(
-                [_cpu(node) for node in members],
+                [_cpu(node) for node in contributors],
                 "Core",
                 allocated=active_allocations.cpu_cores,
             ),
             gpu=_metric(
-                [_gpu(node) for node in members],
+                [_gpu(node) for node in contributors],
                 "GPU",
                 allocated=active_allocations.gpu_count,
             ),
@@ -283,7 +301,7 @@ def aggregate_compute_pool(
                         node.resources.npu if node.resources else None,
                         lambda support: support.tops,
                     )
-                    for node in members
+                    for node in contributors
                 ],
                 "TOPS",
                 allocated=active_allocations.npu_tops,
@@ -295,16 +313,24 @@ def aggregate_compute_pool(
                         node.resources.dla if node.resources else None,
                         lambda support: support.device_count,
                     )
-                    for node in members
+                    for node in contributors
                 ],
                 "Device",
                 allocated=active_allocations.dla_count,
             ),
         ),
         video_memory=_metric(
-            [_video_memory(node) for node in members],
+            [_video_memory(node) for node in contributors],
             "GB",
             allocated=active_allocations.vram_gb,
+        ),
+        memory=_metric(
+            [_byte_capacity(node, "memory") for node in contributors],
+            "GB",
+            allocated=active_allocations.memory_gb,
+        ),
+        storage=_metric(
+            [_byte_capacity(node, "storage") for node in contributors], "GB"
         ),
         updated_at=updated_at or datetime.now(timezone.utc),
     )
@@ -318,16 +344,12 @@ def aggregate_cluster_resources(
     measured_at = updated_at or datetime.now(timezone.utc)
     active_allocations = allocations or SchedulerAllocationTotals()
     compute = aggregate_compute_pool(nodes, measured_at, active_allocations)
-    members = _pool_members(nodes)
     return ClusterResourceSummary(
         resources=compute.resources,
         video_memory=compute.video_memory,
-        memory=_metric(
-            [_byte_capacity(node, "memory") for node in members],
-            "GB",
-            allocated=active_allocations.memory_gb,
-        ),
-        storage=_metric([_byte_capacity(node, "storage") for node in members], "GB"),
+        memory=compute.memory,
+        storage=compute.storage,
+        unified_memory_gpu_nodes=compute.unified_memory_gpu_nodes,
         updated_at=measured_at,
     )
 
@@ -338,16 +360,16 @@ class ResourceAggregationService:
 
     def get_summary(self) -> ComputePoolSummary:
         nodes = self._store.list_nodes()
-        members = _pool_members(nodes)
+        contributors = _current_resource_contributors(nodes)
         allocations = scheduler_allocation_totals(
-            members, self._store.list_scheduler_executions()
+            contributors, self._store.list_scheduler_executions()
         )
         return aggregate_compute_pool(nodes, allocations=allocations)
 
     def get_cluster_summary(self, cluster_id: str) -> ClusterResourceSummary:
         nodes = self._store.list_nodes_by_cluster_id(cluster_id)
-        members = _pool_members(nodes)
+        contributors = _current_resource_contributors(nodes)
         allocations = scheduler_allocation_totals(
-            members, self._store.list_scheduler_executions()
+            contributors, self._store.list_scheduler_executions()
         )
         return aggregate_cluster_resources(nodes, allocations=allocations)

@@ -16,6 +16,8 @@ export interface ApiComputePoolResourceMetric {
 
 export interface ApiComputePoolSummary {
   resources: Record<ResourceKind, ApiComputePoolResourceMetric>;
+  memory?: ApiComputePoolResourceMetric;
+  storage?: ApiComputePoolResourceMetric;
   supporting_resources?: {
     video_memory?: ApiComputePoolResourceMetric | null;
   };

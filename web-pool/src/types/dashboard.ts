@@ -1,6 +1,7 @@
 import type { ClusterSummary } from './cluster';
+import type { NodeResourceContribution } from './computePool';
 import type { SystemEvent } from './event';
-import type { NodeStatusSummary } from './node';
+import type { NodeStatusSummary, NodeSummary } from './node';
 import type { SupportingResourceSummary } from './computePool';
 import type { ResourceKind, ResourcePoolSummary } from './resource';
 import type { TaskSummary } from './task';
@@ -13,6 +14,10 @@ export interface ResourceTrendPoint {
 
 export interface DashboardSummary {
   nodes: NodeStatusSummary;
+  /** Registered nodes used by the fleet view and the node status summary. */
+  nodeItems: NodeSummary[];
+  /** Per-node runtime resources from the same compute-pool snapshot. */
+  nodeResources: NodeResourceContribution[];
   resourcePool: ResourcePoolSummary;
   supportingResources: SupportingResourceSummary;
   tasks: TaskSummary;

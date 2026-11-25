@@ -3,7 +3,6 @@ import { PlusOutlined, ReloadOutlined, UserAddOutlined } from '@ant-design/icons
 import { Alert, App, Badge, Button, Card, Space, Tabs } from 'antd';
 import dayjs from 'dayjs';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
-import { PageHeader } from '../../components/PageHeader';
 import type { MainLayoutOutletContext } from '../../layouts/MainLayout';
 import { NodeEventTable } from './components/NodeEventTable';
 import { NodeFilterBar } from './components/NodeFilterBar';
@@ -208,31 +207,44 @@ export function NodeListPage() {
 
   return (
     <main className="nodes-page">
-      <PageHeader
-        eyebrow="NODE MANAGEMENT"
-        title="节点管理"
-        description="统一管理车群算力节点的接入、状态和资源信息"
-        extra={
+      <section className="nodes-page__overview" aria-label="节点汇总与操作">
+        <div className="nodes-page__toolbar">
+          <span className="nodes-page__updated">
+            <i aria-hidden="true" />
+            <span>实时更新</span>
+            <time dateTime={updatedAt || undefined}>
+              {updatedAt ? dayjs(updatedAt).format('HH:mm:ss') : '--:--:--'}
+            </time>
+          </span>
           <Space className="nodes-page__header-actions" size={8} wrap>
-            <span className="nodes-page__updated">
-              更新于 {updatedAt ? dayjs(updatedAt).format('HH:mm:ss') : '--:--:--'}
-            </span>
             <Badge count={pendingNodes.length} size="small" offset={[-4, 2]}>
-              <Button icon={<UserAddOutlined />} onClick={() => setPendingOpen(true)}>
+              <Button
+                className="nodes-page__action-button nodes-page__action-button--primary"
+                icon={<UserAddOutlined />}
+                onClick={() => setPendingOpen(true)}
+              >
                 待接入节点
               </Button>
             </Badge>
-            <Button icon={<PlusOutlined />} onClick={() => setManualConnectOpen(true)}>
+            <Button
+              className="nodes-page__action-button"
+              icon={<PlusOutlined />}
+              onClick={() => setManualConnectOpen(true)}
+            >
               手动接入
             </Button>
-            <Button icon={<ReloadOutlined />} loading={loading} onClick={refresh}>
+            <Button
+              className="nodes-page__action-button"
+              icon={<ReloadOutlined />}
+              loading={loading}
+              onClick={refresh}
+            >
               刷新
             </Button>
           </Space>
-        }
-      />
-
-      <NodeSummaryCards summary={summary} />
+        </div>
+        <NodeSummaryCards summary={summary} />
+      </section>
 
       {pendingNodes.length > 0 && (
         <Alert

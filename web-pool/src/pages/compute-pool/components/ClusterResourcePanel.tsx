@@ -50,8 +50,8 @@ export function ClusterResourcePanel({ clusters }: ClusterResourcePanelProps) {
                 <span>可调度节点比例</span>
                 <Progress
                   percent={schedulableRate}
-                  strokeColor="#356df3"
-                  trailColor="#edf1f7"
+                  strokeColor="#35ddff"
+                  trailColor="rgba(36, 105, 142, 0.34)"
                   size={['100%', 6]}
                   format={(percent) => `${Number(percent).toFixed(0)}%`}
                 />
@@ -64,7 +64,10 @@ export function ClusterResourcePanel({ clusters }: ClusterResourcePanelProps) {
                   return [
                     <div key={kind}>
                       <dt style={{ color: RESOURCE_PRESENTATION[kind].color }}>
-                        {RESOURCE_PRESENTATION[kind].label}
+                        <span className="cluster-resource-card__resource-icon" aria-hidden="true">
+                          {RESOURCE_PRESENTATION[kind].icon}
+                        </span>
+                        <span>{RESOURCE_PRESENTATION[kind].label}</span>
                       </dt>
                       <dd>
                         <strong>{formatMetricValue(metric.total)}</strong>

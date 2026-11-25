@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SafetyCertificateOutlined } from '@ant-design/icons';
-import { Card, Descriptions, Empty, Tag, Timeline } from 'antd';
+import { Card, Empty, Tag, Timeline } from 'antd';
 import dayjs from 'dayjs';
 import { getNodeReliability, type NodeReliability } from '../../services/platformService';
 import './platform.css';
@@ -48,14 +48,26 @@ export function NodeReliabilityCard({ nodeId }: { nodeId: string }) {
         </span>
       }
     >
-      <Descriptions size="small" column={4}>
-        <Descriptions.Item label="分片执行">{attempts ? attempts.total : '—'}</Descriptions.Item>
-        <Descriptions.Item label="成功">{attempts ? attempts.succeeded : '—'}</Descriptions.Item>
-        <Descriptions.Item label="失败/超时">{attempts ? attempts.failed : '—'}</Descriptions.Item>
-        <Descriptions.Item label="平均恢复">
-          {data?.meanRecoverySeconds == null ? '—' : `${data.meanRecoverySeconds} s`}
-        </Descriptions.Item>
-      </Descriptions>
+      <div className="node-reliability-metrics" aria-label="可靠性指标">
+        <div>
+          <span>分片执行</span>
+          <strong>{attempts ? attempts.total : '—'}</strong>
+        </div>
+        <div>
+          <span>成功</span>
+          <strong>{attempts ? attempts.succeeded : '—'}</strong>
+        </div>
+        <div>
+          <span>失败/超时</span>
+          <strong>{attempts ? attempts.failed : '—'}</strong>
+        </div>
+        <div>
+          <span>平均恢复</span>
+          <strong>
+            {data?.meanRecoverySeconds == null ? '—' : `${data.meanRecoverySeconds} s`}
+          </strong>
+        </div>
+      </div>
       {data && data.incidents.length > 0 ? (
         <div className="reliability-timeline">
           <Timeline

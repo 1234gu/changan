@@ -7,14 +7,9 @@ import { formatMetricValue } from '../presentation';
 interface ResourcePoolCardsProps {
   resources: ComputeResourceMetricMap;
   videoMemory?: ResourceMetric;
-  unifiedGpuNodes?: number;
 }
 
-export function ResourcePoolCards({
-  resources,
-  videoMemory,
-  unifiedGpuNodes = 0,
-}: ResourcePoolCardsProps) {
+export function ResourcePoolCards({ resources, videoMemory }: ResourcePoolCardsProps) {
   return (
     <section className="compute-pool-card-grid" aria-label="核心资源池总览">
       {RESOURCE_ORDER.map((kind) => {
@@ -31,7 +26,7 @@ export function ResourcePoolCards({
         return (
           <Card
             key={kind}
-            className="compute-pool-resource-card"
+            className={`compute-pool-resource-card compute-pool-resource-card--${kind}`}
             style={{ '--pool-accent': presentation.color } as CSSProperties}
           >
             <div className="compute-pool-resource-card__header">
@@ -40,7 +35,7 @@ export function ResourcePoolCards({
               </span>
               <div>
                 <strong>{presentation.label} 资源池</strong>
-                <span>PHYSICAL CAPACITY</span>
+                <span>物理容量</span>
               </div>
             </div>
 
@@ -56,7 +51,7 @@ export function ResourcePoolCards({
             <Progress
               percent={metric.runtimeUtilizationPercent ?? metric.utilizationPercent}
               strokeColor={presentation.color}
-              trailColor="#edf1f7"
+              trailColor="rgba(36, 105, 142, 0.34)"
               size={['100%', 7]}
               showInfo={false}
             />
@@ -67,36 +62,32 @@ export function ResourcePoolCards({
                   <strong className="compute-pool-resource-card__layer-title">GPU 设备资源</strong>
                   <dl className="compute-pool-resource-card__metrics compute-pool-resource-card__metrics--three">
                     <div>
-                      <dt>Total</dt>
+                      <dt>总量</dt>
                       <dd>{formatMetricValue(metric.total)} GPU</dd>
                     </div>
                     <div>
-                      <dt>Allocated</dt>
+                      <dt>已分配</dt>
                       <dd>{formatMetricValue(metric.allocated)} GPU</dd>
                     </div>
                     <div>
-                      <dt>Available</dt>
+                      <dt>可用</dt>
                       <dd>{formatMetricValue(metric.available)} GPU</dd>
                     </div>
                   </dl>
                 </section>
                 <section aria-label="GPU 显存资源">
-                  <strong className="compute-pool-resource-card__layer-title">
-                    GPU 显存资源
-                    {unifiedGpuNodes > 0 &&
-                      `（${unifiedGpuNodes} 个节点为统一内存，不计入独立显存）`}
-                  </strong>
+                  <strong className="compute-pool-resource-card__layer-title">GPU 显存资源</strong>
                   <dl className="compute-pool-resource-card__metrics compute-pool-resource-card__metrics--three">
                     <div>
-                      <dt>Total VRAM</dt>
+                      <dt>显存总量</dt>
                       <dd>{formatMetricValue(videoMemory?.total ?? 0)} GB</dd>
                     </div>
                     <div>
-                      <dt>Used VRAM</dt>
+                      <dt>已用显存</dt>
                       <dd>{formatMetricValue(videoMemory?.used ?? 0)} GB</dd>
                     </div>
                     <div>
-                      <dt>Available VRAM</dt>
+                      <dt>可用显存</dt>
                       <dd>{formatMetricValue(videoMemory?.available ?? 0)} GB</dd>
                     </div>
                   </dl>
@@ -105,25 +96,25 @@ export function ResourcePoolCards({
             ) : (
               <dl className="compute-pool-resource-card__metrics">
                 <div>
-                  <dt>Total · 总量</dt>
+                  <dt>总量</dt>
                   <dd>
                     {formatMetricValue(metric.total)} {presentation.unit}
                   </dd>
                 </div>
                 <div>
-                  <dt>Allocated · 已分配</dt>
+                  <dt>已分配</dt>
                   <dd>
                     {formatMetricValue(metric.allocated)} {presentation.unit}
                   </dd>
                 </div>
                 <div>
-                  <dt>Available · 可用</dt>
+                  <dt>可用</dt>
                   <dd>
                     {formatMetricValue(metric.available)} {presentation.unit}
                   </dd>
                 </div>
                 <div>
-                  <dt>Utilization · 利用率</dt>
+                  <dt>利用率</dt>
                   <dd>
                     {(metric.runtimeUtilizationPercent ?? metric.utilizationPercent).toFixed(1)}%
                   </dd>

@@ -4,7 +4,6 @@ import {
   ApartmentOutlined,
   AppstoreOutlined,
   CloudServerOutlined,
-  CodeSandboxOutlined,
   DashboardOutlined,
   DeploymentUnitOutlined,
   GlobalOutlined,
@@ -16,6 +15,8 @@ import {
 import { Badge, Button, Layout, Menu, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import changanLogo from '../assets/branding/changan-logo.png';
+import sidebarVehicle from '../assets/sidebar-suv-front-v2.png';
 import { NAVIGATION_ITEMS, ROUTES, TASK_CONSOLE_LINKS } from '../routes/config';
 import type { NavigationItemId } from '../routes/config';
 import { getNodeDataMode } from '../services/nodeService';
@@ -105,7 +106,7 @@ export function MainLayout() {
       <Sider
         className="app-sider"
         width={232}
-        collapsedWidth={0}
+        collapsedWidth={isNarrow ? 0 : 64}
         collapsed={collapsed}
         breakpoint="lg"
         trigger={null}
@@ -118,12 +119,12 @@ export function MainLayout() {
           onClick={() => handleNavigate(ROUTES.dashboard)}
         >
           <span className="brand__mark" aria-hidden="true">
-            <CodeSandboxOutlined />
+            <img src={changanLogo} alt="" />
           </span>
           {!collapsed && (
             <span className="brand__copy">
-              <strong>VEHICULAR</strong>
-              <small>COMPUTE CLOUD</small>
+              <strong>长安汽车</strong>
+              <small>CHANGAN</small>
             </span>
           )}
         </button>
@@ -137,6 +138,48 @@ export function MainLayout() {
           items={menuItems}
           onClick={({ key }) => handleNavigate(key)}
         />
+
+        {!collapsed && (
+          <div className="sider-vehicle-decoration" aria-hidden="true">
+            <svg
+              className="sider-vehicle-decoration__tracks"
+              viewBox="0 0 232 142"
+              preserveAspectRatio="none"
+              focusable="false"
+            >
+              <defs>
+                <linearGradient id="sidebar-track-gradient" x1="0" y1="1" x2="1" y2="0">
+                  <stop offset="0" stopColor="#0a7cc8" stopOpacity="0" />
+                  <stop offset="0.4" stopColor="#20cfff" stopOpacity="0.65" />
+                  <stop offset="1" stopColor="#61edff" stopOpacity="0.95" />
+                </linearGradient>
+              </defs>
+              <path
+                className="sider-track sider-track--glow"
+                d="M-28 144C34 137 75 122 112 95C148 69 180 51 250 46"
+              />
+              <path
+                className="sider-track sider-track--primary"
+                d="M-28 144C34 137 75 122 112 95C148 69 180 51 250 46"
+              />
+              <path
+                className="sider-track sider-track--secondary"
+                d="M-20 143C43 132 83 113 122 87C159 62 194 54 252 64"
+              />
+              <path
+                className="sider-track sider-track--secondary"
+                d="M12 144C70 136 107 120 143 100C174 83 207 80 250 88"
+              />
+              <path
+                className="sider-track sider-track--pulse"
+                pathLength="100"
+                d="M-8 137C49 130 93 108 130 79C158 57 190 44 244 39"
+              />
+            </svg>
+            <span className="sider-vehicle-decoration__halo" />
+            <img src={sidebarVehicle} alt="" />
+          </div>
+        )}
 
         {!collapsed && (
           <div className="sider-status">
@@ -170,9 +213,16 @@ export function MainLayout() {
             </Tooltip>
             <div className="app-header__title">
               <strong>车群协同算力管理平台</strong>
-              <span>VEHICULAR COMPUTING PLATFORM</span>
+              <span>Vehicular Computing Platform</span>
             </div>
           </div>
+
+          <span className="app-header__hud-rail" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <b />
+          </span>
 
           <div className="app-header__status">
             <Badge status={dataMode.status} text={dataMode.liveLabel} />

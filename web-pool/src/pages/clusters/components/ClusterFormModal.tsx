@@ -51,6 +51,7 @@ export function ClusterFormModal({
 
   return (
     <Modal
+      rootClassName="cluster-form-modal"
       title={cluster ? '编辑集群' : '创建集群'}
       open={open}
       confirmLoading={loading}
@@ -113,6 +114,7 @@ export function ClusterFormModal({
               extra="成员关系按 Node ID 建立；不选择也可创建空集群，后续可在详情页添加。"
             >
               <Select
+                popupClassName="cluster-node-select-dropdown"
                 mode="multiple"
                 allowClear
                 showSearch

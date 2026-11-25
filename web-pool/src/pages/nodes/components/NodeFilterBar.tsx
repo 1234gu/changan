@@ -36,12 +36,14 @@ export function NodeFilterBar({ filters, options, onChange, onReset }: NodeFilte
         onChange={(event) => update('keyword', event.target.value)}
       />
       <Select
+        popupClassName="node-filter-dropdown"
         aria-label="节点状态"
         value={filters.status}
         options={statusOptions}
         onChange={(value) => update('status', value)}
       />
       <Select
+        popupClassName="node-filter-dropdown"
         allowClear
         placeholder="处理器架构"
         aria-label="处理器架构"
@@ -53,6 +55,7 @@ export function NodeFilterBar({ filters, options, onChange, onReset }: NodeFilte
         onChange={(value) => update('architecture', value ?? 'all')}
       />
       <Select
+        popupClassName="node-filter-dropdown"
         allowClear
         placeholder="所属集群"
         aria-label="所属集群"
@@ -61,6 +64,7 @@ export function NodeFilterBar({ filters, options, onChange, onReset }: NodeFilte
         onChange={(value) => update('clusterId', value ?? 'all')}
       />
       <Select
+        popupClassName="node-filter-dropdown"
         allowClear
         placeholder="接入状态"
         aria-label="接入状态"

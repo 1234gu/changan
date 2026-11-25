@@ -26,7 +26,6 @@ import {
   message,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { PageHeader } from '../../components/PageHeader';
 import { getClusters } from '../../services/clusterService';
 import {
   buildSchedulerSubmission,
@@ -408,16 +407,20 @@ export function SchedulingPage() {
   return (
     <main className="scheduling-page">
       {contextHolder}
-      <PageHeader
-        eyebrow="RESOURCE POOL → SCHEDULER"
-        title="调度管理"
-        description="配置任务资源需求、参与节点范围并查看执行状态。"
-        extra={
-          <Button icon={<ReloadOutlined />} onClick={() => void refreshExecutions()}>
-            刷新执行状态
-          </Button>
-        }
-      />
+      <div className="scheduling-page__toolbar" aria-label="调度执行状态操作">
+        <span className="scheduling-page__live-status">
+          <i aria-hidden="true" />
+          执行状态每 5 秒自动刷新
+        </span>
+        <Button
+          className="scheduling-page__refresh"
+          icon={<ReloadOutlined />}
+          loading={executionLoading}
+          onClick={() => void refreshExecutions()}
+        >
+          刷新执行状态
+        </Button>
+      </div>
 
       <Card className="scheduling-card" title="1. 任务资源需求">
         <Form<RequirementFormValues>
@@ -443,6 +446,7 @@ export function SchedulingPage() {
             <Col xs={24} md={8} lg={6}>
               <Form.Item name="clusterId" label="资源管理集群">
                 <Select
+                  popupClassName="scheduling-select-dropdown"
                   allowClear
                   placeholder="全部可调度节点"
                   options={clusters.map((cluster) => ({ value: cluster.id, label: cluster.name }))}
@@ -452,6 +456,7 @@ export function SchedulingPage() {
             <Col xs={24} md={8} lg={6}>
               <Form.Item name="executionMode" label="执行方式" rules={[{ required: true }]}>
                 <Select
+                  popupClassName="scheduling-select-dropdown"
                   options={[
                     { value: 'SINGLE_NODE', label: '单节点执行' },
                     { value: 'DISTRIBUTED', label: '跨节点协同执行' },

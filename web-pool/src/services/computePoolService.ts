@@ -48,7 +48,12 @@ export async function getComputePoolSummary(): Promise<ComputePoolSummary> {
       dla: mapResourceMetric(response.data.resources.dla),
     },
     supportingResources: {
-      ...localDetails.supportingResources,
+      memory: response.data.memory
+        ? mapResourceMetric(response.data.memory)
+        : localDetails.supportingResources.memory,
+      storage: response.data.storage
+        ? mapResourceMetric(response.data.storage)
+        : localDetails.supportingResources.storage,
       ...(videoMemory ? { videoMemory: mapResourceMetric(videoMemory) } : {}),
       unifiedMemoryGpuNodes: response.data.unified_memory_gpu_nodes ?? 0,
     },

@@ -28,6 +28,28 @@ export interface PlatformSummary {
   updatedAt: string;
 }
 
+export interface PlatformEvent {
+  id: string;
+  eventType: string;
+  level: string;
+  message: string;
+  occurredAt: string;
+  targetId?: string;
+  targetType: 'task';
+  taskStatus?: string;
+}
+
+interface ApiPlatformEvent {
+  id: string;
+  event_type: string;
+  level: string;
+  message: string;
+  occurred_at: string;
+  target_id?: string | null;
+  target_type: 'task';
+  task_status?: string | null;
+}
+
 export interface ExecutionBinding {
   executionNodeId: string;
   kubeNode?: string;
@@ -90,6 +112,23 @@ export async function getPlatformSummary(): Promise<PlatformSummary> {
     admissionMode: data.admission_mode,
     updatedAt: data.updated_at,
   };
+}
+
+/** Recent task lifecycle events owned by the scheduling platform. */
+export async function getPlatformEvents(limit = 8): Promise<PlatformEvent[]> {
+  const { data } = await apiClient.get<{ items: ApiPlatformEvent[] }>('/api/v1/events', {
+    params: { limit },
+  });
+  return data.items.map((item) => ({
+    id: item.id,
+    eventType: item.event_type,
+    level: item.level,
+    message: item.message,
+    occurredAt: item.occurred_at,
+    ...(item.target_id ? { targetId: item.target_id } : {}),
+    targetType: item.target_type,
+    ...(item.task_status ? { taskStatus: item.task_status } : {}),
+  }));
 }
 
 export async function getExecutionBindings(): Promise<{ mode: string; items: ExecutionBinding[] }> {
