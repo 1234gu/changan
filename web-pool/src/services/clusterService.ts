@@ -53,7 +53,7 @@ function mapCluster(cluster: ApiClusterRecord): ClusterRecord {
         npu: mapResourceMetric(cluster.resource_summary.resources.npu),
         dla: mapResourceMetric(cluster.resource_summary.resources.dla),
       },
-      videoMemory: mapResourceMetric(cluster.resource_summary.video_memory),
+      videoMemory: mapResourceMetric(cluster.resource_summary.gpu_accessible_memory ?? cluster.resource_summary.video_memory),
       memory: mapResourceMetric(cluster.resource_summary.memory),
       storage: mapResourceMetric(cluster.resource_summary.storage),
       updatedAt: cluster.resource_summary.updated_at,

@@ -142,14 +142,17 @@ def _gpu(node: NodeRecord) -> _Contribution:
     )
 
 
-def _video_memory(node: NodeRecord) -> _Contribution:
+def _video_memory(node: NodeRecord, *, include_shared: bool = False) -> _Contribution:
     report = node.resources
     if report is None or report.gpu.error:
         return _Contribution(0, 0, 0, valid=False)
-    if not report.gpu.supported or report.gpu.memory_architecture == "unified":
+    if not report.gpu.supported:
         return _Contribution(0, 0, 0)
     if not report.gpu.available:
         return _Contribution(0, 0, 0, valid=False)
+
+    if report.gpu.memory_architecture == "unified":
+        return _byte_capacity(node, "memory") if include_shared else _Contribution(0, 0, 0)
 
     bytes_per_gib = 1024**3
     total = report.gpu.total_vram_bytes / bytes_per_gib
@@ -319,6 +322,9 @@ def aggregate_compute_pool(
                 allocated=active_allocations.dla_count,
             ),
         ),
+        gpu_accessible_memory=_metric(
+            [_video_memory(node, include_shared=True) for node in contributors], "GB"
+        ),
         video_memory=_metric(
             [_video_memory(node) for node in contributors],
             "GB",
@@ -347,6 +353,7 @@ def aggregate_cluster_resources(
     return ClusterResourceSummary(
         resources=compute.resources,
         video_memory=compute.video_memory,
+        gpu_accessible_memory=compute.gpu_accessible_memory,
         memory=compute.memory,
         storage=compute.storage,
         unified_memory_gpu_nodes=compute.unified_memory_gpu_nodes,

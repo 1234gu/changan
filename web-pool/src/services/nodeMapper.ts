@@ -202,6 +202,7 @@ function mapBaseNode(node: ApiNodeRecord): NodeSummary {
     ...(node.removed_reason ? { removedReason: node.removed_reason } : {}),
     ...(report
       ? {
+          memory: toCapacityMetric(report.memory),
           cpuDetails: {
             physicalCores: report.cpu.physical_cores,
             logicalCores: report.cpu.logical_cores,
@@ -335,7 +336,11 @@ export function mapApiNodeDetail(node: ApiNodeRecord): NodeDetail {
     ...(node.registered_at ? { registeredAt: node.registered_at } : {}),
     resources: mapResourceDetails(node),
     memory: toCapacityMetric(report?.memory),
-    ...(report?.gpu ? { videoMemory: toVideoMemory(report.gpu) } : {}),
+    ...(report?.gpu ? {
+      videoMemory: report.gpu.memory_architecture === 'unified'
+        ? base.memory
+        : toVideoMemory(report.gpu),
+    } : {}),
     storage: toCapacityMetric(report?.storage),
     network: {
       interfaceName: network?.network_interface ?? '未上报',

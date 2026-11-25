@@ -13,6 +13,7 @@ export interface ApiClusterResourceSummary {
   video_memory: ApiComputePoolResourceMetric;
   memory: ApiComputePoolResourceMetric;
   storage: ApiComputePoolResourceMetric;
+  gpu_accessible_memory?: ApiComputePoolResourceMetric;
   updated_at: string;
 }
 

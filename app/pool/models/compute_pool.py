@@ -41,6 +41,7 @@ class ComputeResourceMetricMap(ApiModel):
 class ComputePoolSummary(ApiModel):
     resources: ComputeResourceMetricMap
     video_memory: ResourceMetric
+    gpu_accessible_memory: ResourceMetric  # Display view, includes shared system RAM on unified GPUs.
     memory: ResourceMetric
     storage: ResourceMetric
     # Unified-memory nodes share system RAM and contribute no dedicated VRAM.

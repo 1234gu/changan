@@ -24,5 +24,6 @@ export interface ApiComputePoolSummary {
   /** Compatibility with Backend versions that expose the VRAM metric at the top level. */
   video_memory?: ApiComputePoolResourceMetric | null;
   unified_memory_gpu_nodes?: number;
+  gpu_accessible_memory?: ApiComputePoolResourceMetric;
   updated_at: string;
 }

@@ -173,3 +173,15 @@ test('ONLINE paused node keeps physical total and contributes no schedulable cap
   assert.equal(summary.sources[1].supplyEligible, false);
   assert.equal(summary.schedulerCandidates.length, 1);
 });
+
+test('mixed GPU memory uses shared RAM once per unified node and preserves GPU load', () => {
+  const thor = makeNode('thor', { gpuUtilization: 0 });
+  thor.gpuDetails.memoryArchitecture = 'unified';
+  const summary = aggregateComputePool([thor, second()]);
+  const source = summary.sources.find((node) => node.nodeId === thor.id);
+  assert.deepEqual(source.videoMemory, source.memory);
+  assert.equal(source.resources.gpu.runtimeUtilizationPercent, 0);
+  assert.equal(source.memory.runtimeUtilizationPercent, 25);
+  assert.equal(summary.supportingResources.videoMemory.total, 64 + 4);
+  assert.equal(summary.supportingResources.memory.total, 64 + 32);
+});

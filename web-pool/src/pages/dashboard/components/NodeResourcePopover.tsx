@@ -122,7 +122,7 @@ export function NodeResourcePopover({
           }
         />
         <ResourceRow
-          label={snapshot.gpuMemoryArchitecture === 'unified' ? '统一内存' : '显存'}
+          label={snapshot.gpuMemoryArchitecture === 'unified' ? '显存（统一内存）' : '显存'}
           value={
             gpuMemoryTotal === undefined
               ? '--'

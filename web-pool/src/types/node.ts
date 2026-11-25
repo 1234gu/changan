@@ -57,6 +57,7 @@ export interface NodeSummary {
   lastResourceAt?: string;
   removedAt?: string;
   removedReason?: string;
+  memory?: CapacityMetric;
   cpuDetails?: NodeCpuDetails;
   gpuDetails?: NodeGpuDetails;
   npuSupport?: NodeAcceleratorSupport;

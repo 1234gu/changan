@@ -53,7 +53,7 @@ function formatResources(node: NodeSummary) {
   }
 
   if (gpu?.memoryArchitecture === 'unified') {
-    return withOtherAccelerators(`CPU ${cpuCores} Core · GPU ${gpuCount} · 统一内存`);
+    return withOtherAccelerators(`CPU ${cpuCores} Core · GPU ${gpuCount} · 显存（统一内存）${node.memory ? ' ' + node.memory.total + ' GB' : ''}`);
   }
   const fallbackVramBytes =
     gpu?.devices.reduce(

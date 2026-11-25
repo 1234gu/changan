@@ -182,6 +182,7 @@ def test_unified_gpu_load_and_dedicated_capacity_are_independent_of_system_ram()
     assert summary['resources']['gpu']['total'] == 1
     assert summary['resources']['gpu']['runtime_utilization_percent'] == 0.0
     assert summary['video_memory']['total'] == 0
+    assert summary['gpu_accessible_memory'] == summary['memory']
     assert summary['memory']['total'] == 125
     assert summary['memory']['runtime_utilization_percent'] == 24.0
 
@@ -202,6 +203,7 @@ def test_non_unified_gpu_dashboard_keeps_gpu_report_values():
     summary = client.get('/api/v1/compute-pool/summary').json()
     assert summary['unified_memory_gpu_nodes'] == 0
     assert summary['resources']['gpu']['runtime_utilization_percent'] == 60.0
+    assert summary['gpu_accessible_memory'] == summary['video_memory']
     assert summary['video_memory']['total'] == 16.0
     assert summary['video_memory']['used'] == 4.0
     assert summary['video_memory']['available'] == 12.0

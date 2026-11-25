@@ -11,6 +11,8 @@ import type { CapacityMetric, NodeDetail } from '../types/node';
 import { RESOURCE_KINDS, RESOURCE_UNITS } from '../types/resource';
 import type { CanonicalResourceUnit, ResourceKind, ResourceSummary } from '../types/resource';
 
+import { resolveNodeVideoMemory } from './videoMemoryPolicy';
+
 interface MetricSource {
   total: number;
   used: number;
@@ -197,7 +199,7 @@ function createNodeContribution(node: NodeDetail): NodeResourceContribution {
         RESOURCE_KINDS.map((kind) => [kind, createZeroResourceMetric(kind)]),
       ) as ComputeResourceMetricMap);
   const isAgent = node.nodeSource === 'agent';
-  const videoMemory = node.gpuDetails?.memoryArchitecture === 'unified' ? undefined : node.videoMemory;
+  const videoMemory = resolveNodeVideoMemory(node);
   const zeroSupportingMetric = (): ResourceMetric =>
     toMetric(
       {
@@ -235,7 +237,7 @@ function createNodeContribution(node: NodeDetail): NodeResourceContribution {
           : 'unavailable',
     resources,
     memory: currentContributor
-      ? toSupportingMetric(node.memory, supplyEligible, isAgent, online)
+      ? toSupportingMetric(node.memory, supplyEligible, isAgent, online, true)
       : zeroSupportingMetric(),
     ...(videoMemory
       ? {

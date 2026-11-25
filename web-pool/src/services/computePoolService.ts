@@ -36,8 +36,9 @@ export async function getComputePoolSummary(): Promise<ComputePoolSummary> {
     getClusters(),
   ]);
   const localDetails = aggregateComputePool(inventory.items, response.data.updated_at);
-  const videoMemory =
-    response.data.video_memory ?? response.data.supporting_resources?.video_memory ?? undefined;
+  const videoMemory = response.data.gpu_accessible_memory
+    ? mapResourceMetric(response.data.gpu_accessible_memory)
+    : localDetails.supportingResources.videoMemory;
 
   return structuredClone({
     ...localDetails,
@@ -54,7 +55,7 @@ export async function getComputePoolSummary(): Promise<ComputePoolSummary> {
       storage: response.data.storage
         ? mapResourceMetric(response.data.storage)
         : localDetails.supportingResources.storage,
-      ...(videoMemory ? { videoMemory: mapResourceMetric(videoMemory) } : {}),
+      ...(videoMemory ? { videoMemory } : {}),
       unifiedMemoryGpuNodes: response.data.unified_memory_gpu_nodes ?? 0,
     },
     clusters: clusterResult.items.map((cluster) => ({

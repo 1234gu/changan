@@ -218,7 +218,7 @@ export function SchedulingPage() {
         formatCapacity(item.availableCapacity.gpuCount, item.capacity.gpuCount, 'Device'),
     },
     {
-      title: '显存',
+      title: '独立显存',
       width: 120,
       render: (_, item) =>
         formatCapacity(item.availableCapacity.vramTotalGb, item.capacity.vramTotalGb, 'GB'),
@@ -292,7 +292,7 @@ export function SchedulingPage() {
     { title: 'Cluster', dataIndex: 'clusterName' },
     { title: 'Node', dataIndex: 'nodeCount', width: 80, render: (value) => `${value} 个` },
     { title: 'CPU', render: (_, group) => `${group.aggregateCapacity.cpuCores} Core` },
-    { title: '显存', render: (_, group) => `${group.aggregateCapacity.vramGb} GB` },
+    { title: '独立显存', render: (_, group) => `${group.aggregateCapacity.vramGb} GB` },
     { title: '内存', render: (_, group) => `${group.aggregateCapacity.memoryGb} GB` },
     { title: 'NPU', render: (_, group) => `${group.aggregateCapacity.npuTops} TOPS` },
     { title: 'DLA', render: (_, group) => `${group.aggregateCapacity.dlaDevices} Device` },
@@ -470,7 +470,7 @@ export function SchedulingPage() {
               </Form.Item>
             </Col>
             <Col xs={12} md={6} lg={3}>
-              <Form.Item name="vramGb" label="显存 ≥">
+              <Form.Item name="vramGb" label="独立显存 ≥">
                 <InputNumber min={0} addonAfter="GB" />
               </Form.Item>
             </Col>
@@ -539,7 +539,7 @@ export function SchedulingPage() {
                 </div>
                 <div className="scheduling-aggregate__metrics">
                   <span>CPU：{queryResult.aggregateCapacity.cpuCores} Core</span>
-                  <span>显存：{queryResult.aggregateCapacity.vramGb} GB</span>
+                  <span>独立显存：{queryResult.aggregateCapacity.vramGb} GB</span>
                   <span>内存：{queryResult.aggregateCapacity.memoryGb} GB</span>
                   <span>NPU：{queryResult.aggregateCapacity.npuTops} TOPS</span>
                   <span>DLA：{queryResult.aggregateCapacity.dlaDevices} Device</span>

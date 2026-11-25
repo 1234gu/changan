@@ -247,7 +247,7 @@ export function NodeDetailPage() {
         : undefined;
     })();
   const videoMemory = resolveNodeVideoMemory(node);
-  const memoryLabel = gpu?.memoryArchitecture === 'unified' ? '统一内存' : '显存';
+  const memoryLabel = gpu?.memoryArchitecture === 'unified' ? '显存（统一内存）' : '显存';
   const gpuModels =
     gpu?.devices
       .map((device) => device.model)
